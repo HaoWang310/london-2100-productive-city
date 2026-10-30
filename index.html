@@ -1881,7 +1881,7 @@ function buildWaterLayer(){
       clearcoat:.72,clearcoatRoughness:.17,side:THREE.DoubleSide,depthWrite:true})
  );
  channelSurface.rotation.x=-Math.PI/2;
- channelSurface.position.y=.16; // the original Rhino road deck is at +0.50
+ channelSurface.position.y=.94; // channel water sits above the terrain/ground road surface; bridges stay above it
  channelSurface.receiveShadow=true;
  channelSurface.userData.water=true;
  channelSurface.name='凹槽水域 · 连续河道水面';
@@ -1891,12 +1891,12 @@ function buildWaterLayer(){
   new THREE.MeshStandardMaterial({color:'#35576d',roughness:.5,metalness:0,transparent:true,
         opacity:.3,side:THREE.DoubleSide,depthWrite:false})
  );
- channelDepth.rotation.x=-Math.PI/2;channelDepth.position.y=.14-2.8;
+ channelDepth.rotation.x=-Math.PI/2;channelDepth.position.y=.92-2.8;
  channelDepth.name='凹槽水域 · 水下体积';channelDepth.userData.water=true;
  waterGroup.add(channelDepth);
  const edgeMat=new THREE.LineBasicMaterial({color:'#b0bec6',transparent:true,opacity:.32,depthWrite:false});
  const bankLine=new THREE.LineLoop(
-   new THREE.BufferGeometry().setFromPoints(footprint.map(([x,y])=>new THREE.Vector3(x,.18,-y))),
+   new THREE.BufferGeometry().setFromPoints(footprint.map(([x,y])=>new THREE.Vector3(x,.97,-y))),
    edgeMat
  );
  bankLine.name='凹槽水域 · 柔性水岸线';waterGroup.add(bankLine);
@@ -1958,7 +1958,7 @@ function updateWaterVisibility(){
  if(!waterGroup)return;
  const ids=(state.mode==='report'?relatedReportParcelIds():state.selected&&parcelById.has(state.selected)?[state.selected]:[]);
  const showAll=state.mode==='report'?reportParcel==='all'&&!reportFormId:!state.isolated&&!state.selected;
- waterGroup.visible=waterConfig.enabled&&(showAll||ids.some(id=>WATER_PARCELS.has(id)||model.parcels.some(p=>p.id===id&&WATER_CHANNEL_SHAPE.centers.some(q=>pointInPolygon(q,p.boundary)))));
+ waterGroup.visible=waterConfig.enabled&&(!state.isolated||showAll||ids.some(id=>WATER_PARCELS.has(id)||model.parcels.some(p=>p.id===id&&WATER_CHANNEL_SHAPE.centers.some(q=>pointInPolygon(q,p.boundary)))));
 }
 function initWaterUI(){
  const btn=document.createElement('button');btn.id='waterToggle';btn.type='button';btn.setAttribute('aria-pressed','true');btn.textContent='水域：显示';btn.style.cssText='padding:7px 11px;font-size:12px;border:1px solid #395c70;border-radius:7px;background:#1a3444;color:#b4e0f3;cursor:pointer';
