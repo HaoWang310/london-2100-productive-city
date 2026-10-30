@@ -1,0 +1,62 @@
+name: Apply water channel v23
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-water-channel-v23.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch model water geometry and materials
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          def replace_once(old,new):
+              global s
+              n=s.count(old)
+              if n != 1:
+                  raise SystemExit(f'Expected 1 match, found {n}: {old[:90]!r}')
+              s=s.replace(old,new,1)
+          replace_once('// WATER CHANNEL v22 — a continuous recessed waterway joining the P-24 basin.','// WATER CHANNEL v23 — P-22 / P-23 recessed waterway joining the P-24 basin.')
+          replace_once(' [165,92,6.4],[164,64,6.8],[159,34,7.6],[151,3,9.0],\n [139,-28,10.5],[126,-54,13.8],[113,-79,22.0],[101,-105,38.0]',' [-246,-13,8.0],[-246,-37,8.8],[-243,-63,9.5],[-239,-89,10.2],\n [-232,-111,11.8],[-218,-132,15.5],[-201,-150,22.0],[-187,-165,29.0],[-174,-179,42.0]')
+          replace_once(' channelSurface.position.y=.94; // channel water sits above the terrain/ground road surface; bridges stay above it',' channelSurface.position.y=.865; // precisely aligned with P-24 waterline (.84), slightly raised to prevent z-fighting')
+          replace_once(' channelDepth.rotation.x=-Math.PI/2;channelDepth.position.y=.92-2.8;',' channelDepth.rotation.x=-Math.PI/2;channelDepth.position.y=.84-2.8;')
+          replace_once('new THREE.Vector3(x,.97,-y)','new THREE.Vector3(x,.89,-y)')
+          needle=" waterBase.rotation.x=-Math.PI/2;waterBase.position.y=waterline;waterBase.receiveShadow=true;waterBase.name='P-24 水面';waterBase.userData.water=true;waterGroup.add(waterBase);"
+          addition="""
+           // v23: share the primary water body's exact material with the recessed channel.
+           channelSurface.material.dispose();
+           channelSurface.material=waterBase.material;
+           const channelHighlights=[];
+           const centerline=WATER_CHANNEL_SHAPE.centers;
+           for(let i=3;i<centerline.length-3;i+=4){
+            const [x,y,width]=centerline[i];const p0=centerline[i-1],p1=centerline[i+1];
+            const dx=p1[0]-p0[0],dy=p1[1]-p0[1],len=Math.hypot(dx,dy)||1;
+            const nx=-dy/len,ny=dx/len,span=Math.min(4.0,width*.42);
+            channelHighlights.push(x-nx*span,.91,-(y-ny*span),x+nx*span,.91,-(y+ny*span));
+           }
+           if(channelHighlights.length){
+            const highlightGeometry=new THREE.BufferGeometry();
+            highlightGeometry.setAttribute('position',new THREE.Float32BufferAttribute(channelHighlights,3));
+            const highlights=new THREE.LineSegments(highlightGeometry,new THREE.LineBasicMaterial({color:'#eefbff',transparent:true,opacity:.18,depthWrite:false}));
+            highlights.name='凹槽水道 · 水面柔光波纹';highlights.userData.water=true;waterGroup.add(highlights);
+           }
+          """
+          replace_once(needle, needle+'\n'+addition)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit and publish corrected index.html
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Fix P-22 recessed channel and match main water material (v23)"
+          git push
