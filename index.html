@@ -1707,6 +1707,46 @@ function material(color){return new THREE.MeshStandardMaterial({color,roughness:
 // Original Rhino-derived meshes and 24/58 parcel/unit topology remain untouched.
 const landscapeConfig={enabled:true,density:1.0};
 const WATER_PARCELS=new Set(['P-24']);
+
+// WATER CHANNEL v22 — a continuous recessed waterway joining the P-24 basin.
+// Keep it distinct from the original Rhino structure, parcels and roads.
+const WATER_CHANNEL_TRACE=[
+ [165,92,6.4],[164,64,6.8],[159,34,7.6],[151,3,9.0],
+ [139,-28,10.5],[126,-54,13.8],[113,-79,22.0],[101,-105,38.0]
+];
+function channelFootprint(trace=WATER_CHANNEL_TRACE){
+ const interpolate=(i,t,k)=>{
+  const a=trace[Math.max(0,i-1)][k],b=trace[i][k],c=trace[Math.min(trace.length-1,i+1)][k],d=trace[Math.min(trace.length-1,i+2)][k];
+  return .5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-d)*t*t+(-a+3*b-3*c+d)*t*t*t);
+ };
+ const centers=[];
+ for(let i=0;i<trace.length-1;i++)for(let j=0;j<10;j++){const t=j/10;centers.push([interpolate(i,t,0),interpolate(i,t,1),Math.max(2,interpolate(i,t,2))])}
+ centers.push(trace[trace.length-1].slice());
+ const left=[],right=[];
+ for(let i=0;i<centers.length;i++){
+  const prev=centers[Math.max(0,i-1)],next=centers[Math.min(centers.length-1,i+1)],p=centers[i];
+  const dx=next[0]-prev[0],dy=next[1]-prev[1],len=Math.hypot(dx,dy)||1;
+  const nx=-dy/len,ny=dx/len,w=p[2]/2;
+  left.push([p[0]+nx*w,p[1]+ny*w]);
+  right.push([p[0]-nx*w,p[1]-ny*w]);
+ }
+ return {outline:left.concat(right.reverse()),centers};
+}
+const WATER_CHANNEL_SHAPE=channelFootprint();
+function intersectsWaterFootprint(x,y,r=0){
+ const regions=[WATER_CHANNEL_SHAPE.outline];
+ if(model?.parcels){
+  const pond=model.parcels.find(p=>WATER_PARCELS.has(p.id));
+  if(pond)regions.push(pond.boundary);
+ }
+ for(const poly of regions){
+  if(pointInPolygon([x,y],poly))return true;
+  // No grass, shrubs, trees or overhanging crowns on any water region.
+  if(r>0)for(let i=0;i<poly.length;i++)if(distanceToSegment(x,y,poly[i],poly[(i+1)%poly.length])<r)return true;
+ }
+ return false;
+}
+
 const waterConfig={enabled:true};
 let waterGroup=null;
 const roadDesignConfig={enabled:true};
@@ -1742,7 +1782,7 @@ function freeFromStructure(x,y,radius){const kx=Math.floor(x/occupyCell),ky=Math
   if(structureGrid.has((kx+ix)+','+(ky+iy)))return false;
  }return true;
 }
-function siteCandidate(p,x,y,r){return polygonInset(x,y,p.boundary,Math.max(r*.55,1.4))&&freeFromStructure(x,y,r)}
+function siteCandidate(p,x,y,r){return polygonInset(x,y,p.boundary,Math.max(r*.55,1.4))&&!intersectsWaterFootprint(x,y,Math.max(1.4,r))&&freeFromStructure(x,y,r)}
 const matLandscape={
  meadow:new THREE.MeshStandardMaterial({color:'#496b46',roughness:1,side:THREE.DoubleSide,metalness:0}),
  meadowAlt:new THREE.MeshStandardMaterial({color:'#547651',roughness:1,side:THREE.DoubleSide,metalness:0}),
@@ -1829,7 +1869,38 @@ function buildContextDecorations(){
 }
 
 function buildWaterLayer(){
- waterGroup=new THREE.Group();waterGroup.name='P-24 · 水域独立图层';scene.add(waterGroup);
+ waterGroup=new THREE.Group();waterGroup.name='P-24 水库 + 凹槽连续水道';scene.add(waterGroup);
+ // New recessed waterway: visible under the original Rhino bridges and roads.
+ const footprint=WATER_CHANNEL_SHAPE.outline;
+ const chShape=new THREE.Shape();
+ footprint.forEach(([x,y],i)=>i?chShape.lineTo(x,y):chShape.moveTo(x,y));
+ chShape.closePath();
+ const channelSurface=new THREE.Mesh(
+  new THREE.ShapeGeometry(chShape,24),
+  new THREE.MeshPhysicalMaterial({color:'#5689a6',roughness:.18,metalness:.03,transparent:true,opacity:.83,
+      clearcoat:.72,clearcoatRoughness:.17,side:THREE.DoubleSide,depthWrite:true})
+ );
+ channelSurface.rotation.x=-Math.PI/2;
+ channelSurface.position.y=.16; // the original Rhino road deck is at +0.50
+ channelSurface.receiveShadow=true;
+ channelSurface.userData.water=true;
+ channelSurface.name='凹槽水域 · 连续河道水面';
+ waterGroup.add(channelSurface);
+ const channelDepth=new THREE.Mesh(
+  new THREE.ExtrudeGeometry(chShape,{depth:2.8,steps:1,bevelEnabled:false}),
+  new THREE.MeshStandardMaterial({color:'#35576d',roughness:.5,metalness:0,transparent:true,
+        opacity:.3,side:THREE.DoubleSide,depthWrite:false})
+ );
+ channelDepth.rotation.x=-Math.PI/2;channelDepth.position.y=.14-2.8;
+ channelDepth.name='凹槽水域 · 水下体积';channelDepth.userData.water=true;
+ waterGroup.add(channelDepth);
+ const edgeMat=new THREE.LineBasicMaterial({color:'#b0bec6',transparent:true,opacity:.32,depthWrite:false});
+ const bankLine=new THREE.LineLoop(
+   new THREE.BufferGeometry().setFromPoints(footprint.map(([x,y])=>new THREE.Vector3(x,.18,-y))),
+   edgeMat
+ );
+ bankLine.name='凹槽水域 · 柔性水岸线';waterGroup.add(bankLine);
+ waterGroup.userData.channelSurface=channelSurface;
  const p=model.parcels.find(p=>p.id==='P-24');if(!p)return;
  // The supplied user's classification applies to the existing authentic parcel boundary.
  // Water is represented as a terraced volumetric basin rather than a single thin sheet.
@@ -1887,7 +1958,7 @@ function updateWaterVisibility(){
  if(!waterGroup)return;
  const ids=(state.mode==='report'?relatedReportParcelIds():state.selected&&parcelById.has(state.selected)?[state.selected]:[]);
  const showAll=state.mode==='report'?reportParcel==='all'&&!reportFormId:!state.isolated&&!state.selected;
- waterGroup.visible=waterConfig.enabled&&(showAll||ids.some(id=>WATER_PARCELS.has(id)));
+ waterGroup.visible=waterConfig.enabled&&(showAll||ids.some(id=>WATER_PARCELS.has(id)||model.parcels.some(p=>p.id===id&&WATER_CHANNEL_SHAPE.centers.some(q=>pointInPolygon(q,p.boundary)))));
 }
 function initWaterUI(){
  const btn=document.createElement('button');btn.id='waterToggle';btn.type='button';btn.setAttribute('aria-pressed','true');btn.textContent='水域：显示';btn.style.cssText='padding:7px 11px;font-size:12px;border:1px solid #395c70;border-radius:7px;background:#1a3444;color:#b4e0f3;cursor:pointer';
