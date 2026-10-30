@@ -1708,11 +1708,11 @@ function material(color){return new THREE.MeshStandardMaterial({color,roughness:
 const landscapeConfig={enabled:true,density:1.0};
 const WATER_PARCELS=new Set(['P-24']);
 
-// WATER CHANNEL v22 — a continuous recessed waterway joining the P-24 basin.
+// WATER CHANNEL v23 — P-22 / P-23 recessed waterway joining the P-24 basin.
 // Keep it distinct from the original Rhino structure, parcels and roads.
 const WATER_CHANNEL_TRACE=[
- [165,92,6.4],[164,64,6.8],[159,34,7.6],[151,3,9.0],
- [139,-28,10.5],[126,-54,13.8],[113,-79,22.0],[101,-105,38.0]
+ [-246,-13,8.0],[-246,-37,8.8],[-243,-63,9.5],[-239,-89,10.2],
+ [-232,-111,11.8],[-218,-132,15.5],[-201,-150,22.0],[-187,-165,29.0],[-174,-179,42.0]
 ];
 function channelFootprint(trace=WATER_CHANNEL_TRACE){
  const interpolate=(i,t,k)=>{
@@ -1881,7 +1881,7 @@ function buildWaterLayer(){
       clearcoat:.72,clearcoatRoughness:.17,side:THREE.DoubleSide,depthWrite:true})
  );
  channelSurface.rotation.x=-Math.PI/2;
- channelSurface.position.y=.94; // channel water sits above the terrain/ground road surface; bridges stay above it
+ channelSurface.position.y=.865; // precisely aligned with P-24 waterline (.84), slightly raised to prevent z-fighting
  channelSurface.receiveShadow=true;
  channelSurface.userData.water=true;
  channelSurface.name='凹槽水域 · 连续河道水面';
@@ -1891,12 +1891,12 @@ function buildWaterLayer(){
   new THREE.MeshStandardMaterial({color:'#35576d',roughness:.5,metalness:0,transparent:true,
         opacity:.3,side:THREE.DoubleSide,depthWrite:false})
  );
- channelDepth.rotation.x=-Math.PI/2;channelDepth.position.y=.92-2.8;
+ channelDepth.rotation.x=-Math.PI/2;channelDepth.position.y=.84-2.8;
  channelDepth.name='凹槽水域 · 水下体积';channelDepth.userData.water=true;
  waterGroup.add(channelDepth);
  const edgeMat=new THREE.LineBasicMaterial({color:'#b0bec6',transparent:true,opacity:.32,depthWrite:false});
  const bankLine=new THREE.LineLoop(
-   new THREE.BufferGeometry().setFromPoints(footprint.map(([x,y])=>new THREE.Vector3(x,.97,-y))),
+   new THREE.BufferGeometry().setFromPoints(footprint.map(([x,y])=>new THREE.Vector3(x,.89,-y))),
    edgeMat
  );
  bankLine.name='凹槽水域 · 柔性水岸线';waterGroup.add(bankLine);
@@ -1923,6 +1923,25 @@ function buildWaterLayer(){
  shellCore.rotation.x=-Math.PI/2;shellCore.position.y=waterline-17.5;shellCore.userData.water=true;shellCore.name='P-24 核心水体积层';waterGroup.add(shellCore);
  const waterBase=new THREE.Mesh(outerGeo,new THREE.MeshPhysicalMaterial({color:'#7db5cf',roughness:.12,metalness:.02,transmission:.38,thickness:1.2,ior:1.333,clearcoat:.95,clearcoatRoughness:.12,side:THREE.DoubleSide,transparent:true,opacity:.32,depthWrite:false}));
  waterBase.rotation.x=-Math.PI/2;waterBase.position.y=waterline;waterBase.receiveShadow=true;waterBase.name='P-24 水面';waterBase.userData.water=true;waterGroup.add(waterBase);
+
+ // v23: share the primary water body's exact material with the recessed channel.
+ channelSurface.material.dispose();
+ channelSurface.material=waterBase.material;
+ const channelHighlights=[];
+ const centerline=WATER_CHANNEL_SHAPE.centers;
+ for(let i=3;i<centerline.length-3;i+=4){
+  const [x,y,width]=centerline[i];const p0=centerline[i-1],p1=centerline[i+1];
+  const dx=p1[0]-p0[0],dy=p1[1]-p0[1],len=Math.hypot(dx,dy)||1;
+  const nx=-dy/len,ny=dx/len,span=Math.min(4.0,width*.42);
+  channelHighlights.push(x-nx*span,.91,-(y-ny*span),x+nx*span,.91,-(y+ny*span));
+ }
+ if(channelHighlights.length){
+  const highlightGeometry=new THREE.BufferGeometry();
+  highlightGeometry.setAttribute('position',new THREE.Float32BufferAttribute(channelHighlights,3));
+  const highlights=new THREE.LineSegments(highlightGeometry,new THREE.LineBasicMaterial({color:'#eefbff',transparent:true,opacity:.18,depthWrite:false}));
+  highlights.name='凹槽水道 · 水面柔光波纹';highlights.userData.water=true;waterGroup.add(highlights);
+ }
+
  const deepPatch=new THREE.Mesh(innerGeo,new THREE.MeshPhysicalMaterial({color:'#4f86a3',roughness:.16,metalness:.02,transmission:.22,thickness:1.6,ior:1.333,clearcoat:.55,clearcoatRoughness:.16,side:THREE.DoubleSide,transparent:true,opacity:.18,depthWrite:false}));
  deepPatch.rotation.x=-Math.PI/2;deepPatch.position.y=waterline+.02;deepPatch.receiveShadow=false;deepPatch.name='P-24 深水面层';deepPatch.userData.water=true;waterGroup.add(deepPatch);
  const waterTop=new THREE.Mesh(coreGeo,new THREE.MeshPhysicalMaterial({color:'#effcff',roughness:.04,metalness:0,transmission:.58,thickness:.55,ior:1.333,clearcoat:1,clearcoatRoughness:.04,side:THREE.DoubleSide,transparent:true,opacity:.11,depthWrite:false}));
