@@ -1684,8 +1684,11 @@ class SoftwareRenderer{
  const ctx=this.ctx,w=this.w,h=this.h;ctx.setTransform(this.ratio,0,0,this.ratio,0,0);ctx.fillStyle='#101114';ctx.fillRect(0,0,w,h);let triangles=[];const view=new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);
  const landscapeMeshes=decorationGroup?decorationGroup.children.filter(g=>g.visible).flatMap(g=>g.children.filter(m=>m.isMesh)):[];const waterMeshes=waterGroup?.visible?waterGroup.children.filter(m=>m.isMesh):[];const roadDesignMeshes=roadDesignGroup?.visible?roadDesignGroup.children.filter(m=>m.isMesh):[];const carMeshes=vehicleGroup?.visible?vehicleTierGroups.filter(g=>g.visible).flatMap(g=>g.children.filter(m=>m.isMesh)):[];const objects=[siteMesh,roadsMesh,...roadDesignMeshes,...carMeshes,...(state.mode==='report'&&reportParcel!=='all'&&!reportFormId?parcelMeshes.filter(m=>m.visible):[]),...waterMeshes,...landscapeMeshes,...meshes];for(const obj of objects){if(!obj.visible)continue;const id=obj===siteMesh?'site':obj===roadsMesh?'roads':obj.userData.parcel?'parcel-'+obj.userData.id:obj.userData.landscape?'landscape-'+obj.uuid:obj.userData.water?'water-'+obj.uuid:obj.userData.id;let cached=this.cache.get(id);if(!cached){const low=obj.userData.unit?.parent?null:lowModel?.units.find(u=>u.id===id);const g=low?bufferGeom(low.mesh):obj.geometry;cached={g,index:g.index?g.index.array:Uint32Array.from({length:g.attributes.position.count},(_,i)=>i)};this.cache.set(id,cached)}const g=cached.g,pos=g.attributes.position.array,norm=g.attributes.normal.array,index=cached.index;const mat=new THREE.Matrix4().multiplyMatrices(view,obj.matrixWorld).elements;const count=pos.length/3;const screen=new Float32Array(pos.length);for(let i=0;i<count;i++){const a=i*3,x=pos[a],y=pos[a+1],z=pos[a+2];screen[a]=(mat[0]*x+mat[4]*y+mat[8]*z+mat[12]+1)*w/2;screen[a+1]=(1-mat[1]*x-mat[5]*y-mat[9]*z-mat[13])*h/2;screen[a+2]=mat[2]*x+mat[6]*y+mat[10]*z+mat[14]}
  const rgb=obj.material.color.clone().convertLinearToSRGB();const base=[rgb.r*255,rgb.g*255,rgb.b*255];const palettes=Array.from({length:50},(_,k)=>{const shade=.57+k/49*.46;return 'rgb('+base.map(c=>Math.min(255,Math.round(c*shade))).join(',')+')'});
- for(let i=0;i<index.length;i+=3){const a=index[i]*3,b=index[i+1]*3,c=index[i+2]*3,x1=screen[a],y1=screen[a+1],x2=screen[b],y2=screen[b+1],x3=screen[c],y3=screen[c+1];if((x1<0&&x2<0&&x3<0)||(x1>w&&x2>w&&x3>w)||(y1<0&&y2<0&&y3<0)||(y1>h&&y2>h&&y3>h))continue;const cross=(x2-x1)*(y3-y1)-(y2-y1)*(x3-x1);if(cross>.03)continue;if(Math.abs(cross)<.005)continue;const nx=(norm[a]+norm[b]+norm[c])/3,ny=(norm[a+1]+norm[b+1]+norm[c+1])/3,nz=(norm[a+2]+norm[b+2]+norm[c+2])/3;const light=Math.max(0,-nx*.35+ny*.8+nz*.48);const shade=palettes[Math.min(49,Math.round(light*49))];let poly=[[x1,y1,screen[a+2],pos[a+1]],[x2,y2,screen[b+2],pos[b+1]],[x3,y3,screen[c+2],pos[c+1]]];const cut=obj.userData.clipHeight;if(cut!=null){const clipped=[];for(let k=0;k<poly.length;k++){const A=poly[k],B=poly[(k+1)%poly.length],ai=A[3]<=cut,bi=B[3]<=cut;if(ai)clipped.push(A);if(ai!==bi){const t=(cut-A[3])/(B[3]-A[3]);clipped.push(A.map((v,j)=>v+(B[j]-v)*t))}}poly=clipped}for(let k=1;k<poly.length-1;k++){const A=poly[0],B=poly[k],C=poly[k+1];triangles.push([A[2]+B[2]+C[2],A[0],A[1],B[0],B[1],C[0],C[1],shade,id]);}}}
- const order=id=>id==='site'||id.startsWith('parcel-')?0:id==='roads'?1:id==='water-P24'?2:3;triangles.sort((a,b)=>order(a[8])-order(b[8])||b[0]-a[0]);ctx.lineWidth=.45;for(const t of triangles){ctx.beginPath();ctx.moveTo(t[1],t[2]);ctx.lineTo(t[3],t[4]);ctx.lineTo(t[5],t[6]);ctx.closePath();ctx.fillStyle=t[7];ctx.fill();ctx.strokeStyle=state.layers.edges&&t[8]!=='site'&&t[8]!=='roads'?'#8b8c94':t[7];ctx.stroke()}
+ for(let i=0;i<index.length;i+=3){const a=index[i]*3,b=index[i+1]*3,c=index[i+2]*3,x1=screen[a],y1=screen[a+1],x2=screen[b],y2=screen[b+1],x3=screen[c],y3=screen[c+1];if((x1<0&&x2<0&&x3<0)||(x1>w&&x2>w&&x3>w)||(y1<0&&y2<0&&y3<0)||(y1>h&&y2>h&&y3>h))continue;const cross=(x2-x1)*(y3-y1)-(y2-y1)*(x3-x1);if(cross>.03)continue;if(Math.abs(cross)<.005)continue;const nx=(norm[a]+norm[b]+norm[c])/3,ny=(norm[a+1]+norm[b+1]+norm[c+1])/3,nz=(norm[a+2]+norm[b+2]+norm[c+2])/3;const light=Math.max(0,-nx*.35+ny*.8+nz*.48);const shade=palettes[Math.min(49,Math.round(light*49))];let poly=[[x1,y1,screen[a+2],pos[a+1]],[x2,y2,screen[b+2],pos[b+1]],[x3,y3,screen[c+2],pos[c+1]]];const cut=obj.userData.clipHeight;if(cut!=null){const clipped=[];for(let k=0;k<poly.length;k++){const A=poly[k],B=poly[(k+1)%poly.length],ai=A[3]<=cut,bi=B[3]<=cut;if(ai)clipped.push(A);if(ai!==bi){const t=(cut-A[3])/(B[3]-A[3]);clipped.push(A.map((v,j)=>v+(B[j]-v)*t))}}poly=clipped}for(let k=1;k<poly.length-1;k++){const A=poly[0],B=poly[k],C=poly[k+1];triangles.push([A[2]+B[2]+C[2],A[0],A[1],B[0],B[1],C[0],C[1],shade,id,obj.material.transparent?obj.material.opacity:1]);}}}
+ // Canvas fallback must paint the recessed water before the opaque Rhino road.
+ const order=id=>id==='site'||id.startsWith('parcel-')?0:id.startsWith('water-')?1:id==='roads'?2:3;
+ triangles.sort((a,b)=>order(a[8])-order(b[8])||b[0]-a[0]);
+ ctx.lineWidth=.45;for(const t of triangles){ctx.globalAlpha=t[9];ctx.beginPath();ctx.moveTo(t[1],t[2]);ctx.lineTo(t[3],t[4]);ctx.lineTo(t[5],t[6]);ctx.closePath();ctx.fillStyle=t[7];ctx.fill();ctx.strokeStyle=state.layers.edges&&t[8]!=='site'&&t[8]!=='roads'?'#8b8c94':t[7];ctx.stroke()}ctx.globalAlpha=1;
  }
 }
 </script><script>'use strict';
@@ -1888,6 +1891,8 @@ function buildContextDecorations(){
 }
 
 function buildWaterLayer(){
+ // Use the authentic Rhino recessed bed (-1); water stays below the road deck (+0.5).
+ const waterline=WATER_RECESS_SOURCE_LEVEL+.30;
  waterGroup=new THREE.Group();waterGroup.name='Rhino 原始下沉水道 + P-24 连续水域';scene.add(waterGroup);
  const native=nativeRecessedChannel(),positions=[];
  for(const tri of native.triangles)for(const [x,y] of tri)positions.push(x,0,-y);
@@ -1898,7 +1903,7 @@ function buildWaterLayer(){
   color:'#7db5cf',roughness:.12,metalness:.02,transparent:true,opacity:.32,
   side:THREE.DoubleSide,depthWrite:false
  }));
- channelSurface.position.y=.842;
+ channelSurface.position.y=waterline;
  channelSurface.name='原始 Rhino 下沉面片 · 与 P-24 同水位';
  channelSurface.userData.water=true;channelSurface.receiveShadow=true;
  waterGroup.add(channelSurface);
@@ -1914,7 +1919,6 @@ function buildWaterLayer(){
  const outerShape=mkShape(outerPts), midShape=mkShape(midPts), innerShape=mkShape(innerPts), coreShape=mkShape(corePts);
  const outerGeo=mkGeo(outerShape), innerGeo=mkGeo(innerShape), coreGeo=mkGeo(coreShape);
  const mkExtrude=(shape,depth)=>new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false,curveSegments:28,steps:1});
- const waterline=.84;
  const shellOuter=new THREE.Mesh(mkExtrude(outerShape,3.2),new THREE.MeshPhysicalMaterial({color:'#8fc6df',roughness:.28,metalness:.02,transmission:.24,thickness:1.6,ior:1.333,clearcoat:.55,clearcoatRoughness:.2,transparent:true,opacity:.18,side:THREE.DoubleSide,depthWrite:false}));
  shellOuter.rotation.x=-Math.PI/2;shellOuter.position.y=waterline-3.2;shellOuter.userData.water=true;shellOuter.name='P-24 浅水体积层';waterGroup.add(shellOuter);
  const shellMid=new THREE.Mesh(mkExtrude(midShape,7.2),new THREE.MeshPhysicalMaterial({color:'#679db8',roughness:.24,metalness:.02,transmission:.18,thickness:1.8,ior:1.333,clearcoat:.45,clearcoatRoughness:.24,transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false}));
@@ -1970,8 +1974,8 @@ function buildWaterLayer(){
 function updateWaterAnimation(time){
  if(!waterGroup?.visible||!waterGroup.userData.fx)return;const fx=waterGroup.userData.fx,t=(time||0)*0.001;
  const topPos=fx.waterTop.geometry.attributes.position,deepPos=fx.deepPatch.geometry.attributes.position;
- for(let i=0;i<topPos.count;i++){const x=fx.baseTop[i*3],y=fx.baseTop[i*3+1];topPos.array[i*3+2]=Math.sin(x*.036+t*1.15)*.32+Math.cos(y*.044-t*.82)*.18}
- for(let i=0;i<deepPos.count;i++){const x=fx.baseDeep[i*3],y=fx.baseDeep[i*3+1];deepPos.array[i*3+2]=Math.sin(x*.024+t*.62)*.14+Math.cos(y*.031+t*.42)*.1}
+ for(let i=0;i<topPos.count;i++){const x=fx.baseTop[i*3],y=fx.baseTop[i*3+1];topPos.array[i*3+2]=Math.sin(x*.036+t*1.15)*.045+Math.cos(y*.044-t*.82)*.025}
+ for(let i=0;i<deepPos.count;i++){const x=fx.baseDeep[i*3],y=fx.baseDeep[i*3+1];deepPos.array[i*3+2]=Math.sin(x*.024+t*.62)*.035+Math.cos(y*.031+t*.42)*.02}
  topPos.needsUpdate=true;deepPos.needsUpdate=true;fx.waterTop.geometry.computeVertexNormals();fx.deepPatch.geometry.computeVertexNormals();
  fx.waterTop.material.opacity=.10+Math.sin(t*1.1)*.018;fx.waterBase.material.opacity=.30+Math.sin(t*.7)*.018;fx.deepPatch.material.opacity=.17+Math.cos(t*.6)*.02;
  if(fx.rippleLines)fx.rippleLines.material.opacity=.12+Math.sin(t*1.4)*.04;
