@@ -3036,11 +3036,17 @@ function buildRoadFurniture(group){
   const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy);
   if(d<3)continue;
   const ux=dx/d,uy=dy/d;
-  // 1.4 m beyond each end puts the pole on the footway, clear of the lane.
+  // A crossing is painted short of the kerb, so a fixed offset left every pole
+  // still on the carriageway and none were placed. Walk outward from each end
+  // until the road actually stops, then stand the pole just past it.
   for(const sgn2 of [-1,1]){
-   const px=(sgn2<0?ax:bx)+ux*1.4*sgn2,py=(sgn2<0?ay:by)+uy*1.4*sgn2;
-   if(onRoad(px,py))continue;                  // still on the carriageway: skip
-   putSignal(px,py,Math.atan2(-uy*sgn2,-ux*sgn2));
+   const ex=sgn2<0?ax:bx,ey=sgn2<0?ay:by;
+   let off=null;
+   for(let t2=.5;t2<=9;t2+=.5){
+    if(!onRoad(ex+ux*t2*sgn2,ey+uy*t2*sgn2)){off=t2+.6;break}
+   }
+   if(off===null)continue;                     // no kerb within reach
+   putSignal(ex+ux*off*sgn2,ey+uy*off*sgn2,Math.atan2(-uy*sgn2,-ux*sgn2));
   }
  }
  // --- street lighting along the kerb ---
