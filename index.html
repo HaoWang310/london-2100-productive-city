@@ -2107,7 +2107,7 @@ function buildRoadDesign(){
    .map(([a,b])=>[cx+a*u[0]+b*v[0],cy+a*u[1]+b*v[1]]);
   // Each marking stays on the actual Rhino road deck, including its corners.
   if(!corners.every(([x,y])=>onDeck(x,y)))return false;
-  const [a,b,c,d]=corners;mark[layer].push(...a,...b,...c,...a,...c,...d);return true;
+  const [a,b,c,d]=corners;mark[layer].push(...a,...c,...b,...a,...d,...c);return true;
  };
  let crossingCount=0;
  for(const [jx,jy,arms] of ROAD_JUNCTIONS_V21){
