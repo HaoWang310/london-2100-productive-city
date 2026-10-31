@@ -1858,6 +1858,28 @@ function importedRecessedWater(){
   if(f.minZ<waterline-.001&&f.maxZ>waterline+.001)banks.add(o);
  }
  for(const k of banks)selected.add(k);
+ // A road crossing a channel is a bridge, not a bank: the bed runs straight on
+ // underneath it. Subtracting the road there severs the channel and leaves the
+ // dry wedge visible on both kerbs. Treat a road-covered bed face as a crossing
+ // only when water lies on two OPPOSITE sides within 28 m, so a road merely
+ // running alongside water is never filled. Measured on 2.3dm: 33 faces /
+ // 1,958 m², 5.6% of the bed that sits under roads.
+ const roadAt=(x,y)=>(roadCells.get(Math.floor(x/RC)+','+Math.floor(y/RC))||[])
+  .some(t=>x>=t.x0-.001&&x<=t.x1+.001&&y>=t.y0-.001&&y<=t.y1+.001&&pointInTriangle2D(x,y,...t.p));
+ const WC=2,wkey=(x,y)=>Math.floor(x/WC)+','+Math.floor(y/WC),openWater=new Set();
+ for(const k of selected){const f=all.get(k);
+  if(roadAt(f.center[0],f.center[1]))continue;
+  for(const q of f.pts)openWater.add(wkey(q[0],q[1]));
+  openWater.add(wkey(f.center[0],f.center[1]));
+ }
+ const reaches=(x,y,dx,dy)=>{for(let s=2;s<=28;s+=2)if(openWater.has(wkey(x+dx*s,y+dy*s)))return true;return false};
+ const CROSS_DIRS=[[1,0],[0,1],[Math.SQRT1_2,Math.SQRT1_2],[Math.SQRT1_2,-Math.SQRT1_2]];
+ const bridged=new Set();
+ for(const k of selected){const f=all.get(k);
+  if(!roadAt(f.center[0],f.center[1]))continue;
+  if(CROSS_DIRS.some(([dx,dy])=>reaches(f.center[0],f.center[1],dx,dy)&&reaches(f.center[0],f.center[1],-dx,-dy)))bridged.add(k);
+ }
+ result.bridgeFaces=bridged.size;
  for(const k of selected){
   const pts=all.get(k).pts,poly=[];
   for(let i=0;i<pts.length;i++){
@@ -1866,7 +1888,8 @@ function importedRecessedWater(){
    if(aIn!==bIn){const fr=(waterline-a[2])/(b[2]-a[2]);poly.push([a[0]+(b[0]-a[0])*fr,a[1]+(b[1]-a[1])*fr,waterline])}
   }
   if(poly.length<3||Math.abs(signed(poly[0],poly[1],poly[2]))<.001)continue;
-  for(const dryFootprint of subtractRoads(poly))for(let j=1;j+1<dryFootprint.length;j++){
+  // At a crossing the deck hides the water; everywhere else the road is cut out.
+  for(const dryFootprint of (bridged.has(k)?[poly]:subtractRoads(poly)))for(let j=1;j+1<dryFootprint.length;j++){
    // Keep the bed elevation on every point: the water body is built from it.
    const tri=[dryFootprint[0],dryFootprint[j],dryFootprint[j+1]].map(p=>[p[0],p[1],p[2]]);
    const a=signed(...tri);
@@ -1877,7 +1900,7 @@ function importedRecessedWater(){
  }
  result.sourceFaces=selected.size;
  console.info('Rhino geometry-first water · 2.3dm site, road-aware',{floor,waterline,
-  bedFaces:result.connectedChannelFaces,floodedFaces:result.basinFaces,bankFaces:banks.size,
+  bedFaces:result.connectedChannelFaces,floodedFaces:result.basinFaces,bankFaces:banks.size,bridgeFaces:result.bridgeFaces,
   triangles:result.triangles.length,area:Math.round(result.area)});
  return result;
 }

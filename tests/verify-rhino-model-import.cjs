@@ -72,7 +72,12 @@ assert(html.includes('if(model.meta?.imported&&!roadsDisplayOverride)toggle.disa
 assert(html.includes('function importedRecessedWater(){'), 'Road-aware water reader is missing');
 assert(html.includes("if(typeof siteDisplayOverride!=='undefined'&&siteDisplayOverride)return (nativeChannelCache=importedRecessedWater());"), 'Water must be derived from the imported site when one is loaded');
 assert(html.includes('const site=siteDisplayOverride,roads=model?.roads;'), 'Water reader must use the imported site and roads');
-assert(html.includes('for(const dryFootprint of subtractRoads(poly))'), 'Road trenches must be clipped from the final water footprint');
+assert(html.includes('bridged.has(k)?[poly]:subtractRoads(poly)'), 'Road trenches must be clipped from the final water footprint, except at crossings');
+// A road crossing a channel is a bridge: the bed runs on underneath, so the
+// footprint must NOT be cut there or the channel is severed at every kerb.
+assert(html.includes('const bridged=new Set();'), 'Channel/road crossings are not detected');
+assert(html.includes('if(!roadAt(f.center[0],f.center[1]))continue;'), 'Crossing test must only consider road-covered bed');
+assert(html.includes('reaches(f.center[0],f.center[1],dx,dy)&&reaches(f.center[0],f.center[1],-dx,-dy)'), 'A crossing needs water on two opposite sides');
 assert(html.includes('if(floor-z<=3.0001)floor=Math.min(floor,z)'), 'Terrace ladder must bound the flood above the slab underside');
 assert(html.includes("const site=model?.site,basin=model?.parcels?.find(p=>p.id==='P-24');"), 'Embedded baseline must keep its original P-24 water rule');
 // WATER BODY v28 — the footprint must carry the real bed elevation so the
