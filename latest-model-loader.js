@@ -155,12 +155,28 @@ async function parseFile(file,onProgress){
  if(!doc)throw Error("Rhino 3DM could not be decoded");
  const objects=doc.objects(),layers=doc.layers();
  const siteParts=[],roadParts=[],structureParts=[],unresolved=[];
+ // ROAD LINES v31 — the 31 Oct revision adds the road division line work on a
+ // layer named Default: 536 curves, all flat on the deck at the road top. They
+ // are curves, not surfaces, so the mesh path below never sees them; sample
+ // each one into segments here and move it with the same alignment shift.
+ const lineParts=[];
  const names={site:0,roads:0,structure:0};
  for(let i=0;i<objects.count;i++){
   if(i%20===0)onProgress("解析 Rhino 几何 "+(i+1)+" / "+objects.count);
   const ob=objects.get(i),attr=ob.attributes(),geom=ob.geometry();
   const layer=layers.get(attr.layerIndex);
   const name=basename(layer&&layer.name).toLowerCase();
+  if(name==="default"&&geom&&typeof geom.pointAt==="function"&&geom.domain){
+   const d=geom.domain,kind=(geom.constructor&&geom.constructor.name)||"";
+   const n=kind==="LineCurve"?2:kind==="PolylineCurve"?Math.max(2,geom.pointCount||2):24;
+   const pts=[];
+   for(let s2=0;s2<n;s2++){
+    const p=geom.pointAt(d[0]+(d[1]-d[0])*s2/(n-1));
+    if(p)pts.push([Number(p[0]),Number(p[1]),Number(p[2])]);
+   }
+   for(let s2=0;s2+1<pts.length;s2++)lineParts.push(pts[s2],pts[s2+1]);
+   continue;
+  }
   const group=/road|道路/.test(name)?"roads":/site|场地/.test(name)?"site":/struct|结构/.test(name)?"structure":null;
   if(!group)continue;
   names[group]++;
@@ -194,6 +210,7 @@ async function parseFile(file,onProgress){
  for(const p of siteParts)translate(p);
  for(const p of roadParts)translate(p);
  for(const p of structureParts)translate(p);
+ for(const q of lineParts){q[0]+=shift[0];q[1]+=shift[1];q[2]+=shift[2]}
  // Rhino world coordinates stay recoverable: world = local + origin.
  const origin=[-shift[0],-shift[1],-shift[2]];
  const site=newMesh(),roads=newMesh();
@@ -223,10 +240,11 @@ async function parseFile(file,onProgress){
  }
  const siteGeo=meshInfo(site),roadGeo=meshInfo(roads);
  const counts={site:siteParts.length,road:roadParts.length,structure:structureParts.length,unresolved:unresolved.length,originalObjects:objects.count};
- const m={site,roads,parcels,units,meta:{
+ const lines={v:[]};for(const q of lineParts)lines.v.push(q[0],q[1],q[2]);
+ const m={site,roads,lines,parcels,units,meta:{
   source:file.name+" · Rhino source layers · "+new Date().toISOString().slice(0,10),
   modelName:file.name,imported:true,topologyVerified:false,
-  origin,alignedToSiteFrame:true,
+  origin,alignedToSiteFrame:true,roadLineSegments:lineParts.length/2,
   warnings:["地块为独立场地组件的边界近似，尚未完成道路减场地布尔运算","跨路关系按几何距离初判；非施工拆分方案",...unresolved.slice(0,10).map(x=>"Unmeshed: "+x.layer+" / "+x.type)],
   siteArea:siteGeo.projection||siteGeo.area,roadArea:roadGeo.projection||roadGeo.area,
   sourceArea:totalArea,areaError:0,counts

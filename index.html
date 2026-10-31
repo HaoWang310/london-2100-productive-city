@@ -1699,13 +1699,13 @@ class SoftwareRenderer{
  ctx.lineWidth=.45;for(const t of triangles){ctx.globalAlpha=t[9];ctx.beginPath();ctx.moveTo(t[1],t[2]);ctx.lineTo(t[3],t[4]);ctx.lineTo(t[5],t[6]);ctx.closePath();ctx.fillStyle=t[7];ctx.fill();ctx.strokeStyle=state.layers.edges&&t[8]!=='site'&&t[8]!=='roads'?'#8b8c94':t[7];ctx.stroke()}ctx.globalAlpha=1;
  }
 }
-</script><script src="./latest-model-loader.js?v=20261031-site-frame-align-v27"></script><script>'use strict';
+</script><script src="./latest-model-loader.js?v=20261031-road-lines-v31"></script><script>'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const fmt=(n,d=0)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const state={mode:'overview',filter:'parcel',selected:null,isolated:false,explode:0,targetExplode:0,view:'iso',report:'summary',layers:{site:true,roads:true,structure:true,labels:false,mono:false,edges:false},assembled:new Set(),playing:false,presentation:false};
 let model,lowModel,scene,camera,renderer,controls,siteMesh,roadsMesh,ground,parcelGroup,unitGroup,decorationGroup,meshes=[],parcelMeshes=[],labelItems=[],lastTime=0,playAccum=0,transition=null,hoverId=null,lastPointer=null;
 // The published Rhino file may replace ONLY the rendered site; all existing functional model data stays intact.
-let siteDisplayOverride=null, roadsDisplayOverride=null;
+let siteDisplayOverride=null, roadsDisplayOverride=null, roadLineOverride=null;
 const detailByParcel=new Map();
 const unitById=new Map(),parcelById=new Map(),meshById=new Map();
 const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
@@ -2868,10 +2868,10 @@ function initRoadDesignUI(){
  const main=document.querySelector('.stage .layers');
  const report=document.querySelector('#landscapeControlsMount');
  const btn=document.createElement('button');btn.id='roadDesignToggleMain';btn.type='button';btn.className='layer';btn.style.cssText='min-height:33px;border:1px solid #4a4f58;background:#262b32;color:#dde3e8;border-radius:7px;padding:7px 11px;cursor:pointer';
- const label=()=>roadsDisplayOverride?'道路标线 · 待新道路匹配':model.meta?.imported?'道路标线 · 待几何核对':roadDesignConfig.enabled?'道路设计：显示':'道路设计：隐藏';
+ const label=()=>roadLineOverride?(roadDesignConfig.enabled?'道路划线：显示':'道路划线：隐藏'):roadsDisplayOverride?'道路标线 · 待新道路匹配':model.meta?.imported?'道路标线 · 待几何核对':roadDesignConfig.enabled?'道路设计：显示':'道路设计：隐藏';
  const sync=()=>{btn.textContent=label();btn.setAttribute('aria-pressed',String(roadDesignConfig.enabled));const twin=document.querySelector('#roadDesignToggleReport');if(twin){twin.textContent=label();twin.setAttribute('aria-pressed',String(roadDesignConfig.enabled))}if(renderer?.isSoftware)renderer.lastSignature='';};
  btn.addEventListener('click',()=>{roadDesignConfig.enabled=!roadDesignConfig.enabled;updateRoadDesignVisibility();applyColors();sync()});
- if(model.meta?.imported||roadsDisplayOverride)btn.disabled=true;
+ if(model.meta?.imported&&!roadLineOverride)btn.disabled=true;
  if(main)main.append(btn);
  if(report){const copy=btn.cloneNode(true);copy.id='roadDesignToggleReport';copy.addEventListener('click',()=>btn.click());report.append(copy)}
  sync();
@@ -3031,10 +3031,28 @@ function buildScene(){
  if(roadsDisplayOverride){
   // Roads now come exclusively from the exact 2.3dm / Roads mesh.
   // Old fixed crossing, lane and vehicle coordinates must not be drawn over it.
-  roadDesignGroup=new THREE.Group();roadDesignGroup.name='2.3dm roads | legacy markings withheld';
-  roadDesignGroup.userData={version:null,geometrySource:'2.3dm / Roads',unresolved:['道路标线须按新路口几何重新定位']};
+  // The 31 Oct source carries the road division lines itself, on the Default
+  // layer, already flat on the deck. Draw them as they are: no junction
+  // solving, no invented stripes, so nothing here can drift from the model.
+  roadDesignGroup=new THREE.Group();
+  roadDesignGroup.name=roadLineOverride?'2.3dm 道路划线 · 源曲线':'2.3dm roads | legacy markings withheld';
+  roadDesignGroup.userData={version:null,geometrySource:'2.3dm / Default lines',
+   segments:roadLineOverride?roadLineOverride.v.length/6:0,
+   unresolved:roadLineOverride?[]:['道路标线须按新路口几何重新定位']};
   scene.add(roadDesignGroup);
-  roadDesignConfig.enabled=false;
+  roadDesignConfig.enabled=!!roadLineOverride;
+  if(roadLineOverride){
+   const lv=roadLineOverride.v,pos=new Float32Array(lv.length);
+   // Rhino (x,y,z) -> scene (x,z,-y); lift a hair so the deck cannot z-fight.
+   for(let i=0;i<lv.length;i+=3){pos[i]=lv[i];pos[i+1]=lv[i+2]+.012;pos[i+2]=-lv[i+1]}
+   const lg=new THREE.BufferGeometry();
+   lg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+   const lines=new THREE.LineSegments(lg,new THREE.LineBasicMaterial({
+    color:'#f4f7f7',transparent:true,opacity:.62,depthTest:true,depthWrite:false
+   }));
+   lines.name='2.3dm Default 图层划线';lines.userData.roadDetail=true;
+   lines.frustumCulled=false;roadDesignGroup.add(lines);
+  }
   // Markings stay withheld, but traffic no longer depends on the retired
   // coordinate table: v27 solves car positions from the live 2.3dm carriageways.
   buildRoadVehicles();
@@ -3169,6 +3187,7 @@ async function init(){try{
    if(drift>1)console.warn('2.3dm world placement differs from the embedded model by '+drift.toFixed(2)+' m; retained structures, water and landscaping may not match the imported site.',{importedOrigin,embeddedOrigin});
   }
   siteDisplayOverride=importedModel.site;
+  roadLineOverride=importedModel.lines?.v?.length?importedModel.lines:null;
   roadsDisplayOverride=importedModel.roads;
   model.roads=roadsDisplayOverride; // REPLACE old roads; never overlay old mesh.
   if(model.meta){
