@@ -61,5 +61,30 @@ async function run(){
  const html=fs.readFileSync('index.html','utf8');
  const target='getSavedModel';
  console.log('APP_HOOK',JSON.stringify({loaderTag:(html.match(/.{0,100}latest-model-loader.js.{0,140}/g)||[]).slice(0,3),hookCount:(html.match(/getSavedModel/g)||[]).length,hookFragments:(html.match(/.{0,180}getSavedModel.{0,240}/g)||[]).slice(0,6),size:html.length}));
+ // End-to-end execution of the SAME browser importer's parseFile on real source.
+ const vm=require('node:vm');
+ const assert=require('node:assert/strict');
+ const loader=fs.readFileSync('latest-model-loader.js','utf8');
+ const context={
+  window:{rhino3dm:async()=>R},
+  document:{getElementById:()=>null},
+  File:require('node:buffer').File,
+  Blob:require('node:buffer').Blob,
+  console,Uint8Array,Map,Set,Number,String,Date,Math,Error,
+  fetch:async()=>({ok:true,status:200,blob:async()=>new (require('node:buffer').Blob)([bytes])})
+ };
+ vm.runInNewContext(loader,context,{filename:'latest-model-loader.js'});
+ const file={name:'2.3dm',arrayBuffer:async()=>bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength)};
+ const parsed=await context.window.latestModelBridge.parseFile(file,()=>{});
+ const summary={vertices:{site:parsed.site.v.length/3,road:parsed.roads.v.length/3,structure:parsed.units.reduce((n,x)=>n+x.mesh.v.length/3,0)},
+  triangles:{site:parsed.site.t.length/3,road:parsed.roads.t.length/3,structure:parsed.units.reduce((n,x)=>n+x.mesh.t.length/3,0)},
+  parcels:parsed.parcels.length,units:parsed.units.length,counts:parsed.meta.counts};
+ for(const [kind,n] of Object.entries(summary.triangles))assert(n>0,kind+' triangles must be present');
+ assert(parsed.meta.imported,'Source model must be marked imported');
+ assert(summary.counts.site>0&&summary.counts.road>0&&summary.counts.structure>0,'All source layers must be parsed');
+ const published=await context.window.latestModelBridge.getSavedModel();
+ assert(published?.meta?.publishedDefault,'Published GitHub model was not selected');
+ console.log('REAL_PARSE_PASS',JSON.stringify(summary));
+
 }
 run().catch(e=>{console.error('AUDIT_FAILED',e.stack||e);process.exit(1)});
