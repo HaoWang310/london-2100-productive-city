@@ -1788,6 +1788,24 @@ function importedRecessedWater(){
   if(groupArea>=150)for(const x of group)selected.add(x);
  }
  result.connectedChannelFaces=selected.size;
+ // The road test drops a whole triangle as soon as its centroid falls on the
+ // carriageway. Where a channel meets a road at an angle that pulls the water
+ // edge back from the kerb and leaves a dry wedge. Add one ring of those
+ // dropped faces back where they actually touch water: 11 faces / 430 m² on
+ // this model, all of it at the kerb line, and the road deck covers whatever
+ // part of them sits under it. One ring only — a second would creep along the
+ // carriageway and start draining the road network into the lagoon.
+ const kerb=new Set();
+ for(const k of selected)for(const e of all.get(k).spatialEdges)for(const o of spatialEdges.get(e)||[]){
+  if(selected.has(o)||kerb.has(o))continue;
+  const f=all.get(o);
+  if(!f||!f.flat||f.area<=.08||!deepEnough(f))continue;
+  if(f.z>WATER_RECESS_SOURCE_LEVEL+.02)continue;
+  if(!onRoad(f.center[0],f.center[1]))continue;
+  kerb.add(o);
+ }
+ for(const k of kerb)selected.add(k);
+ result.kerbFaces=kerb.size;
  // 5. Follow the real submerged surface off those beds: terrace steps and
  //    basin walls, never under a carriageway and never past the floor.
  const submerged=k=>{const f=all.get(k);

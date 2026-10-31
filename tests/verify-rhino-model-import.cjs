@@ -85,6 +85,11 @@ assert(html.includes("channelGeom.setAttribute('color',new THREE.Float32BufferAt
 assert(html.includes('vertexColors:true'), 'Water material must use the depth colours');
 assert(html.includes("wallMesh.name='场地切面上的水体剖面';"), 'Water body section wall is missing');
 assert(html.includes('if(!onCut(a)||!onCut(b))continue;'), 'Only the site cut may be closed into a wall');
+// WATER v29 — the centroid road test leaves a dry wedge where a channel meets
+// a road; one ring of those dropped faces comes back at the kerb line.
+assert(html.includes('const kerb=new Set();'), 'Kerb-line recovery is missing');
+assert(html.includes('for(const k of kerb)selected.add(k);'), 'Kerb faces are not added back to the water');
+assert(html.includes('result.kerbFaces=kerb.size;'), 'Kerb recovery must be reported');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');
