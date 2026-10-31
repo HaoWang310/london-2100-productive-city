@@ -4,6 +4,7 @@ on:
     paths:
       - index.html
       - latest-model-loader.js
+      - 2.3dm
       - tests/verify-rhino-model-import.cjs
       - .github/workflows/verify-rhino-model-import.yml
   workflow_dispatch:
