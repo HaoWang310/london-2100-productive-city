@@ -138,8 +138,14 @@ body{background:var(--bg);color:var(--ink)}header{height:54px;padding:0 16px;gap
 </style>
 <style id="form-resizable-layout-v14">
 /* v14: precise, resizable professional workspace — geometry and data unchanged */
-.formStudio{--form-browser-width:38%;--form-studio-height:650px;display:grid!important;grid-template-columns:minmax(220px,var(--form-browser-width)) 10px minmax(260px,1fr)!important;height:var(--form-studio-height);min-height:385px;max-height:none;position:relative;overflow:hidden}
+.formStudio{--form-browser-width:38%;--form-studio-height:calc(100dvh - 148px);display:grid!important;grid-template-columns:minmax(220px,var(--form-browser-width)) 10px minmax(260px,1fr)!important;height:var(--form-studio-height);min-height:385px;max-height:none;position:relative;overflow:hidden}
 .reportPreview{position:relative}
+.report{padding:12px 16px}
+.reportTop{min-height:42px;gap:12px}
+.reportTop h1{font-size:15px;font-weight:600;letter-spacing:0;margin:0}
+.reportTop .eyebrow,.reportTop p{display:none}
+.reportTop .pill{min-height:32px;padding:7px 11px}
+.reportPreview{margin:10px 0 18px;border-radius:10px}
 .formStudio .formBrowser{min-width:0;min-height:0;overflow:hidden;max-height:none;border-right:0}
 .formStudio .formBrowser .formGrid{flex:1;max-height:none;min-height:0;overflow-y:auto;grid-template-columns:repeat(auto-fit,minmax(min(100%,138px),1fr))!important}
 .formStudio .formViewer{height:100%;min-height:0;overflow:hidden}
@@ -153,9 +159,6 @@ body{background:var(--bg);color:var(--ink)}header{height:54px;padding:0 16px;gap
 .formCanvasHeightGrip{height:10px;flex:none;touch-action:none;cursor:row-resize;background:#25292f;border-top:1px solid #3c4149;border-bottom:1px solid #3c4149;position:relative;z-index:6}
 .formCanvasHeightGrip::before{content:"";position:absolute;width:46px;height:3px;border-radius:2px;background:#818894;left:50%;top:3px;transform:translateX(-50%)}
 .formCanvasHeightGrip:hover,.formCanvasHeightGrip:focus-visible,.formCanvasHeightGrip.isDragging{background:#535b67;outline:none}
-.formReportTopGrip{position:absolute;top:0;left:0;right:0;height:10px;cursor:row-resize;touch-action:none;z-index:12;background:transparent}
-.formReportTopGrip::before{content:"";position:absolute;width:46px;height:3px;border-radius:2px;background:#818894;left:50%;top:3px;transform:translateX(-50%);opacity:.75}
-.formReportTopGrip:hover,.formReportTopGrip:focus-visible,.formReportTopGrip.isDragging{background:#535b6766;outline:none}
 .formOverview{display:flex;flex-direction:column;min-width:160px;min-height:145px;max-width:none;max-height:none;transition:background .16s ease,box-shadow .16s ease}
 .formOverview .formOverviewTop{cursor:move;touch-action:none;user-select:none;flex:none}
 .formOverview .formOverviewTop button{cursor:pointer;touch-action:auto}
@@ -178,7 +181,8 @@ body.formResizing,body.formResizing *{cursor:inherit!important;user-select:none!
  .formOverview{min-width:140px;min-height:120px}
  .formStudio .formViewer .reportPreviewFooter{min-height:105px}
 }
-@media print{.formSplitGrip,.formCanvasHeightGrip,.formReportTopGrip,.formMapResizeGrip,.formResizeGuide{display:none!important}.formStudio{height:auto!important;grid-template-columns:36% 1fr!important}}
+@media(max-width:600px){.report{padding:10px}.reportTop h1{font-size:14px}.reportTop .pill{font-size:11px;padding:7px}}
+@media print{.formSplitGrip,.formCanvasHeightGrip,.formMapResizeGrip,.formResizeGuide{display:none!important}.formStudio{height:auto!important;grid-template-columns:36% 1fr!important}.reportTop .eyebrow,.reportTop p{display:block}}
 </style>
 </head><body>
 <div class="loader" id="loader"><div class="mark">FORM / ASSEMBLY</div><div class="progress"></div><p id="loadText">正在读取真实 Rhino 几何…</p></div>
@@ -189,7 +193,7 @@ body.formResizing,body.formResizing *{cursor:inherit!important;user-select:none!
 <div class="labels" id="labels"></div><div class="tooltip" id="tooltip"></div><div class="canvasFoot">拖动旋转 · 滚轮缩放 · 右键平移 · 双击单元独看</div><div class="badge" id="statusBadge">原始几何 · 全部显示</div>
 <div class="explodePanel" id="explodePanel"><div class="sliderHead"><b id="sliderLabel">拆解距离</b><span id="sliderValue">45%</span></div><input id="mainSlider" type="range" min="0" max="100" value="45" aria-label="拆解距离或装配进度"><div class="assemblyActions" id="assemblyActions"><button id="playAssembly">▶ 自动装配</button><button id="clearAssembly">清空</button><button id="fullAssembly">完整回装</button><button id="undoAssembly" disabled>撤销</button><button id="saveAssembly">保存清单</button></div></div>
 <div class="viewbar"><button class="active" data-view="iso">轴测</button><button data-view="top">俯视</button><button data-view="front">立面</button><div class="separator"></div><button id="rotateBtn">自动旋转</button><button id="resetBtn">复位</button><button id="snapshotBtn" title="导出当前视角 PNG">截取视图 ↗</button></div>
-<section class="report" id="report"><div class="reportTop"><div><div class="eyebrow">MODEL INTELLIGENCE</div><h1>把结构，讲清楚。</h1><p>从地块到单元，再到连接与装配。</p></div><div><button class="pill" id="csvBtn">导出 CSV ↓</button> <button class="pill black" id="printBtn">打印 / PDF ↗</button></div></div><div class="statsGrid" id="reportStats"></div><div class="reportTabs"><button class="active" data-report="summary">总表</button><button data-report="parcel">地块</button><button data-report="unit">结构单元</button><button data-report="connection">连接关系</button><button data-report="assembly">装配清单</button></div><div class="reportBody" id="reportBody"></div><p class="reportNote" id="reportNote"></p></section>
+<section class="report" id="report"><div class="reportTop"><div><h1>结构报表</h1></div><div><button class="pill" id="csvBtn">导出 CSV ↓</button> <button class="pill black" id="printBtn">打印 / PDF ↗</button></div></div><div class="statsGrid" id="reportStats"></div><div class="reportTabs"><button class="active" data-report="summary">总表</button><button data-report="parcel">地块</button><button data-report="unit">结构单元</button><button data-report="connection">连接关系</button><button data-report="assembly">装配清单</button></div><div class="reportBody" id="reportBody"></div><p class="reportNote" id="reportNote"></p></section>
 </main>
 <section class="inspector" id="inspector"><div class="resizeGrip rightGrip" role="separator" tabindex="0" aria-label="调整属性面板宽度" aria-orientation="vertical"></div><div class="panelTop">单元属性<button id="closeInspector" aria-label="关闭属性面板">×</button></div><div class="inspectContent" id="inspectContent"></div><div class="bottom"><span id="selectionCounter">模型概览</span><div><button id="prevUnit" title="上一个">←</button> <button id="nextUnit" title="下一个">→</button></div></div></section></div>
 <div class="modalBackdrop" id="helpModal"><div class="modal"><div class="eyebrow">QUICK GUIDE</div><h2 style="margin-top:10px">用手，理解结构。</h2><table><tr><td>旋转 / 缩放 / 平移</td><td>左键拖动 / 滚轮 / 右键</td></tr><tr><td>选中 / 单独查看</td><td>单击 / 双击单元</td></tr><tr><td>上一个 / 下一个单元</td><td>键盘 ← / →</td></tr><tr><td>返回整体</td><td>Esc</td></tr><tr><td>自动旋转</td><td>空格</td></tr></table><p>地块来自场地减去道路的平面区域。结构来自原始 SubD 的曲面采样，再沿地块边界竖向切分。道路上的结构按最近的两个地块归组。</p><p>所有几何与程序都嵌入此文件，可离线使用。装配用于研究和演示；切面未封口，接口与承载需另行设计验证。</p><button class="pill black" id="closeHelp" style="width:100%">开始探索</button></div></div><div class="toast" id="toast" role="status"></div>
@@ -3101,23 +3105,21 @@ function mapRelatedParcelIds(){
 
 function installFormResizers(){
  const studio=document.querySelector('.formStudio'),browser=document.querySelector('.formBrowser'),divider=document.getElementById('formSplitGrip'),vGrip=document.getElementById('formCanvasHeightGrip');
- const map=document.getElementById('formOverview'),mapGrip=document.getElementById('formMapResizeGrip'),reportTop=document.querySelector('.reportTop'),topGrip=document.getElementById('formReportTopGrip');
+ const map=document.getElementById('formOverview'),mapGrip=document.getElementById('formMapResizeGrip');
  if(!studio||studio.dataset.resizerInstalled)return;studio.dataset.resizerInstalled='true';
  const key='formAssemblyV14Workspace';let stored={};try{stored=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch(e){}
  const mobile=()=>matchMedia('(max-width:730px)').matches;
  const clip=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
- const persist=()=>{try{const obj={desktopWidth:studio.style.getPropertyValue('--form-browser-width'),desktopHeight:studio.style.getPropertyValue('--form-studio-height'),mobileBrowser:studio.style.getPropertyValue('--form-mobile-browser-height'),mobileViewer:studio.style.getPropertyValue('--form-mobile-viewer-height'),reportTopHeight:reportTop.style.height,mapW:map.style.width,mapH:map.style.height,mapTop:map.style.top,mapRight:map.style.right};localStorage.setItem(key,JSON.stringify(obj))}catch(e){}}
- function restore(){if(stored.desktopWidth)studio.style.setProperty('--form-browser-width',stored.desktopWidth);if(stored.desktopHeight)studio.style.setProperty('--form-studio-height',stored.desktopHeight);if(stored.mobileBrowser)studio.style.setProperty('--form-mobile-browser-height',stored.mobileBrowser);if(stored.mobileViewer)studio.style.setProperty('--form-mobile-viewer-height',stored.mobileViewer);if(stored.reportTopHeight)reportTop.style.height=stored.reportTopHeight;
+ const persist=()=>{try{const obj={desktopWidth:studio.style.getPropertyValue('--form-browser-width'),desktopHeight:studio.style.getPropertyValue('--form-studio-height'),mobileBrowser:studio.style.getPropertyValue('--form-mobile-browser-height'),mobileViewer:studio.style.getPropertyValue('--form-mobile-viewer-height'),mapW:map.style.width,mapH:map.style.height,mapTop:map.style.top,mapRight:map.style.right};localStorage.setItem(key,JSON.stringify(obj))}catch(e){}}
+ function restore(){if(stored.desktopWidth)studio.style.setProperty('--form-browser-width',stored.desktopWidth);if(stored.desktopHeight)studio.style.setProperty('--form-studio-height',stored.desktopHeight);if(stored.mobileBrowser)studio.style.setProperty('--form-mobile-browser-height',stored.mobileBrowser);if(stored.mobileViewer)studio.style.setProperty('--form-mobile-viewer-height',stored.mobileViewer);
  const stage=document.querySelector('.formCanvas');const maxW=Math.max(160,stage.clientWidth-20),maxH=Math.max(150,stage.clientHeight-20);
  if(stored.mapW)map.style.width=clip(parseFloat(stored.mapW),150,maxW)+'px';if(stored.mapH)map.style.height=clip(parseFloat(stored.mapH),140,maxH)+'px';
  if(stored.mapTop)map.style.top=clip(parseFloat(stored.mapTop),0,Math.max(0,stage.clientHeight-map.offsetHeight))+'px';if(stored.mapRight)map.style.right=clip(parseFloat(stored.mapRight),0,Math.max(0,stage.clientWidth-map.offsetWidth))+'px';}
  restore();
- function complete(){window.FORM_UI_RESIZING=false;document.body.classList.remove('formResizing');divider.classList.remove('isDragging');vGrip.classList.remove('isDragging');topGrip.classList.remove('isDragging');map.classList.remove('isDragging');persist();if(state.mode==='report'){resize();fitReport();if(renderer?.isSoftware)renderer.lastSignature='';}}
+ function complete(){window.FORM_UI_RESIZING=false;document.body.classList.remove('formResizing');divider.classList.remove('isDragging');vGrip.classList.remove('isDragging');map.classList.remove('isDragging');persist();if(state.mode==='report'){resize();fitReport();if(renderer?.isSoftware)renderer.lastSignature='';}}
  function bindDrag(grip,onDrag){grip.addEventListener('pointerdown',e=>{if(e.button!==0)return;e.preventDefault();e.stopPropagation();grip.setPointerCapture(e.pointerId);window.FORM_UI_RESIZING=true;document.body.classList.add('formResizing');grip.classList.add('isDragging');const sx=e.clientX,sy=e.clientY,box=studio.getBoundingClientRect(),bw=browser.getBoundingClientRect().width,bh=browser.getBoundingClientRect().height,sh=studio.getBoundingClientRect().height,mw=map.getBoundingClientRect().width,mh=map.getBoundingClientRect().height,top=parseFloat(getComputedStyle(map).top)||16,right=parseFloat(getComputedStyle(map).right)||16;
- const rh=reportTop.getBoundingClientRect().height;
- const move=ev=>{onDrag(ev.clientX-sx,ev.clientY-sy,{box,bw,bh,sh,rh,mw,mh,top,right});if(renderer?.isSoftware)renderer.lastSignature=''};
+ const move=ev=>{onDrag(ev.clientX-sx,ev.clientY-sy,{box,bw,bh,sh,mw,mh,top,right});if(renderer?.isSoftware)renderer.lastSignature=''};
  const end=()=>{grip.removeEventListener('pointermove',move);grip.removeEventListener('pointerup',end);grip.removeEventListener('pointercancel',end);complete()};grip.addEventListener('pointermove',move);grip.addEventListener('pointerup',end);grip.addEventListener('pointercancel',end);});}
- bindDrag(topGrip,(dx,dy,st)=>{reportTop.style.height=clip(st.rh+dy,72,Math.min(360,innerHeight*.45))+'px'});
  bindDrag(divider,(dx,dy,st)=>{if(mobile()){const h=clip(st.bh+dy,125,Math.max(125,innerHeight*.75));studio.style.setProperty('--form-mobile-browser-height',h+'px')}
  else{const w=clip(st.bw+dx,220,Math.max(220,st.box.width-285));studio.style.setProperty('--form-browser-width',w+'px')}});
  bindDrag(vGrip,(dx,dy,st)=>{if(mobile()){const h=clip(st.sh+dy,260,Math.max(260,innerHeight*1.6));studio.style.setProperty('--form-mobile-viewer-height',h+'px')}
@@ -3131,10 +3133,8 @@ function installFormResizers(){
  const end=()=>{header.removeEventListener('pointermove',move);header.removeEventListener('pointerup',end);header.removeEventListener('pointercancel',end);complete()};header.addEventListener('pointermove',move);header.addEventListener('pointerup',end);header.addEventListener('pointercancel',end);});
  function resetWidth(){studio.style.removeProperty('--form-browser-width');studio.style.removeProperty('--form-mobile-browser-height');complete()}
  function resetHeight(){studio.style.removeProperty('--form-studio-height');studio.style.removeProperty('--form-mobile-viewer-height');complete()}
- function resetReportTop(){reportTop.style.height='';complete()}
  function resetMap(){map.style.width='';map.style.height='';map.style.top='';map.style.right='';map.classList.remove('expanded');document.querySelector('#formMapExpand').textContent='放大';document.querySelector('#formMapExpand').setAttribute('aria-expanded','false');complete()}
- topGrip.addEventListener('dblclick',resetReportTop);divider.addEventListener('dblclick',resetWidth);vGrip.addEventListener('dblclick',resetHeight);mapGrip.addEventListener('dblclick',resetMap);
- topGrip.addEventListener('keydown',e=>{if(e.key==='Home'){e.preventDefault();resetReportTop();return}if(!['ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();const delta=(e.shiftKey?40:12)*(e.key==='ArrowUp'?-1:1);reportTop.style.height=clip(reportTop.getBoundingClientRect().height+delta,72,Math.min(360,innerHeight*.45))+'px';persist()});
+ divider.addEventListener('dblclick',resetWidth);vGrip.addEventListener('dblclick',resetHeight);mapGrip.addEventListener('dblclick',resetMap);
  for(const [grip,isWidth,reset] of [[divider,true,resetWidth],[vGrip,false,resetHeight]]){grip.addEventListener('keydown',e=>{if(e.key==='Home'){e.preventDefault();reset();return}if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();const step=e.shiftKey?40:12;if(isWidth){const delta=({ArrowLeft:-step,ArrowRight:step,ArrowUp:-step,ArrowDown:step})[e.key];if(mobile())studio.style.setProperty('--form-mobile-browser-height',clip(browser.offsetHeight+delta,125,innerHeight*.75)+'px');else studio.style.setProperty('--form-browser-width',clip(browser.offsetWidth+delta,220,studio.offsetWidth-285)+'px')}
  else{const delta=['ArrowLeft','ArrowUp'].includes(e.key)?-step:step;if(mobile())studio.style.setProperty('--form-mobile-viewer-height',clip(studio.querySelector('.formViewer').offsetHeight+delta,260,innerHeight*1.6)+'px');else studio.style.setProperty('--form-studio-height',clip(studio.offsetHeight+delta,385,innerHeight*1.8)+'px')}persist();resize();});}
  mapGrip.addEventListener('keydown',e=>{if(e.key==='Home'){resetMap();return}if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();const b=mapBounds(),delta=e.shiftKey?35:12;map.style.width=clip(map.offsetWidth+(['ArrowLeft','ArrowDown'].includes(e.key)?delta:-delta),150,b.w-20)+'px';map.style.height=clip(map.offsetHeight+(['ArrowDown','ArrowLeft'].includes(e.key)?delta:-delta),140,b.h-20)+'px';clampMapPosition();persist()});
@@ -3230,7 +3230,7 @@ function chooseReportForm(id,kind='auto'){
  $$('#formGrid [data-item]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.item===id)));updateFormOverview();
 }
 function initReportPreview(){
- const el=document.createElement('div');el.className='reportPreview';el.innerHTML=`<div class="formReportTopGrip" id="formReportTopGrip" role="separator" tabindex="0" aria-orientation="horizontal" aria-label="拖动调整顶部标题区域高度" title="上下拖动调整顶部区域；双击恢复默认高度"></div><div class="formStudio">
+ const el=document.createElement('div');el.className='reportPreview';el.innerHTML=`<div class="formStudio">
  <div class="formBrowser"><div class="formBrowserHead"><div><div class="eyebrow">FORM LIBRARY / 真实模型</div><h3>结构 Form 图库</h3><p>像文件夹一样选择独立的建筑结构</p></div><span id="formCount" class="formCount">—</span></div>
  <div class="formTabs" id="formTabs"><button type="button" class="active" data-gallery="parcel">地块 · ${model.parcels.length}</button><button type="button" data-gallery="form">全部 Form · ${model.units.length}</button><button type="button" data-gallery="connection">连接 · ${connectionUnits.length}</button><button type="button" data-gallery="edge">边缘 · ${edgeUnits.length}</button></div>
  <div class="formSearchWrap"><input id="formSearch" class="formSearch" placeholder="搜索 Form，例如 P-15、C-01" autocomplete="off" aria-label="搜索 Form 编号"></div>
