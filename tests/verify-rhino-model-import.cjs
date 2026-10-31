@@ -119,6 +119,9 @@ assert(Math.abs(waterContext.waterResult.area-750)<.001, 'Road-centred source fa
 assert(html.includes('function clearsCarriageway(x,y,r){'), 'Carriageway clearance test is missing');
 assert(html.includes('&&clearsCarriageway(x,y,r*.8)&&freeFromStructure(x,y,r)}'), 'Planting must clear the carriageway');
 assert(html.includes('const tint=Math.floor(rand()*3),spin=rand()*6.28'), 'Per-tree crown variation is missing');
+// Clipping rebuilds vertices, so unpaired edges are no longer proof of a shore;
+// an edge is drawn only where exactly one side of it is wet.
+assert(html.includes('if(isWet(mx+nx,my+ny)===isWet(mx-nx,my-ny))continue;'), 'Shoreline must reject interior seams');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

@@ -2284,8 +2284,31 @@ function buildWaterLayer(){
   }
  }
  // Outline only exterior edges of actual wetted triangles, never parcel boundaries.
+ // Edge pairing alone is no longer enough: clipping the footprint against the
+ // road mesh rebuilds vertices, so two neighbouring pieces rarely share an edge
+ // bit-for-bit any more and almost every interior seam counted as a boundary —
+ // 3,443 "shore" segments for 3,318 water triangles, drawn as white scratches
+ // across the lagoon. Keep an unpaired edge only where it really is the water's
+ // edge: sample just off each side and require exactly one side to be wet.
+ const SG=6,shoreCells=new Map();
+ for(const tri of native.triangles){
+  const x0=Math.min(tri[0][0],tri[1][0],tri[2][0]),x1=Math.max(tri[0][0],tri[1][0],tri[2][0]);
+  const y0=Math.min(tri[0][1],tri[1][1],tri[2][1]),y1=Math.max(tri[0][1],tri[1][1],tri[2][1]);
+  const cell={tri,x0,x1,y0,y1};
+  for(let i=Math.floor(x0/SG);i<=Math.floor(x1/SG);i++)for(let j=Math.floor(y0/SG);j<=Math.floor(y1/SG);j++){
+   const id=i+','+j;if(!shoreCells.has(id))shoreCells.set(id,[]);shoreCells.get(id).push(cell);
+  }
+ }
+ const isWet=(x,y)=>(shoreCells.get(Math.floor(x/SG)+','+Math.floor(y/SG))||[])
+  .some(c=>x>=c.x0-.001&&x<=c.x1+.001&&y>=c.y0-.001&&y<=c.y1+.001&&pointInTriangle2D(x,y,...c.tri));
  const shoreline=[];
- for(const edge of boundaryEdges.values())if(edge.count===1){
+ for(const edge of boundaryEdges.values()){
+  if(edge.count!==1)continue;
+  const mx=(edge.a[0]+edge.b[0])/2,my=(edge.a[1]+edge.b[1])/2;
+  const dx=edge.b[0]-edge.a[0],dy=edge.b[1]-edge.a[1],len=Math.hypot(dx,dy);
+  if(len<1e-6)continue;
+  const nx=-dy/len*.12,ny=dx/len*.12;
+  if(isWet(mx+nx,my+ny)===isWet(mx-nx,my-ny))continue; // interior seam, not a shore
   shoreline.push(edge.a[0],waterline+.009,-edge.a[1],edge.b[0],waterline+.009,-edge.b[1]);
  }
  if(shoreline.length){
