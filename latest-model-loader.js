@@ -208,7 +208,7 @@ async function parseFile(file,onProgress){
 }
 // Public GitHub Pages source is authoritative. Local IndexedDB uploads are not
 // used, so every visitor sees the same verified repository asset.
-const PUBLISHED_SOURCE="./2%282%29.3dm";
+const PUBLISHED_SOURCE="./2.3dm";
 let publishedTask=null;
 function controls(){ /* Public presentation: no import or restore dialog. */ }
 async function getSavedModel(){
@@ -221,16 +221,16 @@ async function getSavedModel(){
   }
   const blob=await response.blob();
   if(blob.size<10240)throw Error("Published Rhino 3DM seems incomplete");
-  const source=new File([blob],"2(2).3dm",{type:"application/octet-stream"});
+  const source=new File([blob],"2.3dm",{type:"application/octet-stream"});
   const parsed=await parseFile(source,status=>{
    const label=document.getElementById("loadText");
    if(label)label.textContent=status;
   });
-  parsed.meta.source="2(2).3dm · GitHub Pages public default";
+  parsed.meta.source="2.3dm · GitHub Pages public default";
   parsed.meta.publishedDefault=true;
   return parsed;
  })().catch(error=>{
-  console.error("Could not use published 2(2).3dm; keeping legacy embedded scene",error);
+  console.error("Could not use published 2.3dm; keeping legacy embedded scene",error);
   return null;
  });
  return publishedTask;
