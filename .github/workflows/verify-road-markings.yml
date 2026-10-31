@@ -18,4 +18,6 @@ jobs:
         with:
           node-version: '22'
       - name: Audit actual Rhino deck, crossings and stripe orientation
+        env:
+          STRICT_ROAD_QA: '1'
         run: node tests/verify-road-markings.cjs
