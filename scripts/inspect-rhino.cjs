@@ -76,15 +76,15 @@ async function run(){
  vm.runInNewContext(loader,context,{filename:'latest-model-loader.js'});
  const file={name:'2.3dm',arrayBuffer:async()=>bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength)};
  const parsed=await context.window.latestModelBridge.parseFile(file,()=>{});
- const summary={vertices:{site:parsed.site.v.length/3,road:parsed.roads.v.length/3,structure:parsed.units.reduce((n,x)=>n+x.mesh.v.length/3,0)},
+ const parsedSummary={vertices:{site:parsed.site.v.length/3,road:parsed.roads.v.length/3,structure:parsed.units.reduce((n,x)=>n+x.mesh.v.length/3,0)},
   triangles:{site:parsed.site.t.length/3,road:parsed.roads.t.length/3,structure:parsed.units.reduce((n,x)=>n+x.mesh.t.length/3,0)},
   parcels:parsed.parcels.length,units:parsed.units.length,counts:parsed.meta.counts};
- for(const [kind,n] of Object.entries(summary.triangles))assert(n>0,kind+' triangles must be present');
+ for(const [kind,n] of Object.entries(parsedSummary.triangles))assert(n>0,kind+' triangles must be present');
  assert(parsed.meta.imported,'Source model must be marked imported');
- assert(summary.counts.site>0&&summary.counts.road>0&&summary.counts.structure>0,'All source layers must be parsed');
+ assert(parsedSummary.counts.site>0&&parsedSummary.counts.road>0&&parsedSummary.counts.structure>0,'All source layers must be parsed');
  const published=await context.window.latestModelBridge.getSavedModel();
  assert(published?.meta?.publishedDefault,'Published GitHub model was not selected');
- console.log('REAL_PARSE_PASS',JSON.stringify(summary));
+ console.log('REAL_PARSE_PASS',JSON.stringify(parsedSummary));
 
 }
 run().catch(e=>{console.error('AUDIT_FAILED',e.stack||e);process.exit(1)});
