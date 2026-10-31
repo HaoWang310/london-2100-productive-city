@@ -37,6 +37,17 @@ async function run(){
   if(i<15)sample.push({i,layer,type,vertices,faces,renderMeshes,err});
   if(err&&failures.length<10)failures.push({i,layer,type,err});
  }
+ const probes=[];
+ for(let i=0;i<objects.count;i++){
+  const ob=objects.get(i),g=ob.geometry(),type=g.constructor?.name;
+  const methods=Object.getOwnPropertyNames(Object.getPrototypeOf(g)||{});
+  const out={i,type,protoMethods:methods.filter(x=>/mesh|brep|face|vert|subd|control|limit/i.test(x)),isMeshType:g.objectType?.toString?.()};
+  try {if(typeof g.getMeshes==='function'){let a=g.getMeshes(R.MeshType.Render);out.getMeshes={length:a?.length,firstType:a?.[0]?.constructor?.name}}}catch(e){out.getMeshesError=String(e)}
+  try {if(typeof g.faces==='function'){const fs=g.faces();const face=fs.count?fs.get(0):null;out.face={count:fs.count,type:face?.constructor?.name,methods:Object.getOwnPropertyNames(Object.getPrototypeOf(face)||{}).filter(x=>/mesh|brep|face|to/i.test(x))};if(face&&typeof face.getMesh==='function'){let m=face.getMesh(R.MeshType.Render);out.face.meshType=m?.constructor?.name;out.face.meshVertices=m?.vertices?.()?.count}}}catch(e){out.faceError=String(e)}
+  try {if(typeof g.toBrep==='function'){const b=g.toBrep();out.toBrep={type:b?.constructor?.name,hasMeshes:typeof b?.getMeshes,faceCount:b?.faces?.().count}}}catch(e){out.toBrepError=String(e)}
+  probes.push(out);
+ }
+ console.log('MESH_PROBES',JSON.stringify({objects:probes,meshFactories:Object.getOwnPropertyNames(R.Mesh).filter(x=>/create|from|subd|brep/i.test(x)),meshType:R.MeshType}));
  console.log('LAYERS',JSON.stringify([...summary.values()].sort((a,b)=>b.total-a.total).slice(0,100)));
  console.log('FIRST_OBJECTS',JSON.stringify(sample));
  console.log('MESH_ERRORS',JSON.stringify(failures));
