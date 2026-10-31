@@ -167,6 +167,8 @@ async function parseFile(file,onProgress){
  }
  if(!siteParts.length||!roadParts.length)throw Error("缺少可读取的场地/道路网格。请在 Rhino 中先为曲面生成渲染网格，再重新保存 3DM。");
  if(unresolved.some(u=>/road|道路|site|场地/.test(u.layer)))throw Error("部分场地或道路曲面没有可读取的网格；为防止错误替换，已取消导入。请先在 Rhino 中导出 Mesh。");
+ if(names.structure>0&&unresolved.some(u=>/struct|结构/.test(u.layer)))throw Error("结构图层有未成功转换的 SubD/Brep。为避免丢失结构，已取消导入；请在 Rhino 中生成并保存渲染网格。");
+ if(names.structure>0&&!structureParts.length)throw Error("结构图层无法读取真实网格；导入已取消。");
  // Keep every source vertex in its original coordinates.
  const site=newMesh(),roads=newMesh();
  siteParts.forEach(p=>append(site,p));roadParts.forEach(p=>append(roads,p));
@@ -219,7 +221,7 @@ function controls(){
   try{
    const m=await parseFile(file.files[0],s=>status.textContent=s);
    await database("set",m);
-   status.textContent="校验通过 · 已保存；正在重新载入";
+   status.textContent="已存到当前浏览器 · 正在重新载入";
    location.reload();
   }catch(e){
    console.error("Rhino model import rejected",e);status.textContent="导入失败："+e.message;btn.disabled=false;
@@ -228,7 +230,7 @@ function controls(){
  const reset=document.createElement("button");reset.type="button";reset.textContent="恢复内置版本";reset.className="pill";reset.style.cssText="font-size:10px;padding:8px 11px";
  reset.onclick=async()=>{await database("delete");location.reload()};
  container.append(btn,reset,status,file);parent.prepend(container);
- getSavedModel().then(m=>{status.textContent=m?"本浏览器已应用："+(m.meta.modelName||"新模型"):"当前：GitHub 内置模型"}).catch(()=>{});
+ getSavedModel().then(m=>{status.textContent=m?"仅本机已导入："+(m.meta.modelName||"新模型"):"当前：GitHub 内置模型"}).catch(()=>{});
 }
 async function getSavedModel(){
  try{
