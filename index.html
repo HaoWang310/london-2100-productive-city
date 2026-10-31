@@ -1711,44 +1711,94 @@ function material(color){return new THREE.MeshStandardMaterial({color,roughness:
 const landscapeConfig={enabled:true,density:1.0};
 const WATER_PARCELS=new Set(['P-24']);
 
-// WATER CHANNEL v24 — original Rhino recessed-site triangles, not a sketched curve.
-const WATER_RECESS_SOURCE_LEVEL=-1; // Verified bed elevation in model.site
+// WATER GEOMETRY-FIRST v25 — ONLY authentic submerged Rhino site triangles.
+// P-24 is the anchor; exterior grooves follow the same connected -1 m bed.
+// No sketched centreline, parcel-wide flood polygon or fabricated raised volume.
+const WATER_RECESS_SOURCE_LEVEL=-1;
 let nativeChannelCache=null;
 function nativeRecessedChannel(){
  if(nativeChannelCache)return nativeChannelCache;
  const site=model?.site,basin=model?.parcels?.find(p=>p.id==='P-24');
- const result={triangles:[]};
+ const waterline=WATER_RECESS_SOURCE_LEVEL+.30;
+ const result={triangles:[],sourceFaces:0,basinFaces:0,connectedChannelFaces:0,waterline,area:0};
  if(!site?.v||!site?.t||!basin)return result;
- const src=site.v,faces=site.t,eligible=new Map(),edgeMap=new Map();
+ const src=site.v,faces=site.t,all=new Map(),atMinusOne=new Map(),flatEdges=new Map(),spatialEdges=new Map();
+ const key2=p=>p[0].toFixed(2)+','+p[1].toFixed(2);
+ const key3=p=>key2(p)+','+p[2].toFixed(2);
+ const edge=(a,b,key)=>{const ka=key(a),kb=key(b);return ka<kb?ka+'|'+kb:kb+'|'+ka};
+ const signed=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]);
  for(let k=0;k<faces.length;k+=3){
-  const pts=[0,1,2].map(j=>{const i=faces[k+j]*3;return[src[i],src[i+1],src[i+2]];});
-  if(pts.some(v=>Math.abs(v[2]-WATER_RECESS_SOURCE_LEVEL)>.015))continue;
-  const area=Math.abs((pts[1][0]-pts[0][0])*(pts[2][1]-pts[0][1])-(pts[2][0]-pts[0][0])*(pts[1][1]-pts[0][1]));
-  if(area<.08)continue;
-  const tri=pts.map(v=>[v[0],v[1]]);
-  const center=[(tri[0][0]+tri[1][0]+tri[2][0])/3,(tri[0][1]+tri[1][1]+tri[2][1])/3];
-  const face={tri,center,edges:[]};eligible.set(k,face);
+  const pts=[0,1,2].map(j=>{const i=faces[k+j]*3;return[src[i],src[i+1],src[i+2]]});
+  const center=[(pts[0][0]+pts[1][0]+pts[2][0])/3,(pts[0][1]+pts[1][1]+pts[2][1])/3];
+  const f={pts,center,flatEdges:[],spatialEdges:[]};all.set(k,f);
   for(let j=0;j<3;j++){
-   const a=tri[j],b=tri[(j+1)%3],ea=a.map(n=>n.toFixed(2)).join(','),eb=b.map(n=>n.toFixed(2)).join(',');
-   const key=ea<eb?ea+'|'+eb:eb+'|'+ea;
-   face.edges.push(key);if(!edgeMap.has(key))edgeMap.set(key,[]);edgeMap.get(key).push(k);
+   const e3=edge(pts[j],pts[(j+1)%3],key3);f.spatialEdges.push(e3);
+   if(!spatialEdges.has(e3))spatialEdges.set(e3,[]);spatialEdges.get(e3).push(k);
+  }
+  if(pts.every(p=>Math.abs(p[2]-WATER_RECESS_SOURCE_LEVEL)<.02)&&Math.abs(signed(...pts))>.08){
+   atMinusOne.set(k,f);
+   for(let j=0;j<3;j++){
+    const e2=edge(pts[j],pts[(j+1)%3],key2);f.flatEdges.push(e2);
+    if(!flatEdges.has(e2))flatEdges.set(e2,[]);flatEdges.get(e2).push(k);
+   }
   }
  }
- // Follow the actual site mesh from the north-west P-22 bank, stopping at P-24.
- const p22=model.parcels.find(p=>p.id==='P-22');
- const west=Math.min(...(p22?.boundary||[[-312.5,0]]).map(v=>v[0]));
- const seeds=[...eligible.entries()].filter(([_,f])=>f.center[0]<west+15&&f.center[1]>-30&&f.center[1]<25).map(([k])=>k);
- const visited=new Set(),stack=seeds;
+ // Flood-fill the actual -1 m mesh, seeded by the low bank inside P-24.
+ // This rejects the disconnected depression at the north-west site corner.
+ const seeds=[...atMinusOne].filter(([k,f])=>pointInPolygon(f.center,basin.boundary)).map(([k])=>k);
+ const connected=new Set(),stack=seeds.slice();
  while(stack.length){
-  const k=stack.pop();if(visited.has(k))continue;visited.add(k);
-  const face=eligible.get(k);
-  if(!face||pointInPolygon(face.center,basin.boundary))continue;
-  result.triangles.push(face.tri);
-  for(const edge of face.edges)for(const next of edgeMap.get(edge)||[]){if(!visited.has(next))stack.push(next);}
+  const k=stack.pop();if(connected.has(k)||!atMinusOne.has(k))continue;
+  connected.add(k);
+  for(const e of atMinusOne.get(k).flatEdges)for(const other of flatEdges.get(e)||[])
+   if(!connected.has(other))stack.push(other);
  }
- console.info('Native Rhino water-channel faces:',result.triangles.length);
+ const selected=new Set(connected);
+ result.connectedChannelFaces=connected.size;
+ // P-24 has genuine steps down to -5 m; include all submerged terraces,
+ // instead of estimating nested terraces from an inset parcel boundary.
+ for(const [k,f] of all){
+  if(pointInPolygon(f.center,basin.boundary)&&f.pts.some(p=>p[2]<waterline-.001)){
+   selected.add(k);result.basinFaces++;
+  }
+ }
+ // Include ONLY the actual sloping bank faces touching connected -1 m beds.
+ // Each face is clipped at the waterline below; nothing may cross high ground.
+ for(const k of connected){
+  const f=all.get(k);
+  for(const e of f.spatialEdges)for(const other of spatialEdges.get(e)||[]){
+   const n=all.get(other);
+   if(n&&n.pts.some(p=>p[2]<waterline-.001)&&n.pts.some(p=>p[2]>waterline+.001))
+    selected.add(other);
+  }
+ }
+ function clipBelow(pts){
+  const clipped=[];
+  for(let i=0;i<pts.length;i++){
+   const a=pts[i],b=pts[(i+1)%pts.length],aIn=a[2]<=waterline,bIn=b[2]<=waterline;
+   if(aIn)clipped.push(a);
+   if(aIn!==bIn){
+    const fraction=(waterline-a[2])/(b[2]-a[2]);
+    clipped.push([a[0]+(b[0]-a[0])*fraction,a[1]+(b[1]-a[1])*fraction,waterline]);
+   }
+  }
+  return clipped;
+ }
+ for(const k of selected){
+  const poly=clipBelow(all.get(k).pts);
+  for(let j=1;j+1<poly.length;j++){
+   const tri=[poly[0],poly[j],poly[j+1]].map(p=>[p[0],p[1]]);
+   const a=signed(...tri);
+   if(Math.abs(a)<.001)continue; // Do not fabricate footprint on vertical Rhino walls.
+   if(a<0){const tmp=tri[1];tri[1]=tri[2];tri[2]=tmp}
+   result.triangles.push(tri);result.area+=Math.abs(a)*.5;
+  }
+ }
+ result.sourceFaces=selected.size;
+ console.info('Rhino geometry-first water',{sourceFaces:result.sourceFaces,connectedChannelFaces:result.connectedChannelFaces,basinFaces:result.basinFaces,triangles:result.triangles.length,area:Math.round(result.area),waterline});
  nativeChannelCache=result;return result;
 }
+
 function pointInTriangle2D(x,y,a,b,c){
  const d=(b[1]-c[1])*(a[0]-c[0])+(c[0]-b[0])*(a[1]-c[1]);
  if(Math.abs(d)<1e-8)return false;
@@ -1891,97 +1941,87 @@ function buildContextDecorations(){
 }
 
 function buildWaterLayer(){
- // Use the authentic Rhino recessed bed (-1); water stays below the road deck (+0.5).
- const waterline=WATER_RECESS_SOURCE_LEVEL+.30;
- waterGroup=new THREE.Group();waterGroup.name='Rhino 原始下沉水道 + P-24 连续水域';scene.add(waterGroup);
- const native=nativeRecessedChannel(),positions=[];
- for(const tri of native.triangles)for(const [x,y] of tri)positions.push(x,0,-y);
+ const native=nativeRecessedChannel(),waterline=native.waterline;
+ waterGroup=new THREE.Group();
+ waterGroup.name='真实 Rhino 下沉几何水域 · P-24 连通水系';
+ scene.add(waterGroup);
+ if(!native.triangles.length){
+  console.warn('Rhino submerged water footprint is empty — no synthetic water added.');
+  waterGroup.visible=false;return;
+ }
+ // All water coordinates are derived from actual below-waterline Rhino triangles.
+ // The shared horizontal elevation sits 1.20 m below the original +0.50 m road deck.
+ const positions=[],boundaryEdges=new Map();
+ const ekey=(a,b)=>{const x=a[0].toFixed(3)+','+a[1].toFixed(3),y=b[0].toFixed(3)+','+b[1].toFixed(3);return x<y?x+'|'+y:y+'|'+x};
+ for(const tri of native.triangles){
+  for(const [x,y] of tri)positions.push(x,waterline,-y);
+  for(let j=0;j<3;j++){
+   const a=tri[j],b=tri[(j+1)%3],key=ekey(a,b);
+   const previous=boundaryEdges.get(key);
+   if(previous)previous.count++;else boundaryEdges.set(key,{a,b,count:1});
+  }
+ }
  const channelGeom=new THREE.BufferGeometry();
  channelGeom.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
  channelGeom.computeVertexNormals();
- const channelSurface=new THREE.Mesh(channelGeom,new THREE.MeshPhysicalMaterial({
-  color:'#7db5cf',roughness:.12,metalness:.02,transparent:true,opacity:.32,
-  side:THREE.DoubleSide,depthWrite:false
- }));
- channelSurface.position.y=waterline;
- channelSurface.name='原始 Rhino 下沉面片 · 与 P-24 同水位';
- channelSurface.userData.water=true;channelSurface.receiveShadow=true;
- waterGroup.add(channelSurface);
- waterGroup.userData.channelSurface=channelSurface;
- const p=model.parcels.find(p=>p.id==='P-24');if(!p)return;
- // The supplied user's classification applies to the existing authentic parcel boundary.
- // Water is represented as a terraced volumetric basin rather than a single thin sheet.
- const mkShape=pts=>{const s=new THREE.Shape();pts.forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));s.closePath();return s};
- const mkGeo=s=>{const g=new THREE.ShapeGeometry(s);if(!g.index)g.setIndex(Array.from({length:g.attributes.position.count},(_,i)=>i));if(!g.attributes.normal)g.computeVertexNormals();return g};
- const c=p.center||p.boundary.reduce((a,[x,y])=>(a[0]+=x,a[1]+=y,a),[0,0]).map(v=>v/p.boundary.length);
- const scalePts=f=>p.boundary.map(([x,y])=>[c[0]+(x-c[0])*f,c[1]+(y-c[1])*f]);
- const outerPts=p.boundary, midPts=scalePts(.9), innerPts=scalePts(.78), corePts=scalePts(.64);
- const outerShape=mkShape(outerPts), midShape=mkShape(midPts), innerShape=mkShape(innerPts), coreShape=mkShape(corePts);
- const outerGeo=mkGeo(outerShape), innerGeo=mkGeo(innerShape), coreGeo=mkGeo(coreShape);
- const mkExtrude=(shape,depth)=>new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false,curveSegments:28,steps:1});
- const shellOuter=new THREE.Mesh(mkExtrude(outerShape,3.2),new THREE.MeshPhysicalMaterial({color:'#8fc6df',roughness:.28,metalness:.02,transmission:.24,thickness:1.6,ior:1.333,clearcoat:.55,clearcoatRoughness:.2,transparent:true,opacity:.18,side:THREE.DoubleSide,depthWrite:false}));
- shellOuter.rotation.x=-Math.PI/2;shellOuter.position.y=waterline-3.2;shellOuter.userData.water=true;shellOuter.name='P-24 浅水体积层';waterGroup.add(shellOuter);
- const shellMid=new THREE.Mesh(mkExtrude(midShape,7.2),new THREE.MeshPhysicalMaterial({color:'#679db8',roughness:.24,metalness:.02,transmission:.18,thickness:1.8,ior:1.333,clearcoat:.45,clearcoatRoughness:.24,transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false}));
- shellMid.rotation.x=-Math.PI/2;shellMid.position.y=waterline-7.2;shellMid.userData.water=true;shellMid.name='P-24 中水体积层';waterGroup.add(shellMid);
- const shellInner=new THREE.Mesh(mkExtrude(innerShape,12.6),new THREE.MeshPhysicalMaterial({color:'#3f7693',roughness:.22,metalness:.02,transmission:.14,thickness:2.2,ior:1.333,clearcoat:.35,clearcoatRoughness:.28,transparent:true,opacity:.15,side:THREE.DoubleSide,depthWrite:false}));
- shellInner.rotation.x=-Math.PI/2;shellInner.position.y=waterline-12.6;shellInner.userData.water=true;shellInner.name='P-24 深水体积层';waterGroup.add(shellInner);
- const shellCore=new THREE.Mesh(mkExtrude(coreShape,17.5),new THREE.MeshPhysicalMaterial({color:'#2a5973',roughness:.26,metalness:0,transmission:.1,thickness:2.4,ior:1.333,clearcoat:.25,clearcoatRoughness:.3,transparent:true,opacity:.13,side:THREE.DoubleSide,depthWrite:false}));
- shellCore.rotation.x=-Math.PI/2;shellCore.position.y=waterline-17.5;shellCore.userData.water=true;shellCore.name='P-24 核心水体积层';waterGroup.add(shellCore);
- const waterBase=new THREE.Mesh(outerGeo,new THREE.MeshPhysicalMaterial({color:'#7db5cf',roughness:.12,metalness:.02,transmission:.38,thickness:1.2,ior:1.333,clearcoat:.95,clearcoatRoughness:.12,side:THREE.DoubleSide,transparent:true,opacity:.32,depthWrite:false}));
- waterBase.rotation.x=-Math.PI/2;waterBase.position.y=waterline;waterBase.receiveShadow=true;waterBase.name='P-24 水面';waterBase.userData.water=true;waterGroup.add(waterBase);
-
- // Share the P-24 water surface's exact material instance, without a fake canal extrusion.
- channelSurface.material.dispose();channelSurface.material=waterBase.material;
-
- const deepPatch=new THREE.Mesh(innerGeo,new THREE.MeshPhysicalMaterial({color:'#4f86a3',roughness:.16,metalness:.02,transmission:.22,thickness:1.6,ior:1.333,clearcoat:.55,clearcoatRoughness:.16,side:THREE.DoubleSide,transparent:true,opacity:.18,depthWrite:false}));
- deepPatch.rotation.x=-Math.PI/2;deepPatch.position.y=waterline+.02;deepPatch.receiveShadow=false;deepPatch.name='P-24 深水面层';deepPatch.userData.water=true;waterGroup.add(deepPatch);
- const waterTop=new THREE.Mesh(coreGeo,new THREE.MeshPhysicalMaterial({color:'#effcff',roughness:.04,metalness:0,transmission:.58,thickness:.55,ior:1.333,clearcoat:1,clearcoatRoughness:.04,side:THREE.DoubleSide,transparent:true,opacity:.11,depthWrite:false}));
- waterTop.rotation.x=-Math.PI/2;waterTop.position.y=waterline+.12;waterTop.receiveShadow=false;waterTop.name='P-24 透明高光层';waterTop.userData.water=true;waterGroup.add(waterTop);
- // Keep the actual P-24 shoreline except at the connection to the native channel.
- const bankPts=[];const nativeTriangles=nativeRecessedChannel().triangles;
- for(let i=0;i<p.boundary.length;i++){
-  const a=p.boundary[i],b=p.boundary[(i+1)%p.boundary.length];
-  const steps=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/1.75));
-  for(let j=0;j<steps;j++){
-   const t0=j/steps,t1=(j+1)/steps,tm=(t0+t1)/2;
-   const mid=[a[0]+(b[0]-a[0])*tm,a[1]+(b[1]-a[1])*tm];
-   if(nativeTriangles.some(tri=>pointInTriangle2D(mid[0],mid[1],...tri)))continue;
-   const aa=[a[0]+(b[0]-a[0])*t0,a[1]+(b[1]-a[1])*t0];
-   const bb=[a[0]+(b[0]-a[0])*t1,a[1]+(b[1]-a[1])*t1];
-   bankPts.push(aa[0],waterline+.05,-aa[1],bb[0],waterline+.05,-bb[1]);
-  }
+ const waterMaterial=new THREE.MeshPhysicalMaterial({
+  color:'#7db5cf',roughness:.11,metalness:.02,transmission:.18,thickness:1.15,
+  ior:1.333,clearcoat:.94,clearcoatRoughness:.1,side:THREE.DoubleSide,
+  transparent:true,opacity:.71,depthTest:true,depthWrite:false
+ });
+ const waterBase=new THREE.Mesh(channelGeom,waterMaterial);
+ waterBase.name='P-24 与所有连通原始凹槽 · 真实水面';
+ waterBase.userData.water=true;waterBase.receiveShadow=true;
+ waterBase.frustumCulled=false;waterGroup.add(waterBase);
+ waterGroup.userData.channelSurface=waterBase;
+ // Outline only exterior edges of actual wetted triangles, never parcel boundaries.
+ const shoreline=[];
+ for(const edge of boundaryEdges.values())if(edge.count===1){
+  shoreline.push(edge.a[0],waterline+.009,-edge.a[1],edge.b[0],waterline+.009,-edge.b[1]);
  }
- if(bankPts.length){
-  const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.Float32BufferAttribute(bankPts,3));
-  const outline=new THREE.LineSegments(bg,new THREE.LineBasicMaterial({color:'#eefbff',transparent:true,opacity:.22}));
-  outline.name='P-24 真实岸线 · 与水道交口不封闭';outline.userData.water=true;waterGroup.add(outline);
+ if(shoreline.length){
+  const bg=new THREE.BufferGeometry();
+  bg.setAttribute('position',new THREE.Float32BufferAttribute(shoreline,3));
+  const border=new THREE.LineSegments(bg,new THREE.LineBasicMaterial({
+   color:'#d5ecfa',transparent:true,opacity:.24,depthTest:true,depthWrite:false
+  }));
+  border.name='沿真实 Rhino 下沉边界的水岸';border.userData.water=true;waterGroup.add(border);
  }
- const rand=seeded('water-P-24-ripples');const xs=p.boundary.map(v=>v[0]),ys=p.boundary.map(v=>v[1]);
- const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);let count=0;
- const ripplePts=[];for(let attempt=0;attempt<620&&count<180;attempt++){
-  const x=x0+rand()*(x1-x0),y=y0+rand()*(y1-y0),len=3.2+rand()*10.6,ang=(-0.46+rand()*.92);const dx=Math.cos(ang)*len*.5,dy=Math.sin(ang)*len*.22;
-  if(!polygonInset(x,y,p.boundary,3)||!pointInPolygon([x-dx,y-dy],p.boundary)||!pointInPolygon([x+dx,y+dy],p.boundary))continue;
-  ripplePts.push(x-dx,waterline+.13,-(y-dy),x+dx,waterline+.13,-(y+dy));count++;
+ // Subtle texture is sampled INSIDE native water triangles; never over roads or uplands.
+ const random=seeded('P-24-native-water-ripples-v25'),wavePoints=[];
+ const tris=native.triangles.filter(t=>Math.abs((t[1][0]-t[0][0])*(t[2][1]-t[0][1])-(t[2][0]-t[0][0])*(t[1][1]-t[0][1]))>1.0);
+ for(let attempt=0;attempt<540&&wavePoints.length<840&&tris.length;attempt++){
+  const tri=tris[Math.floor(random()*tris.length)];
+  let u=random(),v=random();if(u+v>1){u=1-u;v=1-v}
+  const x=tri[0][0]+u*(tri[1][0]-tri[0][0])+v*(tri[2][0]-tri[0][0]);
+  const y=tri[0][1]+u*(tri[1][1]-tri[0][1])+v*(tri[2][1]-tri[0][1]);
+  const len=1.5+random()*3.8,ang=random()*6.283185307179586;
+  const ax=x-Math.cos(ang)*len*.5,ay=y-Math.sin(ang)*len*.12;
+  const bx=x+Math.cos(ang)*len*.5,by=y+Math.sin(ang)*len*.12;
+  if(!pointInTriangle2D(ax,ay,...tri)||!pointInTriangle2D(bx,by,...tri))continue;
+  wavePoints.push(ax,waterline+.015,-ay,bx,waterline+.015,-by);
  }
  let rippleLines=null;
- if(ripplePts.length){const rg=new THREE.BufferGeometry();rg.setAttribute('position',new THREE.Float32BufferAttribute(ripplePts,3));rippleLines=new THREE.LineSegments(rg,new THREE.LineBasicMaterial({color:'#f2fdff',transparent:true,opacity:.16,depthWrite:false}));rippleLines.name='水面细纹';waterGroup.add(rippleLines)}
- const sparkPts=[];count=0;for(let attempt=0;attempt<300&&count<90;attempt++){const x=x0+rand()*(x1-x0),y=y0+rand()*(y1-y0);if(!polygonInset(x,y,p.boundary,5))continue;sparkPts.push(x,waterline+.15,-y);count++;}
- let sparkles=null;
- if(sparkPts.length){const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sparkPts,3));sparkles=new THREE.Points(sg,new THREE.PointsMaterial({color:'#ffffff',size:1.25,transparent:true,opacity:.08,depthWrite:false,sizeAttenuation:false}));sparkles.name='水面反光';waterGroup.add(sparkles)}
- waterGroup.userData.fx={waterBase,deepPatch,waterTop,rippleLines,sparkles,baseTop:Array.from(waterTop.geometry.attributes.position.array),baseDeep:Array.from(deepPatch.geometry.attributes.position.array),shells:[shellOuter,shellMid,shellInner,shellCore]};
+ if(wavePoints.length){
+  const waveGeom=new THREE.BufferGeometry();
+  waveGeom.setAttribute('position',new THREE.Float32BufferAttribute(wavePoints,3));
+  rippleLines=new THREE.LineSegments(waveGeom,new THREE.LineBasicMaterial({
+   color:'#e9f8ff',transparent:true,opacity:.18,depthTest:true,depthWrite:false
+  }));
+  rippleLines.name='仅限真实水面范围的细波纹';rippleLines.userData.water=true;waterGroup.add(rippleLines);
+ }
+ waterGroup.userData.fx={waterBase,rippleLines};
+ waterGroup.userData.sourceWaterMetrics={triangles:native.triangles.length,sourceFaces:native.sourceFaces,waterline,area:native.area};
  waterGroup.visible=false;
 }
+
 function updateWaterAnimation(time){
- if(!waterGroup?.visible||!waterGroup.userData.fx)return;const fx=waterGroup.userData.fx,t=(time||0)*0.001;
- const topPos=fx.waterTop.geometry.attributes.position,deepPos=fx.deepPatch.geometry.attributes.position;
- for(let i=0;i<topPos.count;i++){const x=fx.baseTop[i*3],y=fx.baseTop[i*3+1];topPos.array[i*3+2]=Math.sin(x*.036+t*1.15)*.045+Math.cos(y*.044-t*.82)*.025}
- for(let i=0;i<deepPos.count;i++){const x=fx.baseDeep[i*3],y=fx.baseDeep[i*3+1];deepPos.array[i*3+2]=Math.sin(x*.024+t*.62)*.035+Math.cos(y*.031+t*.42)*.02}
- topPos.needsUpdate=true;deepPos.needsUpdate=true;fx.waterTop.geometry.computeVertexNormals();fx.deepPatch.geometry.computeVertexNormals();
- fx.waterTop.material.opacity=.10+Math.sin(t*1.1)*.018;fx.waterBase.material.opacity=.30+Math.sin(t*.7)*.018;fx.deepPatch.material.opacity=.17+Math.cos(t*.6)*.02;
- if(fx.rippleLines)fx.rippleLines.material.opacity=.12+Math.sin(t*1.4)*.04;
- if(fx.sparkles)fx.sparkles.material.opacity=.05+Math.sin(t*1.8)*.04;
- if(fx.shells){fx.shells[0].material.opacity=.17+Math.sin(t*.45)*.01;fx.shells[1].material.opacity=.15+Math.cos(t*.55)*.01;fx.shells[2].material.opacity=.14+Math.sin(t*.65)*.01;fx.shells[3].material.opacity=.12+Math.cos(t*.75)*.01;}
+ if(!waterGroup?.visible||!waterGroup.userData.fx)return;
+ const fx=waterGroup.userData.fx,t=(time||0)*.001;
+ fx.waterBase.material.opacity=.69+Math.sin(t*.7)*.025;
+ if(fx.rippleLines)fx.rippleLines.material.opacity=.13+Math.sin(t*1.28)*.035;
 }
+
 function updateWaterVisibility(){
  if(!waterGroup)return;
  const ids=(state.mode==='report'?relatedReportParcelIds():state.selected&&parcelById.has(state.selected)?[state.selected]:[]);
