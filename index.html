@@ -1696,6 +1696,8 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const fmt=(n,d=0)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const state={mode:'overview',filter:'parcel',selected:null,isolated:false,explode:0,targetExplode:0,view:'iso',report:'summary',layers:{site:true,roads:true,structure:true,labels:false,mono:false,edges:false},assembled:new Set(),playing:false,presentation:false};
 let model,lowModel,scene,camera,renderer,controls,siteMesh,roadsMesh,ground,parcelGroup,unitGroup,decorationGroup,meshes=[],parcelMeshes=[],labelItems=[],lastTime=0,playAccum=0,transition=null,hoverId=null,lastPointer=null;
+// The published Rhino file may replace ONLY the rendered site; all existing functional model data stays intact.
+let siteDisplayOverride=null;
 const detailByParcel=new Map();
 const unitById=new Map(),parcelById=new Map(),meshById=new Map();
 const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
@@ -2503,7 +2505,7 @@ function buildScene(){
  controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.minZoom=.25;controls.maxZoom=30;controls.maxPolarAngle=Math.PI*.495;controls.autoRotateSpeed=.7;controls.target.set(0,-4,0);
  scene.add(new THREE.HemisphereLight(0xffffff,0xc3c4cf,2.2));const key=new THREE.DirectionalLight(0xffffff,2.7);key.position.set(-300,650,400);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-600,right:600,top:600,bottom:-600,near:1,far:1700});key.shadow.bias=-.0002;key.shadow.normalBias=.15;scene.add(key);const fill=new THREE.DirectionalLight(0xf3f5ff,.9);fill.position.set(300,200,-500);scene.add(fill);
  ground=new THREE.Mesh(new THREE.PlaneGeometry(5000,5000),new THREE.ShadowMaterial({opacity:.09}));ground.rotation.x=-Math.PI/2;ground.position.y=-25.12;ground.receiveShadow=true;scene.add(ground);
- siteMesh=new THREE.Mesh(bufferGeom(model.site),material('#383a3d'));siteMesh.receiveShadow=true;siteMesh.castShadow=true;scene.add(siteMesh);
+ siteMesh=new THREE.Mesh(bufferGeom(siteDisplayOverride||model.site),material('#383a3d'));siteMesh.receiveShadow=true;siteMesh.castShadow=true;scene.add(siteMesh);
  roadsMesh=new THREE.Mesh(bufferGeom(model.roads),material('#e6cfa6'));roadsMesh.receiveShadow=true;scene.add(roadsMesh);
  if(model.meta?.imported){
   // Only source Rhino roads. Legacy fixed junction seeds and vehicle coordinates cannot be reused.
@@ -2607,14 +2609,25 @@ function togglePresentation(){state.presentation=!state.presentation;document.bo
 function stepSelection(d){const list=state.filter==='parcel'?model.parcels.flatMap(p=>[p,...model.units.filter(u=>u.parent===p.id&&u.id!==p.id)]):state.filter==='connection'?connectionUnits:model.units;const i=list.findIndex(x=>x.id===state.selected);select(list[(i+d+list.length)%list.length].id)}
 let assemblyOrder=[],parcelUnits=[],connectionUnits=[],edgeUnits=[],maxHeight=0;
 async function init(){try{
- const importedModel=await window.latestModelBridge?.getSavedModel();
- if(importedModel){model=importedModel;lowModel=null}else{
-  const bytes=Uint8Array.from(atob(MODEL_GZIP),c=>c.charCodeAt(0));
-  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-  model=JSON.parse(await new Response(stream).text());
-  const lb=Uint8Array.from(atob(LOD_GZIP),c=>c.charCodeAt(0));
-  lowModel=JSON.parse(await new Response(new Blob([lb]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
- }for(const u of model.units)unitById.set(u.id,u);for(const p of model.parcels)parcelById.set(p.id,p);parcelUnits=model.units.filter(u=>u.kind==='parcel');connectionUnits=model.units.filter(u=>u.kind==='connection');edgeUnits=model.units.filter(u=>u.kind==='edge');assemblyOrder=[...parcelUnits,...connectionUnits,...edgeUnits];maxHeight=Math.max(0,...model.units.map(u=>u.maxZ));state.assembled=new Set(model.units.map(u=>u.id));try{const saved=JSON.parse(localStorage.getItem('formAssemblyV2'));if(Array.isArray(saved))state.assembled=new Set(saved.filter(id=>unitById.has(id)))}catch(e){}
+ // Preserve the complete embedded app model: structure groups, road geometry,
+ // water recesses, parcel links, landscaping and assembly metadata.
+ const bytes=Uint8Array.from(atob(MODEL_GZIP),c=>c.charCodeAt(0));
+ const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+ model=JSON.parse(await new Response(stream).text());
+ const lb=Uint8Array.from(atob(LOD_GZIP),c=>c.charCodeAt(0));
+ lowModel=JSON.parse(await new Response(new Blob([lb]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
+ // The newest 2.3dm provides the site DISPLAY mesh only. Never overwrite
+ // model, parcels, roads, structures, hydrology or landscape source data.
+ try{
+  const importedModel=await window.latestModelBridge?.getSavedModel();
+  if(importedModel?.site?.v?.length&&importedModel?.site?.t?.length){
+   siteDisplayOverride=importedModel.site;
+   console.info('Rhino 2.3dm site-only display updated; legacy assembly, water, parks and roads preserved');
+  }
+ }catch(sourceError){
+  console.warn('Published site cannot be loaded; preserving the complete existing scene',sourceError);
+ }
+ for(const u of model.units)unitById.set(u.id,u);for(const p of model.parcels)parcelById.set(p.id,p);parcelUnits=model.units.filter(u=>u.kind==='parcel');connectionUnits=model.units.filter(u=>u.kind==='connection');edgeUnits=model.units.filter(u=>u.kind==='edge');assemblyOrder=[...parcelUnits,...connectionUnits,...edgeUnits];maxHeight=Math.max(0,...model.units.map(u=>u.maxZ));state.assembled=new Set(model.units.map(u=>u.id));try{const saved=JSON.parse(localStorage.getItem('formAssemblyV2'));if(Array.isArray(saved))state.assembled=new Set(saved.filter(id=>unitById.has(id)))}catch(e){}
  $('#countParcel').textContent=model.parcels.length;$('#countUnits').textContent=parcelUnits.length;$('#countConnections').textContent=connectionUnits.length;$('#librarySummary').textContent=`${model.parcels.length} 个地块 · ${model.units.length} 个结构分组`;buildScene(); initLandscapeUI();initWaterUI();initRoadDesignUI();initRoadVehicleUI();renderList();renderInspector();applyColors();
  $$('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$$('[data-filter]').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;$$('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));renderList()});$('#search').oninput=renderList;
  $$('[data-layer]').forEach(b=>b.onclick=()=>{const key=b.dataset.layer;state.layers[key]=!state.layers[key];b.classList.toggle('off',!state.layers[key]);applyColors()});$$('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;$$('[data-view]').forEach(x=>x.classList.toggle('active',x===b));state.isolated?focusSelected():fitWhole()});$$('[data-report]').forEach(b=>b.onclick=()=>{state.report=b.dataset.report;renderReport()});
