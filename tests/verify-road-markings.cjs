@@ -31,7 +31,7 @@ const build=new Function('model','ROAD_DESIGN_V20','ROAD_JUNCTIONS_V21','THREE',
  'let roadDesignGroup;\n'+source+'\nbuildRoadDesign();return roadDesignGroup;');
 const group=build(model,design,junctions,THREE,scene,pointInTriangle2D,()=>{});
 const report=group.userData;
-const zebra=group.children.find(g=>g.name==='road-v22-zebra');
+const zebra=group.children.find(g=>g.name==='road-v26-zebra');
 assert(zebra,'No zebra crossing mesh was generated');
 const a=zebra.geometry.position.array;
 const bars=a.length/18;
