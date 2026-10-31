@@ -1,0 +1,21 @@
+name: Audit uploaded Rhino geometry
+on:
+  push:
+    paths:
+      - scripts/inspect-rhino.cjs
+      - .github/workflows/inspect-rhino.yml
+      - 2.3dm
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --ignore-scripts rhino3dm@8.35.0
+      - run: node scripts/inspect-rhino.cjs
