@@ -1691,7 +1691,7 @@ class SoftwareRenderer{
  ctx.lineWidth=.45;for(const t of triangles){ctx.globalAlpha=t[9];ctx.beginPath();ctx.moveTo(t[1],t[2]);ctx.lineTo(t[3],t[4]);ctx.lineTo(t[5],t[6]);ctx.closePath();ctx.fillStyle=t[7];ctx.fill();ctx.strokeStyle=state.layers.edges&&t[8]!=='site'&&t[8]!=='roads'?'#8b8c94':t[7];ctx.stroke()}ctx.globalAlpha=1;
  }
 }
-</script><script src="./latest-model-loader.js?v=20261031-source-road-replace-v1"></script><script>'use strict';
+</script><script src="./latest-model-loader.js?v=20261031-site-frame-align-v27"></script><script>'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const fmt=(n,d=0)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const state={mode:'overview',filter:'parcel',selected:null,isolated:false,explode:0,targetExplode:0,view:'iso',report:'summary',layers:{site:true,roads:true,structure:true,labels:false,mono:false,edges:false},assembled:new Set(),playing:false,presentation:false};

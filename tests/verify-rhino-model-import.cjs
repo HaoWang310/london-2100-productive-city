@@ -12,6 +12,11 @@ const end = html.indexOf('</script>', ix);
 assert(end > ix, 'App script closing tag is missing');
 new vm.Script(html.slice(ix + 8, end), {filename: 'app-main.js'});
 assert(html.includes('src="./latest-model-loader.js?v='), 'Rhino source loader not included');
+// The loader is cached per query string, so returning visitors keep running the
+// previous file until this token changes. Bump it in the same commit as any
+// latest-model-loader.js change, or the deployed fix never reaches them.
+assert(html.includes('src="./latest-model-loader.js?v=20261031-site-frame-align-v27"'), 'Loader cache-busting token was not bumped for the site-frame alignment change');
+assert(!html.includes('v=20261031-source-road-replace-v1'), 'Stale loader cache token is still referenced');
 assert(importer.includes('const PUBLISHED_SOURCE="./2.3dm";'), 'Default source must match the published 2.3dm asset');
 assert(!importer.includes('2(2).3dm'), 'Stale source filename remains');
 assert(importer.includes('fetch(PUBLISHED_SOURCE,{cache:"no-cache"})'), 'Default source must be revalidated on refresh');
