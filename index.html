@@ -2075,103 +2075,305 @@ const ROAD_DESIGN_V20 = {"dash":[-305.08,76.728,-305.101,76.529,-301.137,76.113,
 // The elevated white structure is deliberately excluded from road topology.
 const ROAD_JUNCTIONS_V21 = [[-189.0,-29.0,[1.191,2.855,4.217,5.498]],[-123.0,-33.33,[2.436,4.285,5.52]],[-92.33,-55.33,[0.714,2.722,4.952]],[-141.67,-63.33,[0.905,2.733,5.162]],[-173.67,3.0,[1.219,5.729,4.194]],[-109.0,-112.67,[2.102,0.219,3.685]],[290.67,86.67,[1.931,3.614,5.32]],[-156.0,106.0,[2.152,5.884,4.907]],[274.67,123.33,[1.997,0.292,5.156]],[-70.67,-98.0,[2.135,0.258,3.644]],[197.33,149.67,[2.215,6.065,4.267]],[-210.0,167.33,[2.03,3.203,5.7]],[-186.67,157.67,[2.827,0.02,4.943]],[55.0,122.67,[1.796,3.71,5.225]],[-29.67,90.33,[1.889,6.27,4.953]],[-250.67,-167.0,[1.385,0.113,3.892]],[-255.67,-4.0,[1.188,3.103,5.89]],[157.0,29.67,[1.363,3.138,5.053]],[-159.0,38.33,[1.238,2.936,4.289]],[-232.0,66.0,[2.884,5.973,4.547]],[-24.0,-7.33,[1.53,0.149,3.738]],[-75.67,167.0,[0.12,3.243,5.135]],[-97.33,166.67,[2.199,6.155,3.438]],[-261.0,75.33,[1.431,3.167,5.931]],[146.67,-31.67,[1.44,3.026,4.658]],[168.33,70.67,[1.348,6.012,4.37]],[145.67,-59.67,[1.55,3.162,6.108]],[256.67,157.33,[1.246,3.607,5.281]],[-23.0,29.0,[1.546,2.641,4.712]]];
 function buildRoadDesign(){
- roadDesignGroup=new THREE.Group();roadDesignGroup.name='道路细化图层 · 同层路口 v21';scene.add(roadDesignGroup);
+ // V22: Rhino road-surface driven markings; structures and water are never part of topology.
+ roadDesignGroup=new THREE.Group();
+ roadDesignGroup.name='Rhino road markings v22 | surface-driven intersections';
+ scene.add(roadDesignGroup);
  const palette={median:['#76a65d',.76],curb:['#adb8aa',.63],edge:['#f4f7f7',.59],dash:['#e2e7e8',.60],zebra:['#ffffff',.66],stop:['#f4f7f7',.62]};
- // Preserve the road, site and structural meshes; only replace surface markings.
- const roadVertices=model.roads.v,roadFaces=model.roads.t,deckCells=new Map(),deckCellSize=16;
- const deckKey=(i,j)=>i+','+j;
- for(let k=0;k<roadFaces.length;k+=3){
-  const ids=[roadFaces[k],roadFaces[k+1],roadFaces[k+2]];
-  if(ids.some(i=>Math.abs(roadVertices[i*3+2]-.5)>.001))continue;
-  const triangle=ids.map(i=>[roadVertices[i*3],roadVertices[i*3+1]]);
-  const minX=Math.min(...triangle.map(p=>p[0])),maxX=Math.max(...triangle.map(p=>p[0]));
-  const minY=Math.min(...triangle.map(p=>p[1])),maxY=Math.max(...triangle.map(p=>p[1]));
-  for(let i=Math.floor(minX/deckCellSize);i<=Math.floor(maxX/deckCellSize);i++)
-   for(let j=Math.floor(minY/deckCellSize);j<=Math.floor(maxY/deckCellSize);j++){
-    const key=deckKey(i,j);if(!deckCells.has(key))deckCells.set(key,[]);deckCells.get(key).push(triangle);
+ const rv=model.roads.v,rf=model.roads.t,cells=new Map(),cellSize=14;
+ const key=(x,y)=>Math.floor(x/cellSize)+','+Math.floor(y/cellSize);
+ for(let f=0;f<rf.length;f+=3){
+  const indices=[rf[f],rf[f+1],rf[f+2]];
+  if(indices.some(i=>Math.abs(rv[i*3+2]-.5)>.002))continue;
+  const pts=indices.map(i=>[rv[i*3],rv[i*3+1]]);
+  const minX=Math.min(pts[0][0],pts[1][0],pts[2][0]),maxX=Math.max(pts[0][0],pts[1][0],pts[2][0]);
+  const minY=Math.min(pts[0][1],pts[1][1],pts[2][1]),maxY=Math.max(pts[0][1],pts[1][1],pts[2][1]);
+  const tri={pts,minX,maxX,minY,maxY};
+  for(let i=Math.floor(minX/cellSize);i<=Math.floor(maxX/cellSize);i++)
+   for(let j=Math.floor(minY/cellSize);j<=Math.floor(maxY/cellSize);j++){
+    const id=i+','+j;if(!cells.has(id))cells.set(id,[]);cells.get(id).push(tri);
    }
  }
- const onDeck=(x,y)=>(deckCells.get(deckKey(Math.floor(x/deckCellSize),Math.floor(y/deckCellSize)))||[])
-  .some(triangle=>pointInTriangle2D(x,y,...triangle));
- const mark={median:[],curb:[],edge:[],dash:[],zebra:[],stop:[]};
- const overlapsJunction=(raw,k)=>ROAD_JUNCTIONS_V21.some(([x,y])=>{
-  for(let j=0;j<6;j+=2)if((raw[k+j]-x)**2+(raw[k+j+1]-y)**2<15**2)return true;
-  return false;
- });
- for(const layer of ['median','curb','edge','dash']){
-  const old=ROAD_DESIGN_V20[layer]||[];
-  for(let k=0;k<old.length;k+=6)if(!overlapsJunction(old,k))mark[layer].push(...old.slice(k,k+6));
- }
- const putRect=(layer,cx,cy,u,v,length,width)=>{
-  const corners=[[-length/2,-width/2],[length/2,-width/2],[length/2,width/2],[-length/2,width/2]]
-   .map(([a,b])=>[cx+a*u[0]+b*v[0],cy+a*u[1]+b*v[1]]);
-  // Each marking stays on the actual Rhino road deck, including its corners.
-  if(!corners.every(([x,y])=>onDeck(x,y)))return false;
-  const [a,b,c,d]=corners;mark[layer].push(...a,...c,...b,...a,...d,...c);return true;
+ const onRoad=(x,y)=>(cells.get(key(x,y))||[]).some(t=>
+  x>=t.minX-.001&&x<=t.maxX+.001&&y>=t.minY-.001&&y<=t.maxY+.001&&pointInTriangle2D(x,y,...t.pts));
+ const dot=(a,b)=>a[0]*b[0]+a[1]*b[1],unit=a=>[Math.cos(a),Math.sin(a)];
+ const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+ const polygonArea=p=>p.reduce((acc,a,i)=>acc+a[0]*p[(i+1)%p.length][1]-a[1]*p[(i+1)%p.length][0],0)*.5;
+ const hull=points=>{
+  const sorted=points.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]),lo=[],hi=[];
+  for(const p of sorted){while(lo.length>=2&&cross(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)}
+  for(let i=sorted.length-1;i>=0;i--){const p=sorted[i];while(hi.length>=2&&cross(hi[hi.length-2],hi[hi.length-1],p)<=0)hi.pop();hi.push(p)}
+  lo.pop();hi.pop();return lo.concat(hi);
  };
- let crossingCount=0;
- for(const [jx,jy,arms] of ROAD_JUNCTIONS_V21){
-  for(const angle of arms){
-   const u=[Math.cos(angle),Math.sin(angle)],v=[-u[1],u[0]];
-   const neighbour=ROAD_JUNCTIONS_V21.reduce((best,[x,y])=>{
-    const dx=x-jx,dy=y-jy,along=dx*u[0]+dy*u[1];
-    return along>3&&Math.abs(dx*v[0]+dy*v[1])<12?Math.min(best,along):best;
-   },Infinity);
-   const maxOffset=Number.isFinite(neighbour)?Math.min(18,neighbour*.43):18;
-   let chosen=null;
-   for(let distance=Math.min(8,maxOffset);distance<=maxOffset+.001;distance+=1){
-    for(const shift of [0,-1.5,1.5,-3,3]){
-    const cx=jx+u[0]*distance+v[0]*shift,cy=jy+u[1]*distance+v[1]*shift;
-    if(!onDeck(cx,cy))continue;
-    const widths=[];
-    for(const longitudinal of [-2.6,0,2.6]){
-     const lateral=[];
-     for(const sign of [-1,1]){
-      let half=0;
-      for(let step=.4;step<=13;step+=.4){
-       if(!onDeck(cx+u[0]*longitudinal+v[0]*sign*step,cy+u[1]*longitudinal+v[1]*sign*step))break;
-       half=step;
+ const rect=(x,y,u,v,along,from,to)=>[
+  [x-u[0]*along/2+v[0]*from,y-u[1]*along/2+v[1]*from],
+  [x+u[0]*along/2+v[0]*from,y+u[1]*along/2+v[1]*from],
+  [x+u[0]*along/2+v[0]*to,y+u[1]*along/2+v[1]*to],
+  [x-u[0]*along/2+v[0]*to,y-u[1]*along/2+v[1]*to]
+ ];
+ const bbox=p=>[Math.min(...p.map(q=>q[0])),Math.min(...p.map(q=>q[1])),Math.max(...p.map(q=>q[0])),Math.max(...p.map(q=>q[1]))];
+ const collide=(a,b)=>{
+  for(const p of [a,b]){
+   for(let i=0;i<p.length;i++){
+    const e=[p[(i+1)%p.length][0]-p[i][0],p[(i+1)%p.length][1]-p[i][1]],axis=[-e[1],e[0]];
+    const ap=a.map(q=>dot(q,axis)),bp=b.map(q=>dot(q,axis));
+    if(Math.max(...ap)<Math.min(...bp)-.2||Math.max(...bp)<Math.min(...ap)-.2)return false;
+   }
+  }
+  return true;
+ };
+ // Nearby skeleton seeds are merged only if the real deck between them is a broad shared junction.
+ const junctions=[];
+ for(const [x,y,directions] of ROAD_JUNCTIONS_V21){
+  let target=null;
+  for(const j of junctions){
+   const dist=Math.hypot(j.x-x,j.y-y);
+   if(dist>19)continue;
+   const mx=(j.x+x)/2,my=(j.y+y)/2;
+   if(onRoad(mx,my)&&onRoad(mx+2,my)&&onRoad(mx-2,my)&&onRoad(mx,my+2)&&onRoad(mx,my-2)){target=j;break}
+  }
+  if(!target){target={x,y,n:0,arms:[],id:junctions.length};junctions.push(target)}
+  target.x=(target.x*target.n+x)/(target.n+1);target.y=(target.y*target.n+y)/(target.n+1);target.n++;
+  for(const a of directions)if(!target.arms.some(b=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)))<.25))target.arms.push(a);
+ }
+ // A stable cross-section is sampled on all three longitudinal slices of the original road mesh.
+ // It may consist of two carriageways separated by a real central island.
+ const section=(cx,cy,u,v)=>{
+  const step=.4,min=-19,max=19,inside=[];
+  for(let i=0;i<=Math.round((max-min)/step);i++){
+   const s=min+i*step;let ok=true;
+   for(const d of [-1.85,0,1.85]){
+    if(!onRoad(cx+v[0]*s+u[0]*d,cy+v[1]*s+u[1]*d)){ok=false;break}
+   }
+   inside.push(ok);
+  }
+  const runs=[];let start=-1;
+  for(let i=0;i<=inside.length;i++){
+   if(i<inside.length&&inside[i]){if(start<0)start=i}
+   else if(start>=0){const from=min+start*step,to=min+(i-1)*step;if(to-from>=1.25)runs.push([from,to]);start=-1}
+  }
+  if(!runs.length)return null;
+  runs.sort((a,b)=>Math.min(Math.abs(a[0]),Math.abs(a[1]))-Math.min(Math.abs(b[0]),Math.abs(b[1])));
+  const selected=[runs[0]];
+  for(const r of runs.slice(1)){
+   const low=Math.min(...selected.map(q=>q[0])),high=Math.max(...selected.map(q=>q[1]));
+   if(Math.min(Math.abs(r[0]-high),Math.abs(r[1]-low))<=5.6&&Math.max(high,r[1])-Math.min(low,r[0])<=25)selected.push(r);
+  }
+  const a=Math.min(...selected.map(r=>r[0])),b=Math.max(...selected.map(r=>r[1]));
+  if(b-a<3.0||b-a>25)return null;
+  return {runs:selected,from:a,to:b,width:b-a};
+ };
+ const masks=[],crossings=[],audit=[],pending=[];
+ // Each arm gets its own crossing exactly once, regardless of how many skeleton nodes met inside the junction.
+ for(const j of junctions){
+  const angles=j.arms.slice();
+  for(let ai=0;ai<angles.length;ai++){
+   const angle=angles[ai],u=unit(angle),v=[-u[1],u[0]];
+   let neighbour=Infinity;
+   for(const other of junctions){if(other===j)continue;
+    const delta=[other.x-j.x,other.y-j.y],ahead=dot(delta,u),side=Math.abs(dot(delta,v));
+    if(ahead>5&&side<13)neighbour=Math.min(neighbour,ahead);
+   }
+   const maxD=Number.isFinite(neighbour)?Math.max(8,Math.min(31,neighbour*.5-2.6)):31;
+   const proposals=[];
+   for(const d of [14,16,18,12,20,22,24,10,26,28,8,30]){
+    if(d>maxD+.01)continue;
+    for(const adjust of [0,-.09,.09]){
+     const actualAngle=angle+adjust,dir=unit(actualAngle),side=[-dir[1],dir[0]];
+     const cx=j.x+u[0]*d,cy=j.y+u[1]*d;
+     const sec=section(cx,cy,dir,side);
+     if(!sec)continue;
+     const strips=[];
+     for(let offset=sec.from+.55;offset<sec.to-.35;offset+=1.02){
+      if(!sec.runs.some(([a,b])=>offset>=a+.28&&offset<=b-.28))continue;
+      const px=cx+side[0]*offset,py=cy+side[1]*offset;
+      let length=4.2,poly=null;
+      for(const trial of [4.2,3.6,3,2.5,2.05]){
+       const q=rect(px,py,dir,side,trial,-.27,.27);
+       if(q.every(p=>onRoad(p[0],p[1]))&&onRoad(px,py)){length=trial;poly=q;break}
       }
-      lateral.push(half);
+      if(poly)strips.push({poly,offset,length});
      }
-     widths.push(lateral);
+     if(strips.length<3)continue;
+     const offsets=strips.map(t=>t.offset),a=Math.min(...offsets)-.53,b=Math.max(...offsets)+.53;
+     if(b-a<3||b-a>25)continue;
+     const zone=rect(cx,cy,dir,side,Math.max(...strips.map(t=>t.length))+.48,a,b);
+     const score=(strips.length/Math.max(1,sec.width))*1.8
+       -Math.abs(d-16)*.018-Math.abs(adjust)*.20-Math.max(0,sec.width-16)*.045;
+     proposals.push({j,ai,d,dir,side,cx,cy,strips,zone,from:a,to:b,score});
     }
-    const half=Math.min(...widths.flat())-.3;
-    if(half>=1.65){
-     if(!chosen||half>chosen.half)chosen={cx,cy,half};
-     if(half>=2.4&&half<=8)break;
+   }
+   proposals.sort((a,b)=>b.score-a.score);
+   pending.push({j,ai,proposals});
+  }
+ }
+ // Resolve conflicts at the complete crossing-zone level, never stripe by stripe.
+ // Best-constrained approaches are allocated first; blocked approaches retry farther out.
+ pending.sort((a,b)=>a.proposals.length-b.proposals.length);
+ for(const item of pending){
+  const choices=item.proposals;
+  let selected=choices.find(c=>!crossings.some(old=>collide(c.zone,old.zone)));
+  if(!selected&&choices.length){
+   // Last resort: keep a valid but shorter / narrower crossing, not a row of stray bars.
+   for(const c of choices){
+    const compact=rect(c.cx,c.cy,c.dir,c.side,3.0,c.from+.25,c.to-.25);
+    if(!crossings.some(old=>collide(compact,old.zone))){
+     c.zone=compact;
+     c.strips=c.strips.filter(t=>t.length>=2.05);
+     selected=c;break;
     }
-    }
-    if(chosen&&chosen.half>=2.4&&chosen.half<=8)break;
    }
-   if(!chosen)continue;
-   const {cx,cy,half}=chosen;let bars=0;
-   // Six stripes run across the road; spacing advances along the incoming road.
-   for(const along of [-2.05,-1.23,-.41,.41,1.23,2.05]){
-    const px=cx+u[0]*along,py=cy+u[1]*along;
-    if(putRect('zebra',px,py,v,u,half*2,.48))bars++;
+  }
+  if(selected)crossings.push(selected);
+  audit.push({junction:item.j.id,arm:item.ai+1,status:selected?'placed':'needs-review',candidateCount:choices.length});
+ }
+ const mark={median:[],curb:[],edge:[],dash:[],zebra:[],stop:[]};
+ const triangles=(layer,poly)=>{
+  for(let i=1;i<poly.length-1;i++)mark[layer].push(...poly[0],...poly[i],...poly[i+1]);
+ };
+ const emit=(layer,poly,allCorners=true)=>{
+  if(allCorners&&!poly.every(p=>onRoad(p[0],p[1])))return false;
+  triangles(layer,poly);return true;
+ };
+ for(const c of crossings){
+  for(const stripe of c.strips)emit('zebra',stripe.poly);
+  // Single stop bar on the approach side, outside the pedestrian zone.
+  const stopX=c.cx+c.dir[0]*3.65,stopY=c.cy+c.dir[1]*3.65;
+  const insideLanes=c.to-c.from;
+  if(insideLanes>4.5){
+   const mid=(c.from+c.to)*.5;
+   const r=rect(stopX,stopY,c.side,[-c.dir[0],-c.dir[1]],Math.min(insideLanes*.43,7.6),-.12,.12);
+   // Rect above is centred on one incoming lane, not at the junction centre.
+   const shifted=r.map(p=>[p[0]+c.side[0]*(mid+(c.from-mid)*.5),p[1]+c.side[1]*(mid+(c.from-mid)*.5)]);
+   emit('stop',shifted);
+  }
+ }
+ // Build a junction polygon from actual arm approaches, rather than the former 15 m circle.
+ const envelopes=[];
+ for(const j of junctions){
+  const entries=crossings.filter(c=>c.j===j);
+  if(entries.length<2)continue;
+  const points=[[j.x,j.y]];
+  for(const c of entries){
+   const x=c.cx-c.dir[0]*2.4,y=c.cy-c.dir[1]*2.4;
+   points.push([x+c.side[0]*c.from,y+c.side[1]*c.from],[x+c.side[0]*c.to,y+c.side[1]*c.to]);
+  }
+  const poly=hull(points);
+  if(poly.length>=3&&Math.abs(polygonArea(poly))>3)envelopes.push(poly);
+ }
+ const exclusions=envelopes.concat(crossings.map(c=>c.zone)).map(p=>({poly:p,box:bbox(p)}));
+ const intersectBox=(a,b)=>a[0]<=b[2]&&a[2]>=b[0]&&a[1]<=b[3]&&a[3]>=b[1];
+ const split=(poly,a,b,keepLeft)=>{
+  if(!poly.length)return [];
+  const inside=p=>keepLeft?cross(a,b,p)>=-1e-7:cross(a,b,p)<=1e-7;
+  const out=[];for(let i=0;i<poly.length;i++){
+   const p=poly[i],q=poly[(i+1)%poly.length],ip=inside(p),iq=inside(q);
+   if(ip)out.push(p);
+   if(ip!==iq){
+    const v1=cross(a,b,p),v2=cross(a,b,q),t=v1/(v1-v2);
+    out.push([p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t]);
    }
-   if(bars>=4){
-    crossingCount++;
-    // Stop line across the incoming half of the carriageway, outside the crossing.
-    const sx=cx+u[0]*3.55-v[0]*half*.50,sy=cy+u[1]*3.55-v[1]*half*.50;
-    putRect('stop',sx,sy,v,u,half*.9,.20);
+  }
+  return out;
+ };
+ // Exact polygon subtraction retains outer carriageway markings right up to the real turn.
+ const clipAway=(poly,mask)=>{
+  let inside=[poly],outside=[];
+  for(let i=0;i<mask.length;i++){
+   const a=mask[i],b=mask[(i+1)%mask.length],next=[];
+   for(const frag of inside){
+    const out=split(frag,a,b,false);
+    if(out.length>=3&&Math.abs(polygonArea(out))>1e-7)outside.push(out);
+    const inn=split(frag,a,b,true);
+    if(inn.length>=3&&Math.abs(polygonArea(inn))>1e-7)next.push(inn);
    }
+   inside=next;
+   if(!inside.length)break;
+  }
+  return outside;
+ };
+ // Light Laplacian filtering of short-edge centre sections removes visible linework kinks
+ // without changing the existing road mesh or the reference stripe/median widths.
+ const smoothThin=(raw,layer)=>{
+  if(layer!=='edge'&&layer!=='curb')return raw;
+  const nodes=new Map(),edgeToTriangles=new Map(),trianglesInfo=[];
+  const ptKey=(x,y)=>x.toFixed(3)+','+y.toFixed(3);
+  for(let k=0;k+5<raw.length;k+=6){
+   const p=[[raw[k],raw[k+1]],[raw[k+2],raw[k+3]],[raw[k+4],raw[k+5]]];
+   const edges=[[0,1],[1,2],[2,0]].map(([a,b])=>({a,b,len:Math.hypot(p[a][0]-p[b][0],p[a][1]-p[b][1])}));
+   edges.sort((a,b)=>a.len-b.len);
+   if(edges[0].len>.41)continue;
+   const short=edges[0],pa=p[short.a],pb=p[short.b],id=[ptKey(...pa),ptKey(...pb)].sort().join('|');
+   if(!nodes.has(id))nodes.set(id,{pa,pb,c:[(pa[0]+pb[0])*.5,(pa[1]+pb[1])*.5],links:new Set()});
+   const index=trianglesInfo.length;trianglesInfo.push({id,p});
+   for(const e of edges){
+    const edgeId=[ptKey(...p[e.a]),ptKey(...p[e.b])].sort().join('|');
+    if(!edgeToTriangles.has(edgeId))edgeToTriangles.set(edgeId,[]);
+    edgeToTriangles.get(edgeId).push(index);
+   }
+  }
+  for(const pair of edgeToTriangles.values()){
+   if(pair.length!==2)continue;
+   const a=trianglesInfo[pair[0]].id,b=trianglesInfo[pair[1]].id;
+   if(a===b)continue;
+   const na=nodes.get(a),nb=nodes.get(b);
+   if(Math.hypot(na.c[0]-nb.c[0],na.c[1]-nb.c[1])<=3.3){
+    na.links.add(b);nb.links.add(a);
+   }
+  }
+  const displacements=new Map();
+  for(const n of nodes.values()){
+   if(n.links.size!==2)continue;
+   const pts=[...n.links].map(k=>nodes.get(k).c);
+   const target=[(pts[0][0]+pts[1][0])*.5,(pts[0][1]+pts[1][1])*.5];
+   const dx=(target[0]-n.c[0])*.30,dy=(target[1]-n.c[1])*.30;
+   const length=Math.hypot(dx,dy);if(length<.003||length>.32)continue;
+   for(const p of [n.pa,n.pb]){
+    const k=ptKey(...p);if(!displacements.has(k))displacements.set(k,[]);
+    displacements.get(k).push([dx,dy]);
+   }
+  }
+  if(!displacements.size)return raw;
+  const adjusted=raw.slice();
+  for(let i=0;i<raw.length;i+=2){
+   const shifts=displacements.get(ptKey(raw[i],raw[i+1]));
+   if(!shifts)continue;
+   const dx=shifts.reduce((a,v)=>a+v[0],0)/shifts.length,dy=shifts.reduce((a,v)=>a+v[1],0)/shifts.length;
+   if(onRoad(raw[i]+dx,raw[i+1]+dy)){adjusted[i]+=dx;adjusted[i+1]+=dy}
+  }
+  return adjusted;
+ };
+ for(const layer of ['median','curb','edge','dash']){
+  const raw=smoothThin(ROAD_DESIGN_V20[layer]||[],layer);
+  for(let k=0;k+5<raw.length;k+=6){
+   let polys=[[[raw[k],raw[k+1]],[raw[k+2],raw[k+3]],[raw[k+4],raw[k+5]]]];
+   const b=bbox(polys[0]);
+   for(const ex of exclusions){
+    if(!intersectBox(b,ex.box))continue;
+    polys=polys.flatMap(poly=>clipAway(poly,ex.poly));
+    if(!polys.length)break;
+   }
+   for(const poly of polys)triangles(layer,poly);
   }
  }
  for(const [layer,raw] of Object.entries(mark)){
   if(!raw.length)continue;
-  const positions=new Float32Array(raw.length/6*9),depth=palette[layer][1];
-  for(let i=0;i<raw.length/6;i++)for(let j=0;j<3;j++){
-   const k=i*9+j*3,r=i*6+j*2;positions[k]=raw[r];positions[k+1]=depth;positions[k+2]=-raw[r+1];
+  const positions=new Float32Array(raw.length/6*9),level=palette[layer][1];
+  for(let i=0;i<raw.length/6;i++)for(let v=0;v<3;v++){
+   const src=i*6+v*2,dst=i*9+v*3;
+   positions[dst]=raw[src];positions[dst+1]=level;positions[dst+2]=-raw[src+1];
   }
-  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(positions,3));geo.computeVertexNormals();
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));geo.computeVertexNormals();
   const mat=new THREE.MeshStandardMaterial({color:palette[layer][0],roughness:layer==='zebra'?.62:.88,metalness:0,side:THREE.DoubleSide,depthWrite:true});
-  const mesh=new THREE.Mesh(geo,mat);mesh.name='road-v21-'+layer;mesh.userData={roadDetail:true,id:'v21-road-'+layer};mesh.castShadow=false;mesh.receiveShadow=true;roadDesignGroup.add(mesh);
+  const mesh=new THREE.Mesh(geo,mat);
+  mesh.name='road-v22-'+layer;mesh.userData={roadDetail:true,id:'v22-road-'+layer};
+  mesh.castShadow=false;mesh.receiveShadow=true;roadDesignGroup.add(mesh);
  }
- roadDesignGroup.userData.junctions=ROAD_JUNCTIONS_V21.length;
- roadDesignGroup.userData.crossings=crossingCount;
- console.info('Rhino road topology v21',{junctions:ROAD_JUNCTIONS_V21.length,crossings:crossingCount});
+ const unresolved=audit.filter(a=>a.status!=='placed');
+ roadDesignGroup.userData={version:22,junctions:junctions.length,entrances:audit.length,crossings:crossings.length,unresolved,checklist:audit};
+ console.info('Road-marking QA v22',roadDesignGroup.userData);
+ if(unresolved.length)console.warn('Road-marking entrances needing further geometry review',unresolved);
  updateRoadDesignVisibility();
 }
 function updateRoadDesignVisibility(){
