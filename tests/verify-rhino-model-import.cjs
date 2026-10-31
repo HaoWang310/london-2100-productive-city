@@ -75,6 +75,14 @@ assert(html.includes('const site=siteDisplayOverride,roads=model?.roads;'), 'Wat
 assert(html.includes('&&!onRoad(f.center[0],f.center[1]))bed.add(k);'), 'Road trenches must be excluded from the water bed');
 assert(html.includes('if(floor-z<=3.0001)floor=Math.min(floor,z)'), 'Terrace ladder must bound the flood above the slab underside');
 assert(html.includes("const site=model?.site,basin=model?.parcels?.find(p=>p.id==='P-24');"), 'Embedded baseline must keep its original P-24 water rule');
+// WATER BODY v28 — the footprint must carry the real bed elevation so the
+// surface can be depth-tinted and the site cut can be closed into a body.
+assert(html.includes('const tri=[poly[0],poly[j],poly[j+1]].map(p=>[p[0],p[1],p[2]]);'), 'Water footprint must keep the bed elevation');
+assert(html.includes('const SHALLOW=[0.66,0.82,0.90],DEEP=[0.09,0.26,0.40];'), 'Depth tint ramp is missing');
+assert(html.includes("channelGeom.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));"), 'Water surface must carry per-vertex depth colour');
+assert(html.includes('vertexColors:true'), 'Water material must use the depth colours');
+assert(html.includes("wallMesh.name='场地切面上的水体剖面';"), 'Water body section wall is missing');
+assert(html.includes('if(!onCut(a)||!onCut(b))continue;'), 'Only the site cut may be closed into a wall');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');
