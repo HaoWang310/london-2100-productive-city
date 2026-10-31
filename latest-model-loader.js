@@ -1,6 +1,6 @@
 /* Rhino 8 source-model importer: geometry-first, no synthetic road/structure geometry.
- * A user-selected source is stored in this browser's IndexedDB; the original
- * published model remains the fallback until a verified import succeeds.
+ * The public repository 2.3dm is the authoritative default.
+ * Failure is visible rather than silently showing the previous geometry.
  */
 (function(){
 "use strict";
@@ -68,8 +68,14 @@ function getMeshes(g,R){
  const add=m=>{const x=makeMesh(m);if(x)found.push(x)};
  if(!g)return found;
  const typename=(g.constructor&&g.constructor.name||"").toLowerCase();
- if(typename==="mesh"||typeof g.vertices==="function"&&typeof g.faces==="function"){add(g);return found}
- // Rhino caches render meshes on Brep faces; do not generate approximate boxes.
+ // Brep and SubD expose vertices()/faces(), but their faces are NOT MeshFace arrays.
+ if(typename==="mesh"){add(g);return found}
+ if(typename.includes("subd")){
+  if(R.Mesh&&typeof R.Mesh.createFromSubDControlNet==="function"){
+   try{add(R.Mesh.createFromSubDControlNet(g))}catch(e){console.warn("SubD control-net conversion failed",e)}
+  }
+  return found;
+ }
  let brep=g;
  if(typeof g.toBrep==="function"){try{brep=g.toBrep(true)||g}catch(e){}}
  if(typeof brep.getMeshes==="function"){
@@ -77,14 +83,15 @@ function getMeshes(g,R){
  }
  if(!found.length&&typeof brep.faces==="function"){
   try{
-   const faces=brep.faces();for(let i=0;i<faces.count;i++){
+   const faces=brep.faces();
+   for(let i=0;i<faces.count;i++){
     const face=faces.get(i);
-    if(typeof face.getMesh==="function")add(face.getMesh(R.MeshType.Render));
+    if(face&&typeof face.getMesh==="function"){
+     const mesh=face.getMesh(R.MeshType.Render);
+     if(mesh)add(mesh);
+    }
    }
-  }catch(e){}
- }
- if(!found.length&&typename.includes("subd")&&R.Mesh.createFromSubDControlNet){
-  try{add(R.Mesh.createFromSubDControlNet(g))}catch(e){}
+  }catch(e){console.warn("Brep face mesh extraction failed",e)}
  }
  return found;
 }
@@ -217,7 +224,7 @@ async function getSavedModel(){
   const response=await fetch(PUBLISHED_SOURCE,{cache:"no-cache"});
   if(!response.ok){
    if(response.status!==404)console.warn("Published Rhino source HTTP",response.status);
-   return null; // Preserve existing embedded model until source binary is published.
+   throw Error("Published Rhino source unavailable: HTTP "+response.status);
   }
   const blob=await response.blob();
   if(blob.size<10240)throw Error("Published Rhino 3DM seems incomplete");
@@ -230,8 +237,8 @@ async function getSavedModel(){
   parsed.meta.publishedDefault=true;
   return parsed;
  })().catch(error=>{
-  console.error("Could not use published 2.3dm; keeping legacy embedded scene",error);
-  return null;
+  console.error("Published 2.3dm failed validation",error);
+  throw error;
  });
  return publishedTask;
 }
