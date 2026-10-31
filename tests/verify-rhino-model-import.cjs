@@ -85,11 +85,9 @@ assert(html.includes("channelGeom.setAttribute('color',new THREE.Float32BufferAt
 assert(html.includes('vertexColors:true'), 'Water material must use the depth colours');
 assert(html.includes("wallMesh.name='场地切面上的水体剖面';"), 'Water body section wall is missing');
 assert(html.includes('if(!onCut(a)||!onCut(b))continue;'), 'Only the site cut may be closed into a wall');
-// WATER v29 — the centroid road test leaves a dry wedge where a channel meets
-// a road; one ring of those dropped faces comes back at the kerb line.
-assert(html.includes('const kerb=new Set();'), 'Kerb-line recovery is missing');
-assert(html.includes('for(const k of kerb)selected.add(k);'), 'Kerb faces are not added back to the water');
-assert(html.includes('result.kerbFaces=kerb.size;'), 'Kerb recovery must be reported');
+// Road-covered bed faces remain dry at the water boundary.
+assert(html.includes('result.kerbFaces=0;'), 'Road boundary must remain dry');
+assert(!html.includes('for(const k of kerb)selected.add(k);'), 'Road-covered faces were added back to the water');
 // LANDSCAPE v29 — planting is cut against the live Roads mesh, not just the
 // baseline parcel polygons, so nothing is planted on a 2.3dm carriageway.
 assert(html.includes('function clearsCarriageway(x,y,r){'), 'Carriageway clearance test is missing');
