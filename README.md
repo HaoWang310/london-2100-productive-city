@@ -8,19 +8,19 @@ The site is published from the repository's `index.html` through GitHub Pages:
 
 https://haowang310.github.io/london-2100-productive-city/
 
-Current presentation: **FORM / ASSEMBLY — source-aware Rhino 8 import**. The embedded baseline retains the original 24-parcel / 58-Form model; a new browser import facility supports roads, site and structures from a newer Rhino 3DM.
+Current presentation: **FORM / ASSEMBLY — GitHub Pages public default Rhino source**. All visitors load the same repository model file `2(2).3dm` when present and valid. The original embedded 24-parcel / 58-Form model is retained as a fallback only.
 
 > The crossings and road markings are concept-stage design geometry, not an approved traffic-engineering scheme. The Rhino-derived model remains unchanged.
 
 ## Latest Rhino source geometry (October 2026)
 
-The updated App includes **导入最新 3DM** in the header. Choose the Rhino file; source objects are classified by layer name (道路Roads / 场地(Site) / 结构), using actual mesh data, and site/road geometry, estimated unit dimensions, Form groups and counts are rebuilt. Objects without readable render meshes are never silently invented or substituted. Invalid site/road/structure imports are rejected.
+The app now fetches **`2(2).3dm` at the repository root automatically on every browser**, without a "导入最新 3DM" or "恢复内置版本" dialog. A browser-local IndexedDB model can no longer override the public site geometry.
 
-**Browser-local only:** This repository does NOT contain the uploaded 9 MB Rhino source binary. Browser imports are saved in IndexedDB and remain available across refreshes on that browser, but are not distributed to other GitHub Pages visitors. The public default continues to show the original embedded model until the verified new geometry is separately published into GitHub. **恢复内置版本** clears the local override.
+**Required asset:** the 9,345,441-byte binary `2(2).3dm` must be uploaded separately to the `main` branch at the repository root. The source file is not added by the JavaScript commit. Until this exact asset exists and is parseable, visitors see the original embedded baseline; no fabricated replacement is generated. Use the GitHub website: **Add file → Upload files → `2(2).3dm` → Commit changes**. The GitHub Pages link stays unchanged.
 
-**Geometry QA:** The legacy zebra crossings, green medians, road vehicle positions, landscape and water from the previous site are disabled on a new source until geometry-specific recalibration. Imported site objects are represented by estimated mesh-component boundaries, not verified road-minus-site Boolean parcel cuts. Reports flag these geometric and topological limitations explicitly; do not use the estimates for construction or traffic design.
+The public importer maps Rhino layer names containing 道路 / Roads, 场地 / Site, 结构 / Structure, and rebuilds source-aware geometry, parcels, structural groups and counts. The Rhino 8 decoding dependency uses the McNeel JS/WASM CDN. Geometry with missing render meshes is rejected instead of replaced with invented meshes.
 
-Conversion requires the McNeel Rhino3dm JavaScript/WASM CDN. If the importer rejects uncached Brep/SubD objects, save a source with readable Rhino render meshes before retrying. See tests/verify-rhino-model-import.cjs and .github/workflows/verify-rhino-model-import.yml.
+**QA limitation:** zebra crossings, traffic markings, medians, water, landscaping and vehicles designed against an earlier site are not automatically transferable to a new geometry. They require source-aligned recalibration and independent browser visual review. Source geometry is not altered by the loader.
 
 ## Publish updates
 
