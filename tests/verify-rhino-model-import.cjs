@@ -72,7 +72,7 @@ assert(html.includes('if(model.meta?.imported&&!roadsDisplayOverride)toggle.disa
 assert(html.includes('function importedRecessedWater(){'), 'Road-aware water reader is missing');
 assert(html.includes("if(typeof siteDisplayOverride!=='undefined'&&siteDisplayOverride)return (nativeChannelCache=importedRecessedWater());"), 'Water must be derived from the imported site when one is loaded');
 assert(html.includes('const site=siteDisplayOverride,roads=model?.roads;'), 'Water reader must use the imported site and roads');
-assert(html.includes('&&!onRoad(f.center[0],f.center[1]))bed.add(k);'), 'Road trenches must be excluded from the water bed');
+assert(html.includes('for(const dryFootprint of subtractRoads(poly))'), 'Road trenches must be clipped from the final water footprint');
 assert(html.includes('if(floor-z<=3.0001)floor=Math.min(floor,z)'), 'Terrace ladder must bound the flood above the slab underside');
 assert(html.includes("const site=model?.site,basin=model?.parcels?.find(p=>p.id==='P-24');"), 'Embedded baseline must keep its original P-24 water rule');
 // WATER BODY v28 — the footprint must carry the real bed elevation so the
@@ -103,6 +103,12 @@ assert(Math.abs(waterContext.waterResult.area-372.5)<.001, 'Road overlap was not
 assert(waterContext.waterResult.triangles.some(t=>t.some(p=>p[0]<12)), 'Water on the left side was lost');
 assert(waterContext.waterResult.triangles.some(t=>t.some(p=>p[0]>17)), 'Water on the right side was lost');
 assert(waterContext.waterResult.triangles.every(t=>t.every(p=>p[0]<=12+1e-6||p[0]>=17-1e-6)), 'Water has vertices within the dry road strip');
+// One of these two bed faces has its centre on the road. Discarding that whole
+// face creates the diagonal missing wedge seen beside the real P-24 bridges.
+waterContext.siteDisplayOverride={v:[0,0,-1,30,0,-1,30,30,-1,0,30,-1],t:[0,1,2,0,2,3]};
+waterContext.model.roads={v:[10,0,1,15,0,1,15,30,1,10,30,1],t:[0,1,2,0,2,3]};
+vm.runInNewContext('waterResult=importedRecessedWater()',waterContext);
+assert(Math.abs(waterContext.waterResult.area-750)<.001, 'Road-centred source face caused a triangular gap in the channel');
 // LANDSCAPE v29 — planting is cut against the live Roads mesh, not just the
 // baseline parcel polygons, so nothing is planted on a 2.3dm carriageway.
 assert(html.includes('function clearsCarriageway(x,y,r){'), 'Carriageway clearance test is missing');
