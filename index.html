@@ -2344,8 +2344,38 @@ function buildRoadDesign(){
   }
   return adjusted;
  };
+ // Keep only connected planting strips. Source triangles belonging to isolated
+ // fragments <4 m² or <7 m long are decorative noise, not usable medians.
+ const greenQA={sourceComponents:0,discardedComponents:0,discardedTriangles:0};
+ function filterTinyGreenIslands(raw){
+  const count=Math.floor(raw.length/6),parent=Array.from({length:count},(_,i)=>i),pointOwners=new Map();
+  const root=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i]}return i};
+  const unite=(a,b)=>{const ra=root(a),rb=root(b);if(ra!==rb)parent[rb]=ra};
+  for(let i=0;i<count;i++)for(let k=0;k<6;k+=2){
+   const key=raw[i*6+k].toFixed(2)+','+raw[i*6+k+1].toFixed(2);
+   if(pointOwners.has(key))unite(i,pointOwners.get(key));else pointOwners.set(key,i);
+  }
+  const groups=new Map();
+  for(let i=0;i<count;i++){
+   const id=root(i),off=i*6;
+   if(!groups.has(id))groups.set(id,{ids:[],area:0,minX:Infinity,minY:Infinity,maxX:-Infinity,maxY:-Infinity});
+   const g=groups.get(id),p=[[raw[off],raw[off+1]],[raw[off+2],raw[off+3]],[raw[off+4],raw[off+5]]];
+   g.ids.push(i);g.area+=Math.abs(polygonArea(p));
+   for(const q of p){g.minX=Math.min(g.minX,q[0]);g.maxX=Math.max(g.maxX,q[0]);g.minY=Math.min(g.minY,q[1]);g.maxY=Math.max(g.maxY,q[1])}
+  }
+  greenQA.sourceComponents=groups.size;
+  const keep=new Set();
+  for(const g of groups.values()){
+   const span=Math.max(g.maxX-g.minX,g.maxY-g.minY);
+   if(g.area<4||span<7){greenQA.discardedComponents++;greenQA.discardedTriangles+=g.ids.length;continue}
+   g.ids.forEach(i=>keep.add(i));
+  }
+  const output=[];for(let i=0;i<count;i++)if(keep.has(i))output.push(...raw.slice(i*6,i*6+6));
+  return output;
+ }
  for(const layer of ['median','curb','edge','dash']){
-  const raw=smoothThin(ROAD_DESIGN_V20[layer]||[],layer);
+  const data=layer==='median'?filterTinyGreenIslands(ROAD_DESIGN_V20[layer]||[]):(ROAD_DESIGN_V20[layer]||[]);
+  const raw=smoothThin(data,layer);
   for(let k=0;k+5<raw.length;k+=6){
    let polys=[[[raw[k],raw[k+1]],[raw[k+2],raw[k+3]],[raw[k+4],raw[k+5]]]];
    const b=bbox(polys[0]);
@@ -2382,7 +2412,7 @@ function buildRoadDesign(){
   curbFlare:Number(c.flare.toFixed(2)),widthDrift:Number(c.drift.toFixed(2))}));
  roadDesignGroup.userData={version:26,geometrySource:'actual Rhino top road triangles at z=0.5',
   junctions:junctions.length,entrances:audit.length,crossings:crossings.length,
-  stripeLengthMeters:2,overlapping,unresolved,dimensions,checklist:audit};
+  stripeLengthMeters:2,greenQA,overlapping,unresolved,dimensions,checklist:audit};
  console.info('Road-marking QA v26',roadDesignGroup.userData);
  if(unresolved.length)console.warn('Road-marking entrances needing further geometry review',unresolved);
  updateRoadDesignVisibility();
