@@ -26,6 +26,17 @@ Rhino stores this model in world coordinates (X −621.4 … 3.6, Y −0.7 … 3
 
 The importer now applies one rigid translation — no rotation, no scaling, no vertex edited — before anything reads the geometry. The shift is derived from the imported site's own bounding box rather than hard-coded, so a re-export from a different world position still lands correctly, and Site, Roads and Structure always share the same shift. For `2.3dm` this resolves to `[308.935, −186.600, −23.568]`, reproducing the embedded model's `meta.origin` to within 1 mm and matching its site bounding box on every axis.
 
+### Road-aware water (v27)
+
+In `2.3dm` the carriageways sit in a 1 m trench whose floor is at the **same −1 m level as the old water bed**, so the v25 rule — flood every −1 m face connected to parcel P-24 — would have filled the entire road network. On an imported site the water is now read as:
+
+- every flat terrace below the trench floor (the stepped lagoon, −2 m to −6 m), plus
+- the −1 m beds that lie clear of the Roads footprint (the feeder channels).
+
+The Roads mesh is the authority for what counts as carriageway; nothing is drawn or invented. A terrace-ladder scan fixes the lower bound (−6 m here) so the flood can never escape down the basin walls to the −25 m slab underside. The result is 53,460 m² of water (22.8 % of the site) against 50,518 m² before — the difference is the feeder channels, which the embedded baseline site does not contain. Vehicles and planting avoid the new footprint automatically, since both test it through `intersectsWaterFootprint`.
+
+The embedded baseline model keeps the original P-24 rule unchanged, and its CI check still reports 139 connected channel faces and 50,518 m².
+
 Rhino world coordinates stay recoverable as `world = local + meta.origin`, so OBJ export is unaffected. The application refuses an import that is not flagged `alignedToSiteFrame`, and logs a console warning if the file's world placement diverges from the embedded model by more than 1 m — the signal that the retained structures, water and landscaping no longer belong to the imported site. The Rhino 8 decoding dependency uses the McNeel JS/WASM CDN. Geometry with missing render meshes is rejected instead of replaced with invented meshes.
 
 **QA limitation:** zebra crossings, traffic markings, medians, water, landscaping and vehicles designed against an earlier site are not automatically transferable to a new geometry. They require source-aligned recalibration and independent browser visual review. Source geometry is not altered by the loader.

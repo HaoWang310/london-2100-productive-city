@@ -66,6 +66,15 @@ assert(html.includes('if(idx.some(i=>Math.abs(rv[i*3+2]-top)>.02))continue;'), '
 assert(html.includes('if(!fits(lx,ly,ux,uy))continue;'), 'Car footprint must be verified against the road mesh');
 assert(!html.includes("vehicleGroup.name='2.3dm roads | legacy vehicle positions withheld'"), 'Vehicles are still withheld on the imported roads');
 assert(html.includes('if(model.meta?.imported&&!roadsDisplayOverride)toggle.disabled=true;'), 'Vehicle toggle must be usable once traffic is source-solved');
+// WATER v27 — on the imported site the roads sit in a -1 m trench at the same
+// level as the old water bed, so the water must be read from the imported mesh
+// with the road footprint subtracted, not from the embedded baseline site.
+assert(html.includes('function importedRecessedWater(){'), 'Road-aware water reader is missing');
+assert(html.includes("if(typeof siteDisplayOverride!=='undefined'&&siteDisplayOverride)return (nativeChannelCache=importedRecessedWater());"), 'Water must be derived from the imported site when one is loaded');
+assert(html.includes('const site=siteDisplayOverride,roads=model?.roads;'), 'Water reader must use the imported site and roads');
+assert(html.includes('&&!onRoad(f.center[0],f.center[1]))bed.add(k);'), 'Road trenches must be excluded from the water bed');
+assert(html.includes('if(floor-z<=3.0001)floor=Math.min(floor,z)'), 'Terrace ladder must bound the flood above the slab underside');
+assert(html.includes("const site=model?.site,basin=model?.parcels?.find(p=>p.id==='P-24');"), 'Embedded baseline must keep its original P-24 water rule');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

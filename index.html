@@ -1718,8 +1718,120 @@ const WATER_PARCELS=new Set(['P-24']);
 // No sketched centreline, parcel-wide flood polygon or fabricated raised volume.
 const WATER_RECESS_SOURCE_LEVEL=-1;
 let nativeChannelCache=null;
+// WATER v27 — the imported 2.3dm site carries its roads in a 1 m trench whose
+// floor sits at the SAME -1 m level as the old water bed, so the v25 rule
+// ("every -1 m face connected to P-24") would flood the entire road network.
+// On the imported site the water is read differently, still geometry-first:
+//   * flat terraces below the trench floor  -> the stepped lagoon, and
+//   * -1 m beds lying clear of the road footprint -> the feeder channels.
+// The Roads mesh decides what is carriageway. No water is ever invented, and
+// the embedded baseline model keeps the original P-24 rule untouched below.
+function importedRecessedWater(){
+ const site=siteDisplayOverride,roads=model?.roads;
+ const waterline=WATER_RECESS_SOURCE_LEVEL+.30;
+ const result={triangles:[],sourceFaces:0,basinFaces:0,connectedChannelFaces:0,waterline,area:0};
+ if(!site?.v||!site?.t||!roads?.v||!roads?.t)return result;
+ const signed=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]);
+ // 1. Road footprint, straight off the Roads mesh.
+ const RC=10,roadCells=new Map(),rkey=(x,y)=>Math.floor(x/RC)+','+Math.floor(y/RC);
+ for(let k=0;k<roads.t.length;k+=3){
+  const p=[0,1,2].map(j=>{const i=roads.t[k+j]*3;return[roads.v[i],roads.v[i+1]]});
+  if(Math.abs(signed(...p))<1e-6)continue;
+  const x0=Math.min(p[0][0],p[1][0],p[2][0]),x1=Math.max(p[0][0],p[1][0],p[2][0]);
+  const y0=Math.min(p[0][1],p[1][1],p[2][1]),y1=Math.max(p[0][1],p[1][1],p[2][1]);
+  const tri={p,x0,x1,y0,y1};
+  for(let i=Math.floor(x0/RC);i<=Math.floor(x1/RC);i++)for(let j=Math.floor(y0/RC);j<=Math.floor(y1/RC);j++){
+   const id=i+','+j;if(!roadCells.has(id))roadCells.set(id,[]);roadCells.get(id).push(tri);
+  }
+ }
+ const onRoad=(x,y)=>(roadCells.get(rkey(x,y))||[]).some(t=>
+  x>=t.x0-.001&&x<=t.x1+.001&&y>=t.y0-.001&&y<=t.y1+.001&&pointInTriangle2D(x,y,...t.p));
+ const v=site.v,t=site.t;
+ const key3=p=>p[0].toFixed(2)+','+p[1].toFixed(2)+','+p[2].toFixed(2);
+ const edge=(a,b)=>{const x=key3(a),y=key3(b);return x<y?x+'|'+y:y+'|'+x};
+ const all=new Map(),spatialEdges=new Map(),levels=new Map();
+ for(let k=0;k<t.length;k+=3){
+  const pts=[0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1],v[i+2]]});
+  const center=[(pts[0][0]+pts[1][0]+pts[2][0])/3,(pts[0][1]+pts[1][1]+pts[2][1])/3];
+  const area=Math.abs(signed(...pts))/2;
+  const zs=pts.map(p=>p[2]),flat=Math.max(...zs)-Math.min(...zs)<=.02;
+  const f={pts,center,area,flat,z:zs[0],minZ:Math.min(...zs),maxZ:Math.max(...zs),spatialEdges:[]};
+  all.set(k,f);
+  for(let j=0;j<3;j++){const e=edge(pts[j],pts[(j+1)%3]);f.spatialEdges.push(e);
+   if(!spatialEdges.has(e))spatialEdges.set(e,[]);spatialEdges.get(e).push(k)}
+  if(flat&&area>.08&&f.z<waterline){const z=+f.z.toFixed(2);levels.set(z,(levels.get(z)||0)+area)}
+ }
+ // 2. The slab underside is also "below the waterline"; stop at the first gap
+ //    in the terrace ladder so the flood can never reach it.
+ const ladder=[...levels.entries()].filter(([,a])=>a>20).map(([z])=>z).sort((a,b)=>b-a);
+ let floor=WATER_RECESS_SOURCE_LEVEL;
+ for(const z of ladder){if(z>WATER_RECESS_SOURCE_LEVEL+.01)continue;if(floor-z<=3.0001)floor=Math.min(floor,z)}
+ const deepEnough=f=>f.minZ>=floor-.1;
+ // 3. Water beds: lagoon terraces below the trench floor, plus -1 m channel
+ //    beds that no road covers.
+ const bed=new Set();
+ for(const [k,f] of all){
+  if(!f.flat||f.area<=.08||!deepEnough(f))continue;
+  if(f.z<=WATER_RECESS_SOURCE_LEVEL-.5){bed.add(k);continue}
+  if(Math.abs(f.z-WATER_RECESS_SOURCE_LEVEL)<.02&&!onRoad(f.center[0],f.center[1]))bed.add(k);
+ }
+ // 4. Drop bed slivers; keep every genuine body.
+ const visited=new Set(),selected=new Set();
+ for(const k of bed){
+  if(visited.has(k))continue;
+  const stack=[k],group=[];let groupArea=0;
+  while(stack.length){
+   const x=stack.pop();if(visited.has(x)||!bed.has(x))continue;
+   visited.add(x);group.push(x);groupArea+=all.get(x).area;
+   for(const e of all.get(x).spatialEdges)for(const o of spatialEdges.get(e)||[])if(!visited.has(o)&&bed.has(o))stack.push(o);
+  }
+  if(groupArea>=150)for(const x of group)selected.add(x);
+ }
+ result.connectedChannelFaces=selected.size;
+ // 5. Follow the real submerged surface off those beds: terrace steps and
+ //    basin walls, never under a carriageway and never past the floor.
+ const submerged=k=>{const f=all.get(k);
+  return f.maxZ<=waterline&&deepEnough(f)&&!onRoad(f.center[0],f.center[1])};
+ const stack=[...selected];
+ while(stack.length){
+  const k=stack.pop();
+  for(const e of all.get(k).spatialEdges)for(const o of spatialEdges.get(e)||[])
+   if(!selected.has(o)&&submerged(o)){selected.add(o);stack.push(o);result.basinFaces++}
+ }
+ // 6. One ring of bank faces crossing the waterline, clipped below.
+ const banks=new Set();
+ for(const k of selected)for(const e of all.get(k).spatialEdges)for(const o of spatialEdges.get(e)||[]){
+  const f=all.get(o);
+  if(!f||selected.has(o)||onRoad(f.center[0],f.center[1]))continue;
+  if(f.minZ<waterline-.001&&f.maxZ>waterline+.001)banks.add(o);
+ }
+ for(const k of banks)selected.add(k);
+ for(const k of selected){
+  const pts=all.get(k).pts,poly=[];
+  for(let i=0;i<pts.length;i++){
+   const a=pts[i],b=pts[(i+1)%pts.length],aIn=a[2]<=waterline,bIn=b[2]<=waterline;
+   if(aIn)poly.push(a);
+   if(aIn!==bIn){const fr=(waterline-a[2])/(b[2]-a[2]);poly.push([a[0]+(b[0]-a[0])*fr,a[1]+(b[1]-a[1])*fr,waterline])}
+  }
+  for(let j=1;j+1<poly.length;j++){
+   const tri=[poly[0],poly[j],poly[j+1]].map(p=>[p[0],p[1]]);
+   const a=signed(...tri);
+   if(Math.abs(a)<.001)continue; // vertical walls contribute no footprint
+   if(a<0){const tmp=tri[1];tri[1]=tri[2];tri[2]=tmp}
+   result.triangles.push(tri);result.area+=Math.abs(a)*.5;
+  }
+ }
+ result.sourceFaces=selected.size;
+ console.info('Rhino geometry-first water · 2.3dm site, road-aware',{floor,waterline,
+  bedFaces:result.connectedChannelFaces,floodedFaces:result.basinFaces,bankFaces:banks.size,
+  triangles:result.triangles.length,area:Math.round(result.area)});
+ return result;
+}
 function nativeRecessedChannel(){
  if(nativeChannelCache)return nativeChannelCache;
+ // typeof guard: the water CI harness runs this function in a bare VM context
+ // where only `model` exists, and must keep exercising the baseline rule.
+ if(typeof siteDisplayOverride!=='undefined'&&siteDisplayOverride)return (nativeChannelCache=importedRecessedWater());
  const site=model?.site,basin=model?.parcels?.find(p=>p.id==='P-24');
  const waterline=WATER_RECESS_SOURCE_LEVEL+.30;
  const result={triangles:[],sourceFaces:0,basinFaces:0,connectedChannelFaces:0,waterline,area:0};
@@ -1945,7 +2057,7 @@ function buildContextDecorations(){
 function buildWaterLayer(){
  const native=nativeRecessedChannel(),waterline=native.waterline;
  waterGroup=new THREE.Group();
- waterGroup.name='真实 Rhino 下沉几何水域 · P-24 连通水系';
+ waterGroup.name=siteDisplayOverride?'真实 Rhino 下沉几何水域 · 2.3dm 泻湖与水渠（已扣除道路沟槽）':'真实 Rhino 下沉几何水域 · P-24 连通水系';
  scene.add(waterGroup);
  if(!native.triangles.length){
   console.warn('Rhino submerged water footprint is empty — no synthetic water added.');
