@@ -1,0 +1,21 @@
+name: Verify Rhino road markings v22
+on:
+  push:
+    paths:
+      - index.html
+      - tests/verify-road-markings.cjs
+      - .github/workflows/verify-road-markings.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  road-topology:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit actual Rhino deck, crossings and stripe orientation
+        run: node tests/verify-road-markings.cjs
