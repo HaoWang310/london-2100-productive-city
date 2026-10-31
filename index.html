@@ -2033,6 +2033,7 @@ function initWaterUI(){
  const btn=document.createElement('button');btn.id='waterToggle';btn.type='button';btn.setAttribute('aria-pressed','true');btn.textContent='水域：显示';btn.style.cssText='padding:7px 11px;font-size:12px;border:1px solid #395c70;border-radius:7px;background:#1a3444;color:#b4e0f3;cursor:pointer';
  const sync=()=>{const b=document.querySelector('#waterToggleMain');if(b){b.textContent=btn.textContent;b.setAttribute('aria-pressed',btn.getAttribute('aria-pressed'))}};
  btn.addEventListener('click',()=>{waterConfig.enabled=!waterConfig.enabled;btn.setAttribute('aria-pressed',String(waterConfig.enabled));btn.textContent=waterConfig.enabled?'水域：显示':'水域：隐藏';updateWaterVisibility();sync();if(renderer?.isSoftware)renderer.lastSignature='';});
+ if(model.meta?.imported){btn.disabled=true;btn.textContent='水域 · 待场地核对';btn.setAttribute('aria-pressed','false')}
  const report=document.querySelector('#landscapeControlsMount');if(report){report.append(btn)}
  const stage=document.querySelector('.stage .layers');if(stage){const b=btn.cloneNode(true);b.id='waterToggleMain';b.addEventListener('click',()=>btn.click());stage.append(b)}
  sync();
@@ -2041,7 +2042,8 @@ function initLandscapeUI(){
  const btn=document.createElement('button');btn.id='landscapeToggle';btn.className='landscapeToggle';btn.type='button';btn.setAttribute('aria-pressed','true');btn.textContent='公园与树木：显示';
  btn.style.cssText='padding:7px 11px;font-size:12px;border:1px solid #52705a;border-radius:7px;background:#273d30;color:#d9eddb;cursor:pointer';
  btn.addEventListener('click',()=>{landscapeConfig.enabled=!landscapeConfig.enabled;btn.setAttribute('aria-pressed',String(landscapeConfig.enabled));btn.textContent=landscapeConfig.enabled?'公园与树木：显示':'公园与树木：隐藏';if(renderer?.isSoftware)renderer.lastSignature='';});
- const foot=document.createElement('span');foot.style.cssText='font-size:11px;color:#abbdb0';foot.textContent=`${landscapeStats.parks} 片绿地 / ${landscapeStats.trees} 棵树 / ${landscapeStats.shrubs} 株灌木`;
+ if(model.meta?.imported){btn.disabled=true;btn.textContent='公园与树木 · 待场地核对';btn.setAttribute('aria-pressed','false')}
+ const foot=document.createElement('span');foot.style.cssText='font-size:11px;color:#abbdb0';foot.textContent=model.meta?.imported?'重新导入最新场地后需重新规划植被':`${landscapeStats.parks} 片绿地 / ${landscapeStats.trees} 棵树 / ${landscapeStats.shrubs} 株灌木`;
  // Mount beside report preview, leaving every existing 3D control intact.
  const report=document.querySelector('#report');
  if(report){const box=document.createElement('div');box.className='parkSettings';box.id='landscapeControlsMount';box.append(btn,foot);report.insertBefore(box,report.querySelector('#reportStats'))}
@@ -2426,9 +2428,10 @@ function initRoadDesignUI(){
  const main=document.querySelector('.stage .layers');
  const report=document.querySelector('#landscapeControlsMount');
  const btn=document.createElement('button');btn.id='roadDesignToggleMain';btn.type='button';btn.className='layer';btn.style.cssText='min-height:33px;border:1px solid #4a4f58;background:#262b32;color:#dde3e8;border-radius:7px;padding:7px 11px;cursor:pointer';
- const label=()=>roadDesignConfig.enabled?'道路设计：显示':'道路设计：隐藏';
+ const label=()=>model.meta?.imported?'道路标线 · 待几何核对':roadDesignConfig.enabled?'道路设计：显示':'道路设计：隐藏';
  const sync=()=>{btn.textContent=label();btn.setAttribute('aria-pressed',String(roadDesignConfig.enabled));const twin=document.querySelector('#roadDesignToggleReport');if(twin){twin.textContent=label();twin.setAttribute('aria-pressed',String(roadDesignConfig.enabled))}if(renderer?.isSoftware)renderer.lastSignature='';};
  btn.addEventListener('click',()=>{roadDesignConfig.enabled=!roadDesignConfig.enabled;updateRoadDesignVisibility();applyColors();sync()});
+ if(model.meta?.imported)btn.disabled=true;
  if(main)main.append(btn);
  if(report){const copy=btn.cloneNode(true);copy.id='roadDesignToggleReport';copy.addEventListener('click',()=>btn.click());report.append(copy)}
  sync();
@@ -2478,15 +2481,17 @@ function initRoadVehicleUI(){
  const main=document.querySelector('.stage .layers');
  const report=document.querySelector('#landscapeControlsMount');
  const toggle=document.createElement('button');toggle.id='vehicleToggleMain';toggle.type='button';toggle.className='layer';toggle.style.cssText='min-height:33px;border:1px solid #4a4f58;background:#262b32;color:#dde3e8;border-radius:7px;padding:7px 11px;cursor:pointer';
- const counter=()=>vehicleConfig.enabled?`车辆：显示 · ${vehicleConfig.density*16} 辆`:'车辆：隐藏';
+ const counter=()=>model.meta?.imported?'车辆 · 待位置核对':vehicleConfig.enabled?`车辆：显示 · ${vehicleConfig.density*16} 辆`:'车辆：隐藏';
  const sync=()=>{toggle.textContent=counter();toggle.setAttribute('aria-pressed',String(vehicleConfig.enabled));const twin=document.querySelector('#vehicleToggleReport');if(twin){twin.textContent=counter();twin.setAttribute('aria-pressed',String(vehicleConfig.enabled))}if(renderer?.isSoftware)renderer.lastSignature='';};
  toggle.addEventListener('click',()=>{vehicleConfig.enabled=!vehicleConfig.enabled;updateRoadVehicleVisibility();sync()});
+ if(model.meta?.imported)toggle.disabled=true;
  if(main)main.append(toggle);
  if(report){const copy=toggle.cloneNode(true);copy.id='vehicleToggleReport';copy.addEventListener('click',()=>toggle.click());report.append(copy)}
  const density=document.createElement('select');density.id='vehicleDensity';density.setAttribute('aria-label','道路车辆密度');density.style.cssText='background:#252a31;color:#e5e8ed;border:1px solid #4a4f58;border-radius:7px;padding:6px 8px;min-height:33px;font-size:12px;cursor:pointer';
  density.innerHTML='<option value="1">少 · 16 辆</option><option value="2">标准 · 32 辆</option><option value="3">多 · 48 辆</option>';
  density.value=String(vehicleConfig.density);
  density.addEventListener('change',()=>{vehicleConfig.density=Number(density.value);updateRoadVehicleVisibility();sync()});
+ if(model.meta?.imported)density.disabled=true;
  if(main)main.append(density);
  sync();
 }
