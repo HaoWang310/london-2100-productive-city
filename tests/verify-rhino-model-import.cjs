@@ -76,7 +76,7 @@ assert(html.includes('bridged.has(k)?[poly]:subtractRoads(poly)'), 'Road trenche
 // A road crossing a channel is a bridge: the bed runs on underneath, so the
 // footprint must NOT be cut there or the channel is severed at every kerb.
 assert(html.includes('const bridged=new Set();'), 'Channel/road crossings are not detected');
-assert(html.includes('if(!roadAt(f.center[0],f.center[1]))continue;'), 'Crossing test must only consider road-covered bed');
+assert(html.includes('if(!isBedFace(f)||!roadAt(f.center[0],f.center[1]))continue;'), 'Crossing test must only consider road-covered bed faces');
 assert(html.includes('reaches(f.center[0],f.center[1],dx,dy)&&reaches(f.center[0],f.center[1],-dx,-dy)'), 'A crossing needs water on two opposite sides');
 assert(html.includes('if(floor-z<=3.0001)floor=Math.min(floor,z)'), 'Terrace ladder must bound the flood above the slab underside');
 assert(html.includes("const site=model?.site,basin=model?.parcels?.find(p=>p.id==='P-24');"), 'Embedded baseline must keep its original P-24 water rule');

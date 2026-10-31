@@ -1866,9 +1866,14 @@ function importedRecessedWater(){
  // 1,958 m², 5.6% of the bed that sits under roads.
  const roadAt=(x,y)=>(roadCells.get(Math.floor(x/RC)+','+Math.floor(y/RC))||[])
   .some(t=>x>=t.x0-.001&&x<=t.x1+.001&&y>=t.y0-.001&&y<=t.y1+.001&&pointInTriangle2D(x,y,...t.p));
+ // Build both sides of the test from the BED ONLY — flat faces at or below the
+ // -1 m channel floor. Using the final selection instead pulls in bank and
+ // flood faces, which made almost every road edge look like a crossing
+ // (measured: 3,127 faces and 72,468 m² of water, against 33 / 1,958 m² here).
+ const isBedFace=f=>f.flat&&f.area>.08&&deepEnough(f)&&f.z<=WATER_RECESS_SOURCE_LEVEL+.02;
  const WC=2,wkey=(x,y)=>Math.floor(x/WC)+','+Math.floor(y/WC),openWater=new Set();
- for(const k of selected){const f=all.get(k);
-  if(roadAt(f.center[0],f.center[1]))continue;
+ for(const [,f] of all){
+  if(!isBedFace(f)||roadAt(f.center[0],f.center[1]))continue;
   for(const q of f.pts)openWater.add(wkey(q[0],q[1]));
   openWater.add(wkey(f.center[0],f.center[1]));
  }
@@ -1876,7 +1881,7 @@ function importedRecessedWater(){
  const CROSS_DIRS=[[1,0],[0,1],[Math.SQRT1_2,Math.SQRT1_2],[Math.SQRT1_2,-Math.SQRT1_2]];
  const bridged=new Set();
  for(const k of selected){const f=all.get(k);
-  if(!roadAt(f.center[0],f.center[1]))continue;
+  if(!isBedFace(f)||!roadAt(f.center[0],f.center[1]))continue;
   if(CROSS_DIRS.some(([dx,dy])=>reaches(f.center[0],f.center[1],dx,dy)&&reaches(f.center[0],f.center[1],-dx,-dy)))bridged.add(k);
  }
  result.bridgeFaces=bridged.size;
