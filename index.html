@@ -1691,7 +1691,7 @@ class SoftwareRenderer{
  ctx.lineWidth=.45;for(const t of triangles){ctx.globalAlpha=t[9];ctx.beginPath();ctx.moveTo(t[1],t[2]);ctx.lineTo(t[3],t[4]);ctx.lineTo(t[5],t[6]);ctx.closePath();ctx.fillStyle=t[7];ctx.fill();ctx.strokeStyle=state.layers.edges&&t[8]!=='site'&&t[8]!=='roads'?'#8b8c94':t[7];ctx.stroke()}ctx.globalAlpha=1;
  }
 }
-</script><script>'use strict';
+</script><script src="./latest-model-loader.js?v=20261031-rhino2"></script><script>'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const fmt=(n,d=0)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const state={mode:'overview',filter:'parcel',selected:null,isolated:false,explode:0,targetExplode:0,view:'iso',report:'summary',layers:{site:true,roads:true,structure:true,labels:false,mono:false,edges:false},assembled:new Set(),playing:false,presentation:false};
@@ -2500,8 +2500,13 @@ function buildScene(){
  ground=new THREE.Mesh(new THREE.PlaneGeometry(5000,5000),new THREE.ShadowMaterial({opacity:.09}));ground.rotation.x=-Math.PI/2;ground.position.y=-25.12;ground.receiveShadow=true;scene.add(ground);
  siteMesh=new THREE.Mesh(bufferGeom(model.site),material('#383a3d'));siteMesh.receiveShadow=true;siteMesh.castShadow=true;scene.add(siteMesh);
  roadsMesh=new THREE.Mesh(bufferGeom(model.roads),material('#e6cfa6'));roadsMesh.receiveShadow=true;scene.add(roadsMesh);
- buildRoadDesign();
- buildRoadVehicles();
+ if(model.meta?.imported){
+  // Only source Rhino roads. Legacy fixed junction seeds and vehicle coordinates cannot be reused.
+  roadDesignGroup=new THREE.Group();roadDesignGroup.name='Latest Rhino roads | markings require recalibration';
+  roadDesignGroup.userData={version:null,geometrySource:model.meta.source,unresolved:['Latest crossing positions not verified']};
+  scene.add(roadDesignGroup);roadDesignConfig.enabled=false;vehicleConfig.enabled=false;
+  waterConfig.enabled=false;landscapeConfig.enabled=false;
+ }else{buildRoadDesign();buildRoadVehicles();}
  unitGroup=new THREE.Group();scene.add(unitGroup);
  for(const u of model.units){const mesh=new THREE.Mesh(bufferGeom(u.mesh),material('#b7b9bd'));mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData={id:u.id,unit:u,scale:1};mesh.userData.growthPlane=new THREE.Plane(new THREE.Vector3(0,-1,0),u.maxZ+1);unitGroup.add(mesh);meshes.push(mesh);meshById.set(u.id,mesh);
  const wire=new THREE.LineSegments(new THREE.WireframeGeometry(mesh.geometry),new THREE.LineBasicMaterial({color:0x30343c,transparent:true,opacity:.095,depthWrite:false}));wire.visible=false;mesh.add(wire);mesh.userData.wire=wire;
@@ -2510,7 +2515,12 @@ function buildScene(){
  for(const p of model.parcels){const sh=new THREE.Shape();p.boundary.forEach(([x,y],i)=>i?sh.lineTo(x,y):sh.moveTo(x,y));const mesh=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));mesh.rotation.x=-Math.PI/2;mesh.position.y=.6;mesh.userData={id:p.id,parcel:p};parcelGroup.add(mesh);parcelMeshes.push(mesh);
  const pts=p.boundary.map(([x,y])=>new THREE.Vector3(x,.63,-y));const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.5,depthWrite:false}));line.visible=false;parcelGroup.add(line);mesh.userData.line=line;
  const lab=document.createElement('div');lab.className='label';lab.textContent=p.id;$('#labels').append(lab);labelItems.push({element:lab,parcel:p});}
- buildContextDecorations();buildWaterLayer();
+ if(model.meta?.imported){
+  // Site-specific landscape and water are not carried over onto a new geometry.
+  decorationGroup=new THREE.Group();decorationGroup.name='Latest landscape pending validation';
+  waterGroup=new THREE.Group();waterGroup.name='Latest water pending validation';
+  scene.add(decorationGroup);scene.add(waterGroup);
+ }else{buildContextDecorations();buildWaterLayer();}
  new ResizeObserver(resize).observe(wrap);renderer.domElement.addEventListener('pointerdown',e=>lastPointer={x:e.clientX,y:e.clientY});renderer.domElement.addEventListener('pointerup',e=>{if(lastPointer&&Math.hypot(e.clientX-lastPointer.x,e.clientY-lastPointer.y)<5){const hit=pick(e);if(hit)select(hit);else if(!state.isolated)select(null)}});renderer.domElement.addEventListener('pointermove',pointerMove);renderer.domElement.addEventListener('pointerleave',()=>{$('#tooltip').style.display='none';hoverId=null;applyColors()});renderer.domElement.addEventListener('dblclick',e=>{if(state.mode==='report')return;const id=pick(e);if(id){select(id);isolate()}});controls.addEventListener('start',()=>transition=null);fitWhole(false);animate(0);
 }
 function resize(){if(!renderer)return;const el=$('#viewport'),w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;const half=420;camera.left=-half*w/h;camera.right=half*w/h;camera.top=half;camera.bottom=-half;camera.updateProjectionMatrix();renderer.setSize(w,h)}
@@ -2564,7 +2574,10 @@ function renderReport(){const active=state.report;$$('[data-report]').forEach(b=
  if(active==='connection')html='<h3>跨道路结构与关联地块</h3>'+table(['连接组','关联地块 A','关联地块 B','曲面面积 m²','空间尺寸 X × Y × Z / m','归组依据'],connectionUnits.map(u=>[u.id,...u.adjacent.map(i=>model.parcels[i].id),fmt(u.area,2),u.size.map(x=>fmt(x,2)).join(' × '),'最近两侧地块边界']),connectionUnits.map(u=>u.id));
  if(active==='assembly')html='<h3>装配演示顺序 · 当前清单</h3><p style="margin-top:-5px">先显示地块结构，再补入跨路连接，最后保留边缘部分。此顺序用于演示，不代表施工顺序。</p><button class="pill" id="exportManifest" style="margin-bottom:15px">导出装配 JSON ↓</button> <button class="pill" id="importManifest" style="margin-bottom:15px">读取装配 JSON ↑</button>'+table(['次序','单元','演示阶段','装配状态','后续工作'],assemblyOrder.map((u,i)=>[i+1,u.id,u.kind==='parcel'?'01 · 地块结构':u.kind==='connection'?'02 · 跨路连接':'03 · 边缘保留',state.assembled.has(u.id)?'已装配':'待装配',u.kind==='connection'?'设计真实连接节点':'校核接口与承载']),assemblyOrder.map(u=>u.id));
  $('#reportBody').innerHTML=html;syncReportControls();$('#reportNote').textContent=`数据来源：${model.meta.source}，模型单位 m。SubD 两级细分并采样极限曲面；道路与场地投影以 1 mm 精度处理边界。曲面面积不等于楼面面积；不提供体积、重量或承载估算。切分曲面面积守恒误差 ${(model.meta.areaError*100).toExponential(2)}%。切面未封口，连接组可能包含多片段；本应用用于设计展示，非施工分件验证。`;
- $$('#reportBody tr[data-id]').forEach(r=>r.onclick=()=>{if(state.report==='parcel'&&parcelById.has(r.dataset.id)){window.FORM_CHANGE_REPORT_PARCEL?.(r.dataset.id);$('#report').scrollTo({top:155,behavior:'smooth'});}else{setMode('overview');select(r.dataset.id);focusSelected()}});$('#exportManifest')?.addEventListener('click',exportManifest);$('#importManifest')?.addEventListener('click',importManifest);
+ if(model.meta?.imported){
+  $('#reportNote').textContent='LATEST 3DM · '+model.meta.source+'。仅场地、道路和结构源网格为直接导入。场地组件边界、地块归属、连接关系属于未校核的自动估计；尚未完成道路减场地布尔切分。旧版斑马线、车辆、景观及水面已暂停以避免与新模型错位。图中的面积为源网格估计，不代表施工或规划核定值。';
+ }
+ $('#reportBody tr[data-id]').forEach(r=>r.onclick=()=>{if(state.report==='parcel'&&parcelById.has(r.dataset.id)){window.FORM_CHANGE_REPORT_PARCEL?.(r.dataset.id);$('#report').scrollTo({top:155,behavior:'smooth'});}else{setMode('overview');select(r.dataset.id);focusSelected()}});$('#exportManifest')?.addEventListener('click',exportManifest);$('#importManifest')?.addEventListener('click',importManifest);
 }
 function exportCSV(){renderReport();const esc=x=>'"'+String(x).replace(/"/g,'""')+'"';const csv='\ufeff'+[reportHeaders,...reportRows].map(r=>r.map(esc).join(',')).join('\r\n');download(new Blob([csv],{type:'text/csv;charset=utf-8'}),'FORM_'+state.report+'.csv');toast('当前表格已导出')}
 function exportOBJ(){const u=unitById.get(state.selected);if(!u)return;let text=`# FORM / ASSEMBLY\n# Source: 2(1).3dm | Units: meters | Original Rhino coordinates\n# Display segmentation; open cut boundaries, not fabrication ready\no ${u.id}\n`;const o=model.meta.origin;for(let i=0;i<u.mesh.v.length;i+=3)text+=`v ${u.mesh.v[i]+o[0]} ${u.mesh.v[i+1]+o[1]} ${u.mesh.v[i+2]+o[2]}\n`;for(let i=0;i<u.mesh.t.length;i+=3)text+=`f ${u.mesh.t[i]+1} ${u.mesh.t[i+1]+1} ${u.mesh.t[i+2]+1}\n`;download(new Blob([text],{type:'text/plain'}),u.id+'.obj');toast('单元 OBJ 已导出 · 保留 Rhino 原坐标')}
@@ -2574,7 +2587,14 @@ function togglePresentation(){state.presentation=!state.presentation;document.bo
 function stepSelection(d){const list=state.filter==='parcel'?model.parcels.flatMap(p=>[p,...model.units.filter(u=>u.parent===p.id&&u.id!==p.id)]):state.filter==='connection'?connectionUnits:model.units;const i=list.findIndex(x=>x.id===state.selected);select(list[(i+d+list.length)%list.length].id)}
 let assemblyOrder=[],parcelUnits=[],connectionUnits=[],edgeUnits=[],maxHeight=0;
 async function init(){try{
- const bytes=Uint8Array.from(atob(MODEL_GZIP),c=>c.charCodeAt(0));const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));model=JSON.parse(await new Response(stream).text());const lb=Uint8Array.from(atob(LOD_GZIP),c=>c.charCodeAt(0));lowModel=JSON.parse(await new Response(new Blob([lb]).stream().pipeThrough(new DecompressionStream('gzip'))).text());for(const u of model.units)unitById.set(u.id,u);for(const p of model.parcels)parcelById.set(p.id,p);parcelUnits=model.units.filter(u=>u.kind==='parcel');connectionUnits=model.units.filter(u=>u.kind==='connection');edgeUnits=model.units.filter(u=>u.kind==='edge');assemblyOrder=[...parcelUnits,...connectionUnits,...edgeUnits];maxHeight=Math.max(...model.units.map(u=>u.maxZ));state.assembled=new Set(model.units.map(u=>u.id));try{const saved=JSON.parse(localStorage.getItem('formAssemblyV2'));if(Array.isArray(saved))state.assembled=new Set(saved.filter(id=>unitById.has(id)))}catch(e){}
+ const importedModel=await window.latestModelBridge?.getSavedModel();
+ if(importedModel){model=importedModel;lowModel=null}else{
+  const bytes=Uint8Array.from(atob(MODEL_GZIP),c=>c.charCodeAt(0));
+  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  model=JSON.parse(await new Response(stream).text());
+  const lb=Uint8Array.from(atob(LOD_GZIP),c=>c.charCodeAt(0));
+  lowModel=JSON.parse(await new Response(new Blob([lb]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
+ }for(const u of model.units)unitById.set(u.id,u);for(const p of model.parcels)parcelById.set(p.id,p);parcelUnits=model.units.filter(u=>u.kind==='parcel');connectionUnits=model.units.filter(u=>u.kind==='connection');edgeUnits=model.units.filter(u=>u.kind==='edge');assemblyOrder=[...parcelUnits,...connectionUnits,...edgeUnits];maxHeight=Math.max(0,...model.units.map(u=>u.maxZ));state.assembled=new Set(model.units.map(u=>u.id));try{const saved=JSON.parse(localStorage.getItem('formAssemblyV2'));if(Array.isArray(saved))state.assembled=new Set(saved.filter(id=>unitById.has(id)))}catch(e){}
  $('#countParcel').textContent=model.parcels.length;$('#countUnits').textContent=parcelUnits.length;$('#countConnections').textContent=connectionUnits.length;$('#librarySummary').textContent=`${model.parcels.length} 个地块 · ${model.units.length} 个结构分组`;buildScene(); initLandscapeUI();initWaterUI();initRoadDesignUI();initRoadVehicleUI();renderList();renderInspector();applyColors();
  $$('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$$('[data-filter]').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;$$('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));renderList()});$('#search').oninput=renderList;
  $$('[data-layer]').forEach(b=>b.onclick=()=>{const key=b.dataset.layer;state.layers[key]=!state.layers[key];b.classList.toggle('off',!state.layers[key]);applyColors()});$$('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;$$('[data-view]').forEach(x=>x.classList.toggle('active',x===b));state.isolated?focusSelected():fitWhole()});$$('[data-report]').forEach(b=>b.onclick=()=>{state.report=b.dataset.report;renderReport()});
@@ -2583,7 +2603,7 @@ async function init(){try{
  $('#snapshotBtn').onclick=()=>{renderer.render(scene,camera);renderer.domElement.toBlob(b=>{if(b)download(b,'FORM_'+(state.selected||state.mode)+'.png')});toast('当前三维视图已导出')};$('#presentBtn').onclick=togglePresentation;$('#helpBtn').onclick=()=>$('#helpModal').style.display='flex';$('#closeHelp').onclick=()=>$('#helpModal').style.display='none';$('#helpModal').onclick=e=>{if(e.target===$('#helpModal'))$('#helpModal').style.display='none'};
  $('#prevUnit').onclick=()=>stepSelection(-1);$('#nextUnit').onclick=()=>stepSelection(1);$('#csvBtn').onclick=exportCSV;$('#printBtn').onclick=()=>window.print();$('#playAssembly').onclick=()=>{if(state.assembled.size===model.units.length){state.assembled.clear();updateAssemblyUI()}state.playing=!state.playing;$('#playAssembly').textContent=state.playing?'Ⅱ 暂停':'▶ 自动装配'};$('#clearAssembly').onclick=()=>{state.playing=false;$('#playAssembly').textContent='▶ 自动装配';applyAssemblyCount(0)};$('#fullAssembly').onclick=()=>{state.playing=false;$('#playAssembly').textContent='▶ 自动装配';applyAssemblyCount(model.units.length)};$('#saveAssembly').onclick=exportManifest;$('#infoBtn').onclick=()=>$('#inspector').classList.toggle('open');
  document.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA'].includes(e.target.tagName))return;if(e.key==='Escape'){$('#helpModal').style.display='none';$('#inspector').classList.remove('open');if(state.isolated){state.isolated=false;fitWhole();renderInspector()}else if(state.presentation)togglePresentation();else select(null)}if(e.key==='ArrowRight'){e.preventDefault();stepSelection(1)}if(e.key==='ArrowLeft'){e.preventDefault();stepSelection(-1)}if(e.code==='Space'){e.preventDefault();$('#rotateBtn').click()}});
- initReportPreview();$('#loader').style.display='none';window.FORM={model,state,select,setMode,isolate,renderReport,meshes,assemblyOrder};
+ initReportPreview();$('#loader').style.display='none';window.FORM={model,state,select,setMode,isolate,renderReport,meshes,assemblyOrder};window.latestModelBridge?.controls();
  }catch(err){console.error(err);$('#loadText').textContent='无法加载：'+err.message+'。请使用近期版本 Chrome / Edge 打开。';$('#loader .progress').style.display='none'}}
 init().then(setupWorkspace);
 
@@ -2765,7 +2785,7 @@ function updateFormOverview(){
    c.setAttribute('cx',String(u.center[0]));c.setAttribute('cy',String(-u.center[1]));c.setAttribute('r','4.4');c.setAttribute('class','formOverviewMarker');group.appendChild(c)
   }
  }
- const desc=reportFormId?(ids.length>1?`${reportFormId} · 关联 ${ids.join(' / ')}`:ids.length===1?`${reportFormId} · ${ids[0]}`:`${reportFormId} · 边缘位置`):reportParcel==='all'?'全部场地 · 24 地块':WATER_PARCELS.has(reportParcel)?`${reportParcel} · 水域已高亮`:`${reportParcel} · 已高亮`;
+ const desc=reportFormId?(ids.length>1?`${reportFormId} · 关联 ${ids.join(' / ')}`:ids.length===1?`${reportFormId} · ${ids[0]}`:`${reportFormId} · 边缘位置`):reportParcel==='all'?'全部场地 · '+model.parcels.length+' 地块':WATER_PARCELS.has(reportParcel)?`${reportParcel} · 水域已高亮`:`${reportParcel} · 已高亮`;
  $('#formOverviewStatus').textContent=desc;
 }
 function reportLibraryItems(){
@@ -2816,7 +2836,7 @@ function initReportPreview(){
  <div class="formCanvas"><div id="reportViewport"></div><span class="formCanvasInfo">拖动旋转 · 滚轮缩放 · 右键平移</span>
  <div class="formOverview" id="formOverview" aria-label="可点击的真实地块总图导航">
   <div class="formOverviewTop"><div><strong>总图预览</strong><small>点击区域 · 联动 Form</small></div><button id="formMapExpand" type="button" aria-expanded="false">放大</button></div>
-  <svg id="formOverviewSVG" role="group" aria-label="24 个真实道路地块组成的可选总图"></svg>
+  <svg id="formOverviewSVG" role="group" aria-label="可选的真实场地组件总图"></svg>
   <div class="formOverviewFooter"><span id="formOverviewStatus" aria-live="polite">全部场地</span><button id="formMapWhole" type="button">查看全部</button></div><div class="formMapResizeGrip" id="formMapResizeGrip" role="separator" aria-orientation="horizontal" tabindex="0" aria-label="拖动调整总图窗口大小" title="拖动改变总图大小；双击恢复"></div>
  </div></div>
  <div class="formCanvasHeightGrip" id="formCanvasHeightGrip" role="separator" tabindex="0" aria-orientation="horizontal" aria-label="拖动调整 3D 预览高度" title="上下拖动调整高度；双击恢复默认高度"></div><div class="reportPreviewFooter"><span id="reportPreviewNote"></span><div class="reportProgressRow"><button id="reportClear" type="button">0%</button><button id="reportPlay" type="button">▶ 生长</button><input id="reportProgress" type="range" min="0" max="100" step="0.1" value="100" aria-label="当前 Form 真实几何生长进度"><output id="reportProgressText">100%</output><button id="reportFull" type="button">100%</button></div><small>生长通过真实网格沿高度连续裁切演示；不是施工时序，也不影响实际装配清单。</small></div></div>
