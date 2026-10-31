@@ -3049,11 +3049,44 @@ function solveRoadVehiclePositions(limit){
   }
   return true;
  };
+ // Heading comes from the lane work, not from "which way can I drive furthest".
+ // Beside a median the longest free run points diagonally across the
+ // carriageway, which is how a car ended up aimed at the planting. The lane
+ // lines ARE the road direction, so snap to the nearest one and keep the run
+ // test only as a fallback where the source drew no lines.
+ const LC=10,laneCells=new Map();
+ if(roadLineOverride?.v&&roadLineOverride.w){
+  const pv=roadLineOverride.v,pw=roadLineOverride.w;
+  for(let s2=0,seg=0;s2+5<pv.length;s2+=6,seg++){
+   if((pw[seg]||0)>=.3)continue;                 // skip crossing rungs
+   const ax=pv[s2],ay=pv[s2+1],bx=pv[s2+3],by=pv[s2+4];
+   const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy);
+   if(d<1.2)continue;                            // too short to state a direction
+   const mx=(ax+bx)/2,my=(ay+by)/2;
+   const item={mx,my,ang:Math.atan2(dy,dx),len:d};
+   const i=Math.floor(mx/LC),j=Math.floor(my/LC);
+   for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){
+    const id=(i+a)+','+(j+b);if(!laneCells.has(id))laneCells.set(id,[]);laneCells.get(id).push(item);
+   }
+  }
+ }
+ const laneAngleAt=(x,y)=>{
+  const list=laneCells.get(Math.floor(x/LC)+','+Math.floor(y/LC));
+  if(!list)return null;
+  let best=null,bd=14*14;
+  for(const it of list){
+   const dx=it.mx-x,dy=it.my-y,d2=dx*dx+dy*dy;
+   if(d2<bd){bd=d2;best=it}
+  }
+  return best?best.ang:null;
+ };
  const placed=[];
  for(let t=0;t<9000&&placed.length<limit;t++){
   const x=minX+rnd()*(maxX-minX),y=minY+rnd()*(maxY-minY);
   if(!onRoad(x,y))continue;
-  const ang=axisAt(x,y);if(ang===null)continue;
+  const ang=laneAngleAt(x,y)??axisAt(x,y);if(ang===null)continue;
+  // Whatever set the heading, the car must have real road ahead and behind.
+  if(runLength(x,y,ang)<18)continue;
   const vx=-Math.sin(ang),vy=Math.cos(ang);
   const dl=edgeDist(x,y,vx,vy),dr=edgeDist(x,y,-vx,-vy),width=dl+dr;
   // Too narrow for a car with clearance, or so wide it is a junction apron.
