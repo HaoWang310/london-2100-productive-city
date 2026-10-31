@@ -88,6 +88,21 @@ assert(html.includes('if(!onCut(a)||!onCut(b))continue;'), 'Only the site cut ma
 // Road-covered bed faces remain dry at the water boundary.
 assert(html.includes('result.kerbFaces=0;'), 'Road boundary must remain dry');
 assert(!html.includes('for(const k of kerb)selected.add(k);'), 'Road-covered faces were added back to the water');
+// A single selected site face can cross a road while its centre remains dry.
+// Its water footprint must be clipped on both road edges, with the dry strip
+// removed and the two connected wet sides preserved.
+const waterReader = html.slice(html.indexOf('function importedRecessedWater(){'), html.indexOf('function nativeRecessedChannel(){'));
+const triangleCheck = html.slice(html.indexOf('function pointInTriangle2D('), html.indexOf('function intersectsWaterFootprint('));
+const waterContext = {
+  siteDisplayOverride: {v:[0,0,-1,30,0,-1,0,30,-1],t:[0,1,2]},
+  model:{roads:{v:[12,0,1,17,0,1,17,30,1,12,30,1],t:[0,1,2,0,2,3]}},
+  WATER_RECESS_SOURCE_LEVEL:-1,console:{info(){}},Math,Map,Set
+};
+vm.runInNewContext(triangleCheck+waterReader+';globalThis.waterResult=importedRecessedWater()',waterContext);
+assert(Math.abs(waterContext.waterResult.area-372.5)<.001, 'Road overlap was not removed precisely from the water footprint');
+assert(waterContext.waterResult.triangles.some(t=>t.some(p=>p[0]<12)), 'Water on the left side was lost');
+assert(waterContext.waterResult.triangles.some(t=>t.some(p=>p[0]>17)), 'Water on the right side was lost');
+assert(waterContext.waterResult.triangles.every(t=>t.every(p=>p[0]<=12+1e-6||p[0]>=17-1e-6)), 'Water has vertices within the dry road strip');
 // LANDSCAPE v29 — planting is cut against the live Roads mesh, not just the
 // baseline parcel polygons, so nothing is planted on a 2.3dm carriageway.
 assert(html.includes('function clearsCarriageway(x,y,r){'), 'Carriageway clearance test is missing');
