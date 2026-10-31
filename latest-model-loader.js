@@ -174,7 +174,10 @@ async function parseFile(file,onProgress){
     const p=geom.pointAt(d[0]+(d[1]-d[0])*s2/(n-1));
     if(p)pts.push([Number(p[0]),Number(p[1]),Number(p[2])]);
    }
-   for(let s2=0;s2+1<pts.length;s2++)lineParts.push(pts[s2],pts[s2+1]);
+   // Store the sampled polyline itself. Pushing endpoint PAIRS here shares
+   // each interior point between two segments, and the alignment shift below
+   // then lands on it twice, throwing the line off the site entirely.
+   if(pts.length>1)lineParts.push(pts);
    continue;
   }
   const group=/road|道路/.test(name)?"roads":/site|场地/.test(name)?"site":/struct|结构/.test(name)?"structure":null;
@@ -210,7 +213,7 @@ async function parseFile(file,onProgress){
  for(const p of siteParts)translate(p);
  for(const p of roadParts)translate(p);
  for(const p of structureParts)translate(p);
- for(const q of lineParts){q[0]+=shift[0];q[1]+=shift[1];q[2]+=shift[2]}
+ for(const curve of lineParts)for(const q of curve){q[0]+=shift[0];q[1]+=shift[1];q[2]+=shift[2]}
  // Rhino world coordinates stay recoverable: world = local + origin.
  const origin=[-shift[0],-shift[1],-shift[2]];
  const site=newMesh(),roads=newMesh();
@@ -240,11 +243,14 @@ async function parseFile(file,onProgress){
  }
  const siteGeo=meshInfo(site),roadGeo=meshInfo(roads);
  const counts={site:siteParts.length,road:roadParts.length,structure:structureParts.length,unresolved:unresolved.length,originalObjects:objects.count};
- const lines={v:[]};for(const q of lineParts)lines.v.push(q[0],q[1],q[2]);
+ const lines={v:[]};
+ for(const curve of lineParts)for(let i=0;i+1<curve.length;i++){
+  lines.v.push(curve[i][0],curve[i][1],curve[i][2],curve[i+1][0],curve[i+1][1],curve[i+1][2]);
+ }
  const m={site,roads,lines,parcels,units,meta:{
   source:file.name+" · Rhino source layers · "+new Date().toISOString().slice(0,10),
   modelName:file.name,imported:true,topologyVerified:false,
-  origin,alignedToSiteFrame:true,roadLineSegments:lineParts.length/2,
+  origin,alignedToSiteFrame:true,roadLineSegments:lines.v.length/6,
   warnings:["地块为独立场地组件的边界近似，尚未完成道路减场地布尔运算","跨路关系按几何距离初判；非施工拆分方案",...unresolved.slice(0,10).map(x=>"Unmeshed: "+x.layer+" / "+x.type)],
   siteArea:siteGeo.projection||siteGeo.area,roadArea:roadGeo.projection||roadGeo.area,
   sourceArea:totalArea,areaError:0,counts

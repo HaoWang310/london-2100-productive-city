@@ -15,7 +15,7 @@ assert(html.includes('src="./latest-model-loader.js?v='), 'Rhino source loader n
 // The loader is cached per query string, so returning visitors keep running the
 // previous file until this token changes. Bump it in the same commit as any
 // latest-model-loader.js change, or the deployed fix never reaches them.
-assert(html.includes('src="./latest-model-loader.js?v=20261031-road-lines-v31"'), 'Loader cache-busting token was not bumped for the road-line change');
+assert(html.includes('src="./latest-model-loader.js?v=20261031-road-lines-v31b"'), 'Loader cache-busting token was not bumped for the road-line change');
 assert(!html.includes('v=20261031-source-road-replace-v1'), 'Stale loader cache token is still referenced');
 assert(importer.includes('const PUBLISHED_SOURCE="./2.3dm";'), 'Default source must match the published 2.3dm asset');
 assert(!importer.includes('2(2).3dm'), 'Stale source filename remains');
@@ -124,7 +124,8 @@ assert(html.includes('const tint=Math.floor(rand()*3),spin=rand()*6.28'), 'Per-t
 assert(html.includes('if(isWet(mx+nx,my+ny)===isWet(mx-nx,my-ny))continue;'), 'Shoreline must reject interior seams');
 // ROAD LINES v31 — the source carries its own division lines on the Default layer.
 assert(importer.includes('if(name===\"default\"&&geom&&typeof geom.pointAt===\"function\"&&geom.domain){'), 'Default-layer curves are not sampled');
-assert(importer.includes('roadLineSegments:lineParts.length/2,'), 'Road line count is not reported');
+assert(importer.includes('roadLineSegments:lines.v.length/6,'), 'Road line count is not reported');
+assert(importer.includes('if(pts.length>1)lineParts.push(pts);'), 'Line points must be stored once per curve, not per segment endpoint');
 assert(html.includes('roadLineOverride=importedModel.lines?.v?.length?importedModel.lines:null;'), 'Road lines are not applied');
 assert(html.includes("lines.name='2.3dm Default 图层划线';"), 'Road lines are not drawn');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
