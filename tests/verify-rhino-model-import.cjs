@@ -142,6 +142,10 @@ assert(html.includes('if(runLength(x,y,ang)<18)continue;'), 'A car must have roa
 assert(html.includes('function buildRoadMedians(group){'), 'Median detection is missing');
 assert(html.includes("strip.name='道路绿化隔离带';"), 'Median planting strip is not drawn');
 assert(html.includes('const med=buildRoadMedians(roadDesignGroup);'), 'Medians are not built with the road lines');
+// FURNITURE v34 — signals sit at the ends of a crossing, lighting on the kerb.
+assert(html.includes('function buildRoadFurniture(group){'), 'Road furniture is missing');
+assert(html.includes('if(group2.length<3)continue;'), 'A lone bar must not be treated as a crossing');
+assert(html.includes('const furniture=buildRoadFurniture(roadDesignGroup);'), 'Furniture is not built with the road detail');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

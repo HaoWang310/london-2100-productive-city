@@ -2953,6 +2953,143 @@ function buildRoadMedians(group){
  batch.commit(group,'隔离带灌木');
  return {areaM2:+(cells*G*G).toFixed(0),cells,shrubs};
 }
+// ROAD FURNITURE v34 — signals and street lighting, both positioned from the
+// source rather than scattered. Signals go where the drawing already puts a
+// crossing: a zebra's rungs span the carriageway, so the ENDS of a rung
+// cluster are the two kerbs of that approach. Lighting follows the kerb line
+// itself, taken as the unpaired edges of the road top surface.
+function buildRoadFurniture(group){
+ const roads=model?.roads;
+ if(!roads?.v?.length||!roads?.t?.length)return null;
+ const rv=roads.v,rf=roads.t;
+ let top=-Infinity;for(let i=2;i<rv.length;i+=3)if(rv[i]>top)top=rv[i];
+ const sgn=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]);
+ // road lookup, so an arm can be turned toward the carriageway
+ const RG=8,rcell=new Map();
+ for(let k=0;k<rf.length;k+=3){
+  const q=[0,1,2].map(j=>{const i=rf[k+j]*3;return[rv[i],rv[i+1]]});
+  if(Math.abs(sgn(...q))<1e-6)continue;
+  const x0=Math.min(q[0][0],q[1][0],q[2][0]),x1=Math.max(q[0][0],q[1][0],q[2][0]);
+  const y0=Math.min(q[0][1],q[1][1],q[2][1]),y1=Math.max(q[0][1],q[1][1],q[2][1]);
+  const tri={q,x0,x1,y0,y1};
+  for(let i=Math.floor(x0/RG);i<=Math.floor(x1/RG);i++)for(let j=Math.floor(y0/RG);j<=Math.floor(y1/RG);j++){
+   const id=i+','+j;if(!rcell.has(id))rcell.set(id,[]);rcell.get(id).push(tri);
+  }
+ }
+ const onRoad=(x,y)=>(rcell.get(Math.floor(x/RG)+','+Math.floor(y/RG))||[])
+  .some(t=>x>=t.x0-.001&&x<=t.x1+.001&&y>=t.y0-.001&&y<=t.y1+.001&&pointInTriangle2D(x,y,...t.q));
+ // --- geometry, shared by every instance through the batcher ---
+ const box=new THREE.BoxGeometry(1,1,1);
+ const post=new THREE.CylinderGeometry(.09,.11,1,6);
+ const matPole=new THREE.MeshStandardMaterial({color:'#6f757c',roughness:.62,metalness:.35});
+ const matHead=new THREE.MeshStandardMaterial({color:'#2b3137',roughness:.7,metalness:.2});
+ const matLampHead=new THREE.MeshStandardMaterial({color:'#aeb6bd',roughness:.45,metalness:.4});
+ const matRed=new THREE.MeshBasicMaterial({color:'#e2544a'});
+ const matAmber=new THREE.MeshBasicMaterial({color:'#e0a63c'});
+ const matGreen=new THREE.MeshBasicMaterial({color:'#5fbf6a'});
+ const deck=top;
+ // --- signals at the ends of every crossing ---
+ const lv=roadLineOverride?.v,lw=roadLineOverride?.w;
+ const rungs=[];
+ if(lv&&lw){
+  for(let s2=0,seg=0;s2+5<lv.length;s2+=6,seg++){
+   if((lw[seg]||0)<.3)continue;
+   rungs.push([lv[s2],lv[s2+1],lv[s2+3],lv[s2+4]]);
+  }
+ }
+ const used=new Array(rungs.length).fill(false),crossings=[];
+ for(let i=0;i<rungs.length;i++){
+  if(used[i])continue;
+  const group2=[i];used[i]=true;
+  const mi=[(rungs[i][0]+rungs[i][2])/2,(rungs[i][1]+rungs[i][3])/2];
+  const di=Math.atan2(rungs[i][3]-rungs[i][1],rungs[i][2]-rungs[i][0]);
+  for(let j=0;j<rungs.length;j++){
+   if(used[j])continue;
+   const mj=[(rungs[j][0]+rungs[j][2])/2,(rungs[j][1]+rungs[j][3])/2];
+   if(Math.hypot(mj[0]-mi[0],mj[1]-mi[1])>9)continue;
+   const dj=Math.atan2(rungs[j][3]-rungs[j][1],rungs[j][2]-rungs[j][0]);
+   if(Math.abs(Math.cos(di-dj))<.9)continue;
+   group2.push(j);used[j]=true;
+  }
+  if(group2.length<3)continue;                 // a lone bar is not a crossing
+  // Average rung: its two ends sit on the kerbs of this approach.
+  let ax=0,ay=0,bx=0,by=0;
+  for(const k of group2){
+   const r=rungs[k],flip=Math.cos(di)*(r[2]-r[0])+Math.sin(di)*(r[3]-r[1])<0;
+   ax+=flip?r[2]:r[0];ay+=flip?r[3]:r[1];bx+=flip?r[0]:r[2];by+=flip?r[1]:r[3];
+  }
+  const n=group2.length;
+  crossings.push([ax/n,ay/n,bx/n,by/n]);
+ }
+ const batch=batcher();let signals=0;
+ const putSignal=(x,y,faceAng)=>{
+  const h=3.4,co=Math.cos(faceAng),si=Math.sin(faceAng);
+  batch.add(post,matPole,x,deck+h/2,-y,1,h,1);
+  const hx=x+co*.26,hy=y+si*.26;
+  batch.add(box,matHead,hx,deck+h-.42,-hy,.3,1.05,.34,-faceAng);
+  const dots=[[matRed,.33],[matAmber,0],[matGreen,-.33]];
+  for(const [m,dy] of dots)
+   batch.add(box,m,hx+co*.17,deck+h-.42+dy,-(hy+si*.17),.07,.2,.2,-faceAng);
+  signals++;
+ };
+ for(const [ax,ay,bx,by] of crossings){
+  const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy);
+  if(d<3)continue;
+  const ux=dx/d,uy=dy/d;
+  // 1.4 m beyond each end puts the pole on the footway, clear of the lane.
+  for(const sgn2 of [-1,1]){
+   const px=(sgn2<0?ax:bx)+ux*1.4*sgn2,py=(sgn2<0?ay:by)+uy*1.4*sgn2;
+   if(onRoad(px,py))continue;                  // still on the carriageway: skip
+   putSignal(px,py,Math.atan2(-uy*sgn2,-ux*sgn2));
+  }
+ }
+ // --- street lighting along the kerb ---
+ const key=p=>p[0].toFixed(2)+','+p[1].toFixed(2);
+ const ek=(a,b)=>{const x=key(a),y=key(b);return x<y?x+'|'+y:y+'|'+x};
+ const cnt=new Map(),store=new Map();
+ for(let k=0;k<rf.length;k+=3){
+  const pts=[0,1,2].map(j=>{const i=rf[k+j]*3;return[rv[i],rv[i+1],rv[i+2]]});
+  if(!pts.every(q=>Math.abs(q[2]-top)<.02))continue;
+  for(let j=0;j<3;j++){
+   const a=pts[j],b=pts[(j+1)%3],e=ek(a,b);
+   cnt.set(e,(cnt.get(e)||0)+1);if(!store.has(e))store.set(e,[a,b]);
+  }
+ }
+ const SPACING=26,LG=SPACING,lampCells=new Map();
+ const farEnough=(x,y)=>{
+  const i=Math.floor(x/LG),j=Math.floor(y/LG);
+  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)
+   for(const p of lampCells.get((i+a)+','+(j+b))||[])
+    if((p[0]-x)**2+(p[1]-y)**2<SPACING*SPACING)return false;
+  return true;
+ };
+ let lamps=0;
+ for(const [e,c] of cnt){
+  if(c!==1)continue;
+  const [a,b]=store.get(e);
+  const dx=b[0]-a[0],dy=b[1]-a[1],d=Math.hypot(dx,dy);
+  if(d<1e-6)continue;
+  const steps=Math.max(1,Math.floor(d/3));
+  for(let k=0;k<=steps;k++){
+   const x=a[0]+dx*k/steps,y=a[1]+dy*k/steps;
+   if(!farEnough(x,y))continue;
+   // Which side is the carriageway? Put the column on the other one.
+   const nx=-dy/d,ny=dx/d;
+   const inward=onRoad(x+nx*1.2,y+ny*1.2)?1:onRoad(x-nx*1.2,y-ny*1.2)?-1:0;
+   if(!inward)continue;
+   const px=x-nx*.7*inward,py=y-ny*.7*inward;
+   const h=7.2,ang=Math.atan2(ny*inward,nx*inward);
+   batch.add(post,matPole,px,deck+h/2,-py,1,h,1);
+   batch.add(box,matPole,px+Math.cos(ang)*.7,deck+h-.1,-(py+Math.sin(ang)*.7),1.5,.12,.12,-ang);
+   batch.add(box,matLampHead,px+Math.cos(ang)*1.4,deck+h-.22,-(py+Math.sin(ang)*1.4),.62,.16,.3,-ang);
+   const id=Math.floor(x/LG)+','+Math.floor(y/LG);
+   if(!lampCells.has(id))lampCells.set(id,[]);lampCells.get(id).push([x,y]);
+   lamps++;
+  }
+ }
+ batch.commit(group,'道路设施');
+ return {signals,crossings:crossings.length,lamps};
+}
 function initRoadDesignUI(){
  const main=document.querySelector('.stage .layers');
  const report=document.querySelector('#landscapeControlsMount');
@@ -3218,7 +3355,9 @@ function buildScene(){
    lines.frustumCulled=false;roadDesignGroup.add(lines);
    const med=buildRoadMedians(roadDesignGroup);
    if(med)roadDesignGroup.userData.medians=med;
-   console.info('Road line work drawn from the source',{segments:roadLineOverride.v.length/6,medians:med});
+   const furniture=buildRoadFurniture(roadDesignGroup);
+   if(furniture)roadDesignGroup.userData.furniture=furniture;
+   console.info('Road line work drawn from the source',{segments:roadLineOverride.v.length/6,medians:med,furniture});
   }
   // Markings stay withheld, but traffic no longer depends on the retired
   // coordinate table: v27 solves car positions from the live 2.3dm carriageways.
