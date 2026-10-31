@@ -45,6 +45,13 @@ async function run(){
   try {if(typeof g.getMeshes==='function'){let a=g.getMeshes(R.MeshType.Render);out.getMeshes={length:a?.length,firstType:a?.[0]?.constructor?.name}}}catch(e){out.getMeshesError=String(e)}
   try {if(typeof g.faces==='function'){const fs=g.faces();const face=fs.count?fs.get(0):null;out.face={count:fs.count,type:face?.constructor?.name,methods:Object.getOwnPropertyNames(Object.getPrototypeOf(face)||{}).filter(x=>/mesh|brep|face|to/i.test(x))};if(face&&typeof face.getMesh==='function'){let m=face.getMesh(R.MeshType.Render);out.face.meshType=m?.constructor?.name;out.face.meshVertices=m?.vertices?.()?.count}}}catch(e){out.faceError=String(e)}
   try {if(typeof g.toBrep==='function'){const b=g.toBrep();out.toBrep={type:b?.constructor?.name,hasMeshes:typeof b?.getMeshes,faceCount:b?.faces?.().count}}}catch(e){out.toBrepError=String(e)}
+  try {
+   if(type==='Brep'){let nm=0,nv=0,nf=0,empty=0;
+    for(let n=0;n<g.faces().count;n++){const fm=g.faces().get(n).getMesh(R.MeshType.Render);if(fm&&fm.vertices().count&&fm.faces().count){nm++;nv+=fm.vertices().count;nf+=fm.faces().count}else empty++}
+    out.brepFaceMeshes={num:nm,vertices:nv,faces:nf,empty};
+   }
+   if(type==='SubD'){const m=R.Mesh.createFromSubDControlNet(g);out.subdControlMesh={type:m?.constructor?.name,vertices:m?.vertices?.().count,faces:m?.faces?.().count,firstVertex:m?.vertices?.().get(0),firstFace:m?.faces?.().get(0)};}
+  }catch(e){out.meshConstructionError=String(e)}
   probes.push(out);
  }
  console.log('MESH_PROBES',JSON.stringify({objects:probes,meshFactories:Object.getOwnPropertyNames(R.Mesh).filter(x=>/create|from|subd|brep/i.test(x)),meshType:R.MeshType}));
