@@ -1719,7 +1719,10 @@ function material(color){return new THREE.MeshStandardMaterial({color,roughness:
 // LANDSCAPE v10 — separate, optional, model-avoiding context layer.
 // Original Rhino-derived meshes and 24/58 parcel/unit topology remain untouched.
 const landscapeConfig={enabled:true,density:1.0};
-const WATER_PARCELS=new Set(['P-24']);
+// Only meaningful for the embedded baseline. Once parcels are re-cut from the
+// 2.3dm roads, land components exclude water by construction and planting
+// already rejects the water footprint geometrically.
+let WATER_PARCELS=new Set(['P-24']);
 
 // WATER GEOMETRY-FIRST v25 — ONLY authentic submerged Rhino site triangles.
 // P-24 is the anchor; exterior grooves follow the same connected -1 m bed.
@@ -1908,6 +1911,111 @@ function importedRecessedWater(){
   bedFaces:result.connectedChannelFaces,floodedFaces:result.basinFaces,bankFaces:banks.size,bridgeFaces:result.bridgeFaces,
   triangles:result.triangles.length,area:Math.round(result.area)});
  return result;
+}
+// PARCELS v30 — the embedded 24 parcels were cut against the PREVIOUS road
+// network, so the plan subdivision no longer matches the 2.3dm carriageways.
+// Re-cut them from the live geometry: land is every up-facing site face above
+// the waterline that no road covers and no water occupies, grouped into
+// connected components. Measured on 2.3dm: 32 parcels over 140,891 m².
+// Structures are then re-linked to whichever new parcel contains them, so the
+// library, labels, report and plan preview all speak about the same areas.
+function rebuildParcelsFromRoads(){
+ const site=siteDisplayOverride,roads=model?.roads;
+ if(!site?.v?.length||!roads?.v?.length)return null;
+ const signed=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]);
+ const RC=10,roadCells=new Map();
+ for(let k=0;k<roads.t.length;k+=3){
+  const q=[0,1,2].map(j=>{const i=roads.t[k+j]*3;return[roads.v[i],roads.v[i+1]]});
+  if(Math.abs(signed(...q))<1e-6)continue;
+  const x0=Math.min(q[0][0],q[1][0],q[2][0]),x1=Math.max(q[0][0],q[1][0],q[2][0]);
+  const y0=Math.min(q[0][1],q[1][1],q[2][1]),y1=Math.max(q[0][1],q[1][1],q[2][1]);
+  const tri={q,x0,x1,y0,y1};
+  for(let i=Math.floor(x0/RC);i<=Math.floor(x1/RC);i++)for(let j=Math.floor(y0/RC);j<=Math.floor(y1/RC);j++){
+   const id=i+','+j;if(!roadCells.has(id))roadCells.set(id,[]);roadCells.get(id).push(tri);
+  }
+ }
+ const onRoad=(x,y)=>(roadCells.get(Math.floor(x/RC)+','+Math.floor(y/RC))||[])
+  .some(t=>x>=t.x0-.001&&x<=t.x1+.001&&y>=t.y0-.001&&y<=t.y1+.001&&pointInTriangle2D(x,y,...t.q));
+ const water=nativeRecessedChannel(),waterline=water.waterline;
+ const inWater=(x,y)=>water.triangles.some(t=>pointInTriangle2D(x,y,...t));
+ const v=site.v,t=site.t,land=[],edges=new Map();
+ const key=q=>q[0].toFixed(2)+','+q[1].toFixed(2);
+ const ekey=(a,b)=>{const x=key(a),y=key(b);return x<y?x+'|'+y:y+'|'+x};
+ for(let k=0;k<t.length;k+=3){
+  const pts=[0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1],v[i+2]]});
+  const a2=signed(...pts);
+  if(Math.abs(a2)<=.08)continue;                       // vertical walls hold no plan area
+  if(Math.min(...pts.map(q=>q[2]))<waterline)continue; // submerged: that is water, not land
+  const c=[(pts[0][0]+pts[1][0]+pts[2][0])/3,(pts[0][1]+pts[1][1]+pts[2][1])/3];
+  if(onRoad(c[0],c[1])||inWater(c[0],c[1]))continue;
+  const id=land.length;land.push({pts,c,area:Math.abs(a2)/2});
+  for(let j=0;j<3;j++){const e=ekey(pts[j],pts[(j+1)%3]);if(!edges.has(e))edges.set(e,[]);edges.get(e).push(id)}
+ }
+ if(!land.length)return null;
+ const adj=land.map(()=>[]);
+ for(const list of edges.values())for(const a of list)for(const b of list)if(a!==b)adj[a].push(b);
+ const comp=new Array(land.length).fill(-1),groups=[];
+ for(let i=0;i<land.length;i++){
+  if(comp[i]>=0)continue;
+  const stack=[i],members=[];comp[i]=groups.length;let area=0;
+  while(stack.length){const x=stack.pop();members.push(x);area+=land[x].area;
+   for(const y of adj[x])if(comp[y]<0){comp[y]=groups.length;stack.push(y)}}
+  groups.push({members,area});
+ }
+ // Trace each parcel's outline from its own unpaired edges and keep the
+ // longest ring; smaller rings are holes punched by water or a roundabout.
+ const parcels=[];
+ for(const g of groups.sort((a,b)=>b.area-a.area)){
+  if(g.area<300)continue;
+  const own=new Set(g.members),ring=new Map();
+  for(const m of own){const pts=land[m].pts;
+   for(let j=0;j<3;j++){
+    const a=pts[j],b=pts[(j+1)%3],e=ekey(a,b);
+    if((edges.get(e)||[]).filter(x=>own.has(x)).length===1){
+     const ka=key(a);if(!ring.has(ka))ring.set(ka,[]);ring.get(ka).push([a,b]);
+    }
+   }
+  }
+  const loops=[],used=new Set();
+  for(const [start,list] of ring){
+   for(const seg of list){
+    const sk=key(seg[0])+'>'+key(seg[1]);if(used.has(sk))continue;
+    const loop=[seg[0]];used.add(sk);let cur=seg[1],guard=0;
+    while(key(cur)!==start&&guard++<20000){
+     loop.push(cur);
+     const nexts=(ring.get(key(cur))||[]).filter(s=>!used.has(key(s[0])+'>'+key(s[1])));
+     if(!nexts.length)break;
+     used.add(key(nexts[0][0])+'>'+key(nexts[0][1]));cur=nexts[0][1];
+    }
+    if(loop.length>=3)loops.push(loop);
+   }
+  }
+  if(!loops.length)continue;
+  loops.sort((a,b)=>b.length-a.length);
+  const boundary=loops[0].map(q=>[q[0],q[1]]);
+  let cx=0,cy=0;for(const m of g.members){cx+=land[m].c[0]*land[m].area;cy+=land[m].c[1]*land[m].area}
+  const per=boundary.reduce((s,q,i)=>s+Math.hypot(q[0]-boundary[(i+1)%boundary.length][0],q[1]-boundary[(i+1)%boundary.length][1]),0);
+  parcels.push({id:'P-'+String(parcels.length+1).padStart(2,'0'),boundary,
+   area:g.area,perimeter:per,type:'2.3dm 道路切分地块',unit:null,
+   center:[cx/g.area,cy/g.area,0]});
+ }
+ if(!parcels.length)return null;
+ // Re-link every structure: the old parcel index and parent id pointed at the
+ // retired subdivision, and the report reads model.parcels[index] directly.
+ const near=c=>parcels.map((p,i)=>({i,d:Math.hypot(c[0]-p.center[0],c[1]-p.center[1])})).sort((a,b)=>a.d-b.d);
+ for(const u of model.units){
+  const c=u.center||[0,0];
+  let idx=parcels.findIndex(p=>pointInPolygon([c[0],c[1]],p.boundary));
+  const rank=near(c);
+  if(idx<0)idx=rank.length?rank[0].i:0;
+  u.parcel=idx;u.parent=parcels[idx].id;
+  u.adjacent=u.kind==='connection'?rank.slice(0,2).map(r=>r.i):[idx];
+  if(u.kind==='parcel'&&!parcels[idx].unit)parcels[idx].unit=u.id;
+ }
+ model.parcels=parcels;
+ console.info('Parcels re-cut against 2.3dm roads',{parcels:parcels.length,
+  landArea:Math.round(parcels.reduce((s,p)=>s+p.area,0)),landFaces:land.length});
+ return parcels;
 }
 function nativeRecessedChannel(){
  if(nativeChannelCache)return nativeChannelCache;
@@ -3076,6 +3184,7 @@ async function init(){try{
   console.error('Authoritative 2.3dm source could not be loaded; old roads will not be substituted',sourceError);
   throw Error('无法加载最新 Rhino 场地与道路（2.3dm）：'+sourceError.message);
  }
+ if(siteDisplayOverride&&rebuildParcelsFromRoads())WATER_PARCELS=new Set();
  for(const u of model.units)unitById.set(u.id,u);for(const p of model.parcels)parcelById.set(p.id,p);parcelUnits=model.units.filter(u=>u.kind==='parcel');connectionUnits=model.units.filter(u=>u.kind==='connection');edgeUnits=model.units.filter(u=>u.kind==='edge');assemblyOrder=[...parcelUnits,...connectionUnits,...edgeUnits];maxHeight=Math.max(0,...model.units.map(u=>u.maxZ));state.assembled=new Set(model.units.map(u=>u.id));try{const saved=JSON.parse(localStorage.getItem('formAssemblyV2'));if(Array.isArray(saved))state.assembled=new Set(saved.filter(id=>unitById.has(id)))}catch(e){}
  $('#countParcel').textContent=model.parcels.length;$('#countUnits').textContent=parcelUnits.length;$('#countConnections').textContent=connectionUnits.length;$('#librarySummary').textContent=`${model.parcels.length} 个地块 · ${model.units.length} 个结构分组`;buildScene(); initLandscapeUI();initWaterUI();initRoadDesignUI();initRoadVehicleUI();renderList();renderInspector();applyColors();
  $$('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$$('[data-filter]').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;$$('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));renderList()});$('#search').oninput=renderList;
