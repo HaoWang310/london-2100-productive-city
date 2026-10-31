@@ -24,20 +24,25 @@ assert(importer.includes('if(!siteParts.length||!roadParts.length)'), 'Incomplet
 assert(importer.includes('throw Error("Published Rhino source unavailable: HTTP "+response.status)'), 'Missing source must produce visible failure rather than stale model fallback');
 assert(importer.includes('window.latestModelBridge={getSavedModel,controls,parseFile}'), 'Public loader bridge is missing');
 assert(!importer.includes('database("set",m)'), 'Local IndexedDB model must not override public source');
-// Site-only import regression: the published mesh must NOT overwrite the
-// baseline scene's road, unit, parcel, landscape, water or assembly data.
-assert(html.includes('let siteDisplayOverride=null;'), 'Site-only display state is missing');
-assert(html.includes("siteMesh=new THREE.Mesh(bufferGeom(siteDisplayOverride||model.site)"), 'Site view does not use the published display mesh');
-assert(html.includes('siteDisplayOverride=importedModel.site;'), 'Published site mesh is not applied');
+// Dual Site/Roads replacement must NOT overwrite the original structures,
+// parcels, landscape, hydrology or assembly datasets.
+assert(html.includes('let siteDisplayOverride=null, roadsDisplayOverride=null;'), 'Independent Site/Roads override state is missing');
+assert(html.includes("siteMesh=new THREE.Mesh(bufferGeom(siteDisplayOverride||model.site)"), 'Site view does not use the published mesh');
+assert(html.includes('siteDisplayOverride=importedModel.site;'), 'Published Site mesh is not applied');
+assert(html.includes('roadsDisplayOverride=importedModel.roads;'), 'Published Roads mesh is not applied');
+assert(html.includes('model.roads=roadsDisplayOverride;'), 'Embedded Roads geometry is not replaced');
+assert(html.includes('roadSource=\'2.3dm / Roads\''), 'Roads provenance is missing');
+assert(html.includes('if(roadsDisplayOverride){'), 'Old roads annotations are not guarded');
+assert(html.includes("roadDesignConfig.enabled=false;vehicleConfig.enabled=false;"), 'Outdated road markings/vehicle locations were not disabled');
 assert(html.includes('model=JSON.parse(await new Response(stream).text());'), 'Embedded complete scene must remain loaded');
 assert(html.includes('lowModel=JSON.parse('), 'Original structure LOD must remain available');
 assert(!html.includes('if(importedModel){model=importedModel;lowModel=null}'), 'Published source must not replace the whole model');
-assert(html.includes('}else{buildRoadDesign();buildRoadVehicles();}'), 'Original road markings and vehicle creation were removed');
-assert(html.includes('}else{buildContextDecorations();buildWaterLayer();}'), 'Original greenery or water creation were removed');
+assert(html.includes('}else{buildRoadDesign();buildRoadVehicles();}'), 'Original road marking/vehicle code removed');
+assert(html.includes('}else{buildContextDecorations();buildWaterLayer();}'), 'Original greenery/water functions removed');
 assert(html.includes('function isolate(){'), 'Original standalone structure viewing was removed');
 assert(html.includes("state.targetExplode=mode==='explode'?.45:0"), 'Original explode control was removed');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');
 assert(asset.subarray(0,24).toString('ascii').startsWith('3D Geometry File Format'), 'Default asset has no Rhino 3DM header');
-console.log('PASS: published Rhino source, app integration, syntax and source-aware fallback');
+console.log('PASS: published Rhino source, dual Site/Roads import, retained scene functions and syntax');
