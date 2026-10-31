@@ -1699,7 +1699,7 @@ class SoftwareRenderer{
  ctx.lineWidth=.45;for(const t of triangles){ctx.globalAlpha=t[9];ctx.beginPath();ctx.moveTo(t[1],t[2]);ctx.lineTo(t[3],t[4]);ctx.lineTo(t[5],t[6]);ctx.closePath();ctx.fillStyle=t[7];ctx.fill();ctx.strokeStyle=state.layers.edges&&t[8]!=='site'&&t[8]!=='roads'?'#8b8c94':t[7];ctx.stroke()}ctx.globalAlpha=1;
  }
 }
-</script><script src="./latest-model-loader.js?v=20261031-road-lines-v31b"></script><script>'use strict';
+</script><script src="./latest-model-loader.js?v=20261031-road-detail-v33"></script><script>'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const fmt=(n,d=0)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const state={mode:'overview',filter:'parcel',selected:null,isolated:false,explode:0,targetExplode:0,view:'iso',report:'summary',layers:{site:true,roads:true,structure:true,labels:false,mono:false,edges:false},assembled:new Set(),playing:false,presentation:false};
@@ -2870,6 +2870,7 @@ function updateRoadDesignVisibility(){
 // carriageway, burn the line work in as walls, flood in from the kerb, and
 // whatever the flood cannot reach is enclosed by markings — the medians and
 // splitter islands. Measured on 2.3dm: 10 regions, 1,986 m².
+let medianLookup=null;
 function buildRoadMedians(group){
  const roads=model?.roads,lv=roadLineOverride?.v;
  if(!roads?.v?.length||!lv?.length)return null;
@@ -2902,8 +2903,15 @@ function buildRoadMedians(group){
   for(let k=0;k<=n;k++)burn(ax+(bx-ax)*k/n,ay+(by-ay)*k/n);
  }
  const seen=new Uint8Array(W*H),stack=[];
+ // Seed from kerbs only. The carriageway also "ends" where it runs off the
+ // site, and seeding there let the flood enter a central reservation from its
+ // cut end, so every median that reaches the boundary went undetected.
+ const EDGE=2.5;
+ const atSiteEdge=(i,j)=>{const x=X0+(i+.5)*G,y=Y0+(j+.5)*G;
+  return x<-312.5+EDGE||x>312.5-EDGE||y<-187.3+EDGE||y>187.3-EDGE};
  for(let j=0;j<H;j++)for(let i=0;i<W;i++){
   const id=j*W+i;if(cell[id]!==1)continue;
+  if(atSiteEdge(i,j))continue;
   if(i===0||j===0||i===W-1||j===H-1||!cell[id-1]||!cell[id+1]||!cell[id-W]||!cell[id+W]){seen[id]=1;stack.push(id)}
  }
  while(stack.length){const id=stack.pop();
@@ -2912,6 +2920,8 @@ function buildRoadMedians(group){
    if(cell[nb]===1&&!seen[nb]){seen[nb]=1;stack.push(nb)}
   }}
  const isMedian=id=>cell[id]===1&&!seen[id];
+ medianLookup=(x,y)=>{const i=Math.floor((x-X0)/G),j=Math.floor((y-Y0)/G);
+  if(i<0||j<0||i>=W||j>=H)return false;return isMedian(j*W+i)};
  const pos=[],deck=.26;let cells=0;
  for(let j=0;j<H;j++)for(let i=0;i<W;i++){
   const id=j*W+i;if(!isMedian(id))continue;cells++;
@@ -3007,11 +3017,36 @@ function solveRoadVehiclePositions(limit){
   return bestLen>=14?best:null;
  };
  const edgeDist=(x,y,vx,vy)=>{let d=0;while(d<16&&onRoad(x+vx*(d+.3),y+vy*(d+.3)))d+=.3;return d};
+ // Crossings are for people. Index the bold markings — the importer flags a
+ // zebra rung at 0.55 m against 0.16 m for lane work — so no car is parked on
+ // one. Travel direction is already the left-hand lane: the offset below is
+ // the left normal of the heading, which is how the UK drives.
+ const ZC=4,zebra=new Set(),zkey=(x,y)=>Math.floor(x/ZC)+','+Math.floor(y/ZC);
+ if(roadLineOverride?.v&&roadLineOverride.w){
+  const zv=roadLineOverride.v,zw=roadLineOverride.w;
+  for(let s2=0,seg=0;s2+5<zv.length;s2+=6,seg++){
+   if((zw[seg]||0)<.3)continue;
+   const ax=zv[s2],ay=zv[s2+1],bx=zv[s2+3],by=zv[s2+4];
+   const n=Math.max(1,Math.ceil(Math.hypot(bx-ax,by-ay)/2));
+   for(let k=0;k<=n;k++)zebra.add(zkey(ax+(bx-ax)*k/n,ay+(by-ay)*k/n));
+  }
+ }
+ const onCrossing=(x,y)=>{
+  if(!zebra.size)return false;
+  const i=Math.floor(x/ZC),j=Math.floor(y/ZC);
+  for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++)if(zebra.has((i+di)+','+(j+dj)))return true;
+  return false;
+ };
  const CAR_LEN=4.32,CAR_WID=1.83,MARGIN=.5;
  const fits=(x,y,ux,uy)=>{
   const vx=-uy,vy=ux,hl=CAR_LEN/2+MARGIN,hw=CAR_WID/2+MARGIN;
-  for(const a of [-hl,-hl/2,0,hl/2,hl])for(const b of [-hw,0,hw])
-   if(!onRoad(x+ux*a+vx*b,y+uy*a+vy*b))return false;
+  for(const a of [-hl,-hl/2,0,hl/2,hl])for(const b of [-hw,0,hw]){
+   const px=x+ux*a+vx*b,py=y+uy*a+vy*b;
+   if(!onRoad(px,py))return false;
+   // Keep off the planted islands: a car parked on a median reads as a bug.
+   if(medianLookup&&medianLookup(px,py))return false;
+   if(onCrossing(px,py))return false;
+  }
   return true;
  };
  const placed=[];
@@ -3121,13 +3156,26 @@ function buildScene(){
   scene.add(roadDesignGroup);
   roadDesignConfig.enabled=!!roadLineOverride;
   if(roadLineOverride){
-   const lv=roadLineOverride.v,pos=new Float32Array(lv.length);
-   // Rhino (x,y,z) -> scene (x,z,-y); lift a hair so the deck cannot z-fight.
-   for(let i=0;i<lv.length;i+=3){pos[i]=lv[i];pos[i+1]=lv[i+2]+.012;pos[i+2]=-lv[i+1]}
+   // Painted markings are a surface, not a hairline: WebGL ignores
+   // LineBasicMaterial.linewidth, so a zebra drawn as lines stays one pixel
+   // wide however bold it should read. Build a ribbon per segment at the width
+   // the importer classified — 0.55 m for a crossing rung, 0.16 m for lane work.
+   const lv=roadLineOverride.v,lw=roadLineOverride.w||[],pos=[];
+   for(let s2=0,seg=0;s2+5<lv.length;s2+=6,seg++){
+    const ax=lv[s2],ay=lv[s2+1],az=lv[s2+2],bx=lv[s2+3],by=lv[s2+4],bz=lv[s2+5];
+    const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy);
+    if(d<1e-6)continue;
+    const h=(lw[seg]||.16)/2,nx=-dy/d*h,ny=dx/d*h,y1=az+.014,y2=bz+.014;
+    pos.push(ax+nx,y1,-(ay+ny), bx+nx,y2,-(by+ny), bx-nx,y2,-(by-ny),
+             ax+nx,y1,-(ay+ny), bx-nx,y2,-(by-ny), ax-nx,y1,-(ay-ny));
+   }
    const lg=new THREE.BufferGeometry();
-   lg.setAttribute('position',new THREE.BufferAttribute(pos,3));
-   const lines=new THREE.LineSegments(lg,new THREE.LineBasicMaterial({
-    color:'#f4f7f7',transparent:true,opacity:.62,depthTest:true,depthWrite:false
+   lg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+   lg.computeVertexNormals();
+   const lines=new THREE.Mesh(lg,new THREE.MeshStandardMaterial({
+    color:'#f2f5f6',roughness:.82,metalness:0,side:THREE.DoubleSide,
+    transparent:true,opacity:.92,depthWrite:false,
+    polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2
    }));
    lines.name='2.3dm Default 图层划线';lines.userData.roadDetail=true;
    lines.frustumCulled=false;roadDesignGroup.add(lines);

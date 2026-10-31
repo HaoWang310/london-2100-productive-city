@@ -243,14 +243,47 @@ async function parseFile(file,onProgress){
  }
  const siteGeo=meshInfo(site),roadGeo=meshInfo(roads);
  const counts={site:siteParts.length,road:roadParts.length,structure:structureParts.length,unresolved:unresolved.length,originalObjects:objects.count};
- const lines={v:[]};
- for(const curve of lineParts)for(let i=0;i+1<curve.length;i++){
-  lines.v.push(curve[i][0],curve[i][1],curve[i][2],curve[i+1][0],curve[i+1][1],curve[i+1][2]);
+ // Classify the line work so the app can draw it at a believable weight.
+ // A zebra rung is a short straight curve with other short straight curves
+ // running PARALLEL BESIDE it; a dash of a lane line is short and straight
+ // too, but its neighbours sit end to end along its own direction. Without
+ // that distinction a dashed centre line renders as a row of fat blocks.
+ const info=lineParts.map(c=>{
+  const a=c[0],b=c[c.length-1];
+  let len=0;for(let i=0;i+1<c.length;i++)len+=Math.hypot(c[i+1][0]-c[i][0],c[i+1][1]-c[i][1]);
+  const chord=Math.hypot(b[0]-a[0],b[1]-a[1]);
+  const dir=chord>1e-6?[(b[0]-a[0])/chord,(b[1]-a[1])/chord]:[1,0];
+  return {len,straight:len>0&&chord/len>.985,dir,mid:[(a[0]+b[0])/2,(a[1]+b[1])/2]};
+ });
+ for(let i=0;i<info.length;i++){
+  const f=info[i];
+  f.bold=false;
+  if(!f.straight||f.len>9||f.len<1)continue;
+  let beside=0;
+  for(let j=0;j<info.length&&beside<2;j++){
+   if(j===i)continue;const g=info[j];
+   if(!g.straight||g.len>9||g.len<1)continue;
+   const dx=g.mid[0]-f.mid[0],dy=g.mid[1]-f.mid[1],d=Math.hypot(dx,dy);
+   if(d<.3||d>12)continue;
+   if(Math.abs(f.dir[0]*g.dir[0]+f.dir[1]*g.dir[1])<.95)continue;
+   const along=Math.abs(dx*f.dir[0]+dy*f.dir[1]),across=Math.abs(-dx*f.dir[1]+dy*f.dir[0]);
+   if(across>along)beside++;              // sits beside, not end to end
+  }
+  f.bold=beside>=2;
  }
+ const lines={v:[],w:[]};
+ lineParts.forEach((curve,ci)=>{
+  const w=info[ci].bold?.55:.16;
+  for(let i=0;i+1<curve.length;i++){
+   lines.v.push(curve[i][0],curve[i][1],curve[i][2],curve[i+1][0],curve[i+1][1],curve[i+1][2]);
+   lines.w.push(w);
+  }
+ });
  const m={site,roads,lines,parcels,units,meta:{
   source:file.name+" · Rhino source layers · "+new Date().toISOString().slice(0,10),
   modelName:file.name,imported:true,topologyVerified:false,
   origin,alignedToSiteFrame:true,roadLineSegments:lines.v.length/6,
+  roadLineBold:lines.w.filter(w=>w>.3).length,
   warnings:["地块为独立场地组件的边界近似，尚未完成道路减场地布尔运算","跨路关系按几何距离初判；非施工拆分方案",...unresolved.slice(0,10).map(x=>"Unmeshed: "+x.layer+" / "+x.type)],
   siteArea:siteGeo.projection||siteGeo.area,roadArea:roadGeo.projection||roadGeo.area,
   sourceArea:totalArea,areaError:0,counts

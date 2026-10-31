@@ -15,7 +15,7 @@ assert(html.includes('src="./latest-model-loader.js?v='), 'Rhino source loader n
 // The loader is cached per query string, so returning visitors keep running the
 // previous file until this token changes. Bump it in the same commit as any
 // latest-model-loader.js change, or the deployed fix never reaches them.
-assert(html.includes('src="./latest-model-loader.js?v=20261031-road-lines-v31b"'), 'Loader cache-busting token was not bumped for the road-line change');
+assert(html.includes('src="./latest-model-loader.js?v=20261031-road-detail-v33"'), 'Loader cache-busting token was not bumped for the road-line change');
 assert(!html.includes('v=20261031-source-road-replace-v1'), 'Stale loader cache token is still referenced');
 assert(importer.includes('const PUBLISHED_SOURCE="./2.3dm";'), 'Default source must match the published 2.3dm asset');
 assert(!importer.includes('2(2).3dm'), 'Stale source filename remains');
@@ -128,6 +128,12 @@ assert(importer.includes('roadLineSegments:lines.v.length/6,'), 'Road line count
 assert(importer.includes('if(pts.length>1)lineParts.push(pts);'), 'Line points must be stored once per curve, not per segment endpoint');
 assert(html.includes('roadLineOverride=importedModel.lines?.v?.length?importedModel.lines:null;'), 'Road lines are not applied');
 assert(html.includes("lines.name='2.3dm Default 图层划线';"), 'Road lines are not drawn');
+// WebGL ignores line width, so markings are ribbons sized by the importer.
+assert(importer.includes('f.bold=beside>=2;'), 'Zebra rungs are not told apart from lane dashes');
+assert(html.includes('const h=(lw[seg]||.16)/2,'), 'Markings are not drawn at their classified width');
+assert(html.includes('if(atSiteEdge(i,j))continue;'), 'Median flood must not seed from the site boundary');
+assert(html.includes('if(medianLookup&&medianLookup(px,py))return false;'), 'Traffic must keep off the medians');
+assert(html.includes('if(onCrossing(px,py))return false;'), 'Traffic must keep off the crossings');
 // MEDIANS v32 — islands are enclosed by open line work, so they are found by
 // flooding the carriageway raster, not by reading closed curves.
 assert(html.includes('function buildRoadMedians(group){'), 'Median detection is missing');
