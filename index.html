@@ -2079,7 +2079,7 @@ function buildRoadDesign(){
  roadDesignGroup=new THREE.Group();
  roadDesignGroup.name='Rhino road markings v26 | geometry-first crossings';
  scene.add(roadDesignGroup);
- const palette={median:['#76a65d',.76],curb:['#adb8aa',.63],edge:['#f4f7f7',.59],dash:['#e2e7e8',.60],zebra:['#ffffff',.66],stop:['#f4f7f7',.62]};
+ const palette={median:['#76a65d',.550],curb:['#adb8aa',.552],edge:['#f4f7f7',.515],dash:['#e2e7e8',.516],zebra:['#ffffff',.518],stop:['#f4f7f7',.517]};
  const rv=model.roads.v,rf=model.roads.t,cells=new Map(),cellSize=14;
  const key=(x,y)=>Math.floor(x/cellSize)+','+Math.floor(y/cellSize);
  for(let f=0;f<rf.length;f+=3){
@@ -2396,7 +2396,7 @@ function buildRoadDesign(){
   }
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.BufferAttribute(positions,3));geo.computeVertexNormals();
-  const mat=new THREE.MeshStandardMaterial({color:palette[layer][0],roughness:layer==='zebra'?.62:.88,metalness:0,side:THREE.DoubleSide,depthWrite:true});
+  const mat=new THREE.MeshStandardMaterial({color:palette[layer][0],roughness:layer==='zebra'?.62:.88,metalness:0,side:THREE.DoubleSide,depthWrite:true,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
   const mesh=new THREE.Mesh(geo,mat);
   mesh.name='road-v26-'+layer;mesh.userData={roadDetail:true,id:'v26-road-'+layer};
   mesh.castShadow=false;mesh.receiveShadow=true;roadDesignGroup.add(mesh);
