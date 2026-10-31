@@ -1691,13 +1691,13 @@ class SoftwareRenderer{
  ctx.lineWidth=.45;for(const t of triangles){ctx.globalAlpha=t[9];ctx.beginPath();ctx.moveTo(t[1],t[2]);ctx.lineTo(t[3],t[4]);ctx.lineTo(t[5],t[6]);ctx.closePath();ctx.fillStyle=t[7];ctx.fill();ctx.strokeStyle=state.layers.edges&&t[8]!=='site'&&t[8]!=='roads'?'#8b8c94':t[7];ctx.stroke()}ctx.globalAlpha=1;
  }
 }
-</script><script src="./latest-model-loader.js?v=20261031-rhino3-brep-subd"></script><script>'use strict';
+</script><script src="./latest-model-loader.js?v=20261031-source-road-replace-v1"></script><script>'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const fmt=(n,d=0)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const state={mode:'overview',filter:'parcel',selected:null,isolated:false,explode:0,targetExplode:0,view:'iso',report:'summary',layers:{site:true,roads:true,structure:true,labels:false,mono:false,edges:false},assembled:new Set(),playing:false,presentation:false};
 let model,lowModel,scene,camera,renderer,controls,siteMesh,roadsMesh,ground,parcelGroup,unitGroup,decorationGroup,meshes=[],parcelMeshes=[],labelItems=[],lastTime=0,playAccum=0,transition=null,hoverId=null,lastPointer=null;
 // The published Rhino file may replace ONLY the rendered site; all existing functional model data stays intact.
-let siteDisplayOverride=null;
+let siteDisplayOverride=null, roadsDisplayOverride=null;
 const detailByParcel=new Map();
 const unitById=new Map(),parcelById=new Map(),meshById=new Map();
 const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
@@ -2430,10 +2430,10 @@ function initRoadDesignUI(){
  const main=document.querySelector('.stage .layers');
  const report=document.querySelector('#landscapeControlsMount');
  const btn=document.createElement('button');btn.id='roadDesignToggleMain';btn.type='button';btn.className='layer';btn.style.cssText='min-height:33px;border:1px solid #4a4f58;background:#262b32;color:#dde3e8;border-radius:7px;padding:7px 11px;cursor:pointer';
- const label=()=>model.meta?.imported?'道路标线 · 待几何核对':roadDesignConfig.enabled?'道路设计：显示':'道路设计：隐藏';
+ const label=()=>roadsDisplayOverride?'道路标线 · 待新道路匹配':model.meta?.imported?'道路标线 · 待几何核对':roadDesignConfig.enabled?'道路设计：显示':'道路设计：隐藏';
  const sync=()=>{btn.textContent=label();btn.setAttribute('aria-pressed',String(roadDesignConfig.enabled));const twin=document.querySelector('#roadDesignToggleReport');if(twin){twin.textContent=label();twin.setAttribute('aria-pressed',String(roadDesignConfig.enabled))}if(renderer?.isSoftware)renderer.lastSignature='';};
  btn.addEventListener('click',()=>{roadDesignConfig.enabled=!roadDesignConfig.enabled;updateRoadDesignVisibility();applyColors();sync()});
- if(model.meta?.imported)btn.disabled=true;
+ if(model.meta?.imported||roadsDisplayOverride)btn.disabled=true;
  if(main)main.append(btn);
  if(report){const copy=btn.cloneNode(true);copy.id='roadDesignToggleReport';copy.addEventListener('click',()=>btn.click());report.append(copy)}
  sync();
@@ -2483,10 +2483,10 @@ function initRoadVehicleUI(){
  const main=document.querySelector('.stage .layers');
  const report=document.querySelector('#landscapeControlsMount');
  const toggle=document.createElement('button');toggle.id='vehicleToggleMain';toggle.type='button';toggle.className='layer';toggle.style.cssText='min-height:33px;border:1px solid #4a4f58;background:#262b32;color:#dde3e8;border-radius:7px;padding:7px 11px;cursor:pointer';
- const counter=()=>model.meta?.imported?'车辆 · 待位置核对':vehicleConfig.enabled?`车辆：显示 · ${vehicleConfig.density*16} 辆`:'车辆：隐藏';
+ const counter=()=>roadsDisplayOverride?'车辆 · 待新道路定位':model.meta?.imported?'车辆 · 待位置核对':vehicleConfig.enabled?`车辆：显示 · ${vehicleConfig.density*16} 辆`:'车辆：隐藏';
  const sync=()=>{toggle.textContent=counter();toggle.setAttribute('aria-pressed',String(vehicleConfig.enabled));const twin=document.querySelector('#vehicleToggleReport');if(twin){twin.textContent=counter();twin.setAttribute('aria-pressed',String(vehicleConfig.enabled))}if(renderer?.isSoftware)renderer.lastSignature='';};
  toggle.addEventListener('click',()=>{vehicleConfig.enabled=!vehicleConfig.enabled;updateRoadVehicleVisibility();sync()});
- if(model.meta?.imported)toggle.disabled=true;
+ if(model.meta?.imported||roadsDisplayOverride)toggle.disabled=true;
  if(main)main.append(toggle);
  if(report){const copy=toggle.cloneNode(true);copy.id='vehicleToggleReport';copy.addEventListener('click',()=>toggle.click());report.append(copy)}
  const density=document.createElement('select');density.id='vehicleDensity';density.setAttribute('aria-label','道路车辆密度');density.style.cssText='background:#252a31;color:#e5e8ed;border:1px solid #4a4f58;border-radius:7px;padding:6px 8px;min-height:33px;font-size:12px;cursor:pointer';
@@ -2507,7 +2507,15 @@ function buildScene(){
  ground=new THREE.Mesh(new THREE.PlaneGeometry(5000,5000),new THREE.ShadowMaterial({opacity:.09}));ground.rotation.x=-Math.PI/2;ground.position.y=-25.12;ground.receiveShadow=true;scene.add(ground);
  siteMesh=new THREE.Mesh(bufferGeom(siteDisplayOverride||model.site),material('#383a3d'));siteMesh.receiveShadow=true;siteMesh.castShadow=true;scene.add(siteMesh);
  roadsMesh=new THREE.Mesh(bufferGeom(model.roads),material('#e6cfa6'));roadsMesh.receiveShadow=true;scene.add(roadsMesh);
- if(model.meta?.imported){
+ if(roadsDisplayOverride){
+  // Roads now come exclusively from the exact 2.3dm / Roads mesh.
+  // Old fixed crossing, lane and vehicle coordinates must not be drawn over it.
+  roadDesignGroup=new THREE.Group();roadDesignGroup.name='2.3dm roads | legacy markings withheld';
+  roadDesignGroup.userData={version:null,geometrySource:'2.3dm / Roads',unresolved:['道路标线须按新路口几何重新定位']};
+  scene.add(roadDesignGroup);
+  vehicleGroup=new THREE.Group();vehicleGroup.name='2.3dm roads | legacy vehicle positions withheld';scene.add(vehicleGroup);
+  roadDesignConfig.enabled=false;vehicleConfig.enabled=false;
+ }else if(model.meta?.imported){
   // Only source Rhino roads. Legacy fixed junction seeds and vehicle coordinates cannot be reused.
   roadDesignGroup=new THREE.Group();roadDesignGroup.name='Latest Rhino roads | markings require recalibration';
   roadDesignGroup.userData={version:null,geometrySource:model.meta.source,unresolved:['Latest crossing positions not verified']};
@@ -2616,16 +2624,29 @@ async function init(){try{
  model=JSON.parse(await new Response(stream).text());
  const lb=Uint8Array.from(atob(LOD_GZIP),c=>c.charCodeAt(0));
  lowModel=JSON.parse(await new Response(new Blob([lb]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
- // The newest 2.3dm provides the site DISPLAY mesh only. Never overwrite
- // model, parcels, roads, structures, hydrology or landscape source data.
+ // Geometry-first source replacement: both the Site and Roads render meshes
+ // are read from the SAME published Rhino file and remain in Rhino coordinates.
+ // Keep original parcels, structures, assembly, water and greenery intact.
  try{
   const importedModel=await window.latestModelBridge?.getSavedModel();
-  if(importedModel?.site?.v?.length&&importedModel?.site?.t?.length){
-   siteDisplayOverride=importedModel.site;
-   console.info('Rhino 2.3dm site-only display updated; legacy assembly, water, parks and roads preserved');
+  if(!importedModel?.site?.v?.length||!importedModel?.site?.t?.length||
+     !importedModel?.roads?.v?.length||!importedModel?.roads?.t?.length){
+   throw Error('2.3dm 缺少可显示的场地或道路网格');
   }
+  siteDisplayOverride=importedModel.site;
+  roadsDisplayOverride=importedModel.roads;
+  model.roads=roadsDisplayOverride; // REPLACE old roads; never overlay old mesh.
+  if(model.meta){
+   model.meta.roadArea=importedModel.meta?.roadArea??model.meta.roadArea;
+   model.meta.roadSource='2.3dm / Roads';
+   model.meta.roadTopologyVerified=false;
+  }
+  console.info('Rhino 2.3dm Site and Roads replaced in place; original structure, water, greenery and assembly retained', {
+   roadVertices:roadsDisplayOverride.v.length/3,roadTriangles:roadsDisplayOverride.t.length/3
+  });
  }catch(sourceError){
-  console.warn('Published site cannot be loaded; preserving the complete existing scene',sourceError);
+  console.error('Authoritative 2.3dm source could not be loaded; old roads will not be substituted',sourceError);
+  throw Error('无法加载最新 Rhino 场地与道路（2.3dm）：'+sourceError.message);
  }
  for(const u of model.units)unitById.set(u.id,u);for(const p of model.parcels)parcelById.set(p.id,p);parcelUnits=model.units.filter(u=>u.kind==='parcel');connectionUnits=model.units.filter(u=>u.kind==='connection');edgeUnits=model.units.filter(u=>u.kind==='edge');assemblyOrder=[...parcelUnits,...connectionUnits,...edgeUnits];maxHeight=Math.max(0,...model.units.map(u=>u.maxZ));state.assembled=new Set(model.units.map(u=>u.id));try{const saved=JSON.parse(localStorage.getItem('formAssemblyV2'));if(Array.isArray(saved))state.assembled=new Set(saved.filter(id=>unitById.has(id)))}catch(e){}
  $('#countParcel').textContent=model.parcels.length;$('#countUnits').textContent=parcelUnits.length;$('#countConnections').textContent=connectionUnits.length;$('#librarySummary').textContent=`${model.parcels.length} 个地块 · ${model.units.length} 个结构分组`;buildScene(); initLandscapeUI();initWaterUI();initRoadDesignUI();initRoadVehicleUI();renderList();renderInspector();applyColors();
