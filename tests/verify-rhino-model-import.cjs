@@ -128,6 +128,11 @@ assert(importer.includes('roadLineSegments:lines.v.length/6,'), 'Road line count
 assert(importer.includes('if(pts.length>1)lineParts.push(pts);'), 'Line points must be stored once per curve, not per segment endpoint');
 assert(html.includes('roadLineOverride=importedModel.lines?.v?.length?importedModel.lines:null;'), 'Road lines are not applied');
 assert(html.includes("lines.name='2.3dm Default 图层划线';"), 'Road lines are not drawn');
+// MEDIANS v32 — islands are enclosed by open line work, so they are found by
+// flooding the carriageway raster, not by reading closed curves.
+assert(html.includes('function buildRoadMedians(group){'), 'Median detection is missing');
+assert(html.includes("strip.name='道路绿化隔离带';"), 'Median planting strip is not drawn');
+assert(html.includes('const med=buildRoadMedians(roadDesignGroup);'), 'Medians are not built with the road lines');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');
