@@ -176,7 +176,26 @@ async function parseFile(file,onProgress){
  if(unresolved.some(u=>/road|道路|site|场地/.test(u.layer)))throw Error("部分场地或道路曲面没有可读取的网格；为防止错误替换，已取消导入。请先在 Rhino 中导出 Mesh。");
  if(names.structure>0&&unresolved.some(u=>/struct|结构/.test(u.layer)))throw Error("结构图层有未成功转换的 SubD/Brep。为避免丢失结构，已取消导入；请在 Rhino 中生成并保存渲染网格。");
  if(names.structure>0&&!structureParts.length)throw Error("结构图层无法读取真实网格；导入已取消。");
- // Keep every source vertex in its original coordinates.
+ // ALIGNMENT v27 — move the source into the application's site frame.
+ // Rhino vertices arrive in world coordinates (this file: X -621.4…3.6,
+ // Y -0.7…373.9, Z -1.4…23.6). The application model is site-centred: XY
+ // centre at the origin and the site top surface at z = 0. Imported geometry
+ // used to be handed over untransformed, so Site and Roads rendered roughly
+ // 360 m away from the structures, parcels, water and landscaping.
+ // The shift is derived from the imported site's own bounding box rather than
+ // hard-coded, so a re-export from a different world position still lands
+ // correctly. Site, Roads and Structure share ONE shift — never compute it per
+ // layer, or the layers separate from each other.
+ // This is a rigid translation: no rotation, no scaling, no vertex is edited.
+ const siteProbe=newMesh();siteParts.forEach(p=>append(siteProbe,p));
+ const probe=meshInfo(siteProbe);
+ const shift=[-(probe.min[0]+probe.max[0])/2,-(probe.min[1]+probe.max[1])/2,-probe.max[2]];
+ const translate=m=>{for(let i=0;i<m.v.length;i+=3){m.v[i]+=shift[0];m.v[i+1]+=shift[1];m.v[i+2]+=shift[2]}};
+ for(const p of siteParts)translate(p);
+ for(const p of roadParts)translate(p);
+ for(const p of structureParts)translate(p);
+ // Rhino world coordinates stay recoverable: world = local + origin.
+ const origin=[-shift[0],-shift[1],-shift[2]];
  const site=newMesh(),roads=newMesh();
  siteParts.forEach(p=>append(site,p));roadParts.forEach(p=>append(roads,p));
  const parcels=[];
@@ -207,6 +226,7 @@ async function parseFile(file,onProgress){
  const m={site,roads,parcels,units,meta:{
   source:file.name+" · Rhino source layers · "+new Date().toISOString().slice(0,10),
   modelName:file.name,imported:true,topologyVerified:false,
+  origin,alignedToSiteFrame:true,
   warnings:["地块为独立场地组件的边界近似，尚未完成道路减场地布尔运算","跨路关系按几何距离初判；非施工拆分方案",...unresolved.slice(0,10).map(x=>"Unmeshed: "+x.layer+" / "+x.type)],
   siteArea:siteGeo.projection||siteGeo.area,roadArea:roadGeo.projection||roadGeo.area,
   sourceArea:totalArea,areaError:0,counts

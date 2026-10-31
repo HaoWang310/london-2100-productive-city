@@ -2633,6 +2633,18 @@ async function init(){try{
      !importedModel?.roads?.v?.length||!importedModel?.roads?.t?.length){
    throw Error('2.3dm 缺少可显示的场地或道路网格');
   }
+  if(!importedModel.meta?.alignedToSiteFrame){
+   throw Error('2.3dm 导入结果未对齐到场地坐标系（缺少 alignedToSiteFrame）');
+  }
+  // The importer has already moved the source into the site frame. Confirm it
+  // agrees with the embedded model's own Rhino origin: a large divergence means
+  // the 3DM was re-modelled somewhere else, and the retained structures, water
+  // and landscaping would no longer sit on the imported site.
+  const importedOrigin=importedModel.meta.origin,embeddedOrigin=model.meta?.origin;
+  if(importedOrigin&&embeddedOrigin){
+   const drift=Math.hypot(importedOrigin[0]-embeddedOrigin[0],importedOrigin[1]-embeddedOrigin[1],importedOrigin[2]-embeddedOrigin[2]);
+   if(drift>1)console.warn('2.3dm world placement differs from the embedded model by '+drift.toFixed(2)+' m; retained structures, water and landscaping may not match the imported site.',{importedOrigin,embeddedOrigin});
+  }
   siteDisplayOverride=importedModel.site;
   roadsDisplayOverride=importedModel.roads;
   model.roads=roadsDisplayOverride; // REPLACE old roads; never overlay old mesh.
@@ -2641,8 +2653,9 @@ async function init(){try{
    model.meta.roadSource='2.3dm / Roads';
    model.meta.roadTopologyVerified=false;
   }
-  console.info('Rhino 2.3dm Site and Roads replaced in place; original structure, water, greenery and assembly retained', {
-   roadVertices:roadsDisplayOverride.v.length/3,roadTriangles:roadsDisplayOverride.t.length/3
+  console.info('Rhino 2.3dm Site and Roads replaced in place and aligned to the site frame; original structure, water, greenery and assembly retained', {
+   roadVertices:roadsDisplayOverride.v.length/3,roadTriangles:roadsDisplayOverride.t.length/3,
+   importedOrigin,embeddedOrigin
   });
  }catch(sourceError){
   console.error('Authoritative 2.3dm source could not be loaded; old roads will not be substituted',sourceError);

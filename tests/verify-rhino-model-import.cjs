@@ -41,6 +41,18 @@ assert(html.includes('}else{buildRoadDesign();buildRoadVehicles();}'), 'Original
 assert(html.includes('}else{buildContextDecorations();buildWaterLayer();}'), 'Original greenery/water functions removed');
 assert(html.includes('function isolate(){'), 'Original standalone structure viewing was removed');
 assert(html.includes("state.targetExplode=mode==='explode'?.45:0"), 'Original explode control was removed');
+// ALIGNMENT v27 — imported Site/Roads/Structure must be moved into the
+// application's site-centred frame, or they render ~360 m away from the
+// retained structures, parcels, water and landscaping.
+assert(!importer.includes('// Keep every source vertex in its original coordinates.'), 'Imported geometry must be aligned to the site frame, not left in Rhino world coordinates');
+assert(importer.includes('const shift=[-(probe.min[0]+probe.max[0])/2,-(probe.min[1]+probe.max[1])/2,-probe.max[2]];'), 'Site-frame shift must be derived from the imported site bounding box');
+assert(importer.includes('for(const p of siteParts)translate(p);'), 'Imported site is not translated into the site frame');
+assert(importer.includes('for(const p of roadParts)translate(p);'), 'Imported roads are not translated into the site frame');
+assert(importer.includes('for(const p of structureParts)translate(p);'), 'Imported structures are not translated into the site frame');
+assert(importer.includes('const origin=[-shift[0],-shift[1],-shift[2]];'), 'Rhino world coordinates must stay recoverable through meta.origin');
+assert(importer.includes('origin,alignedToSiteFrame:true,'), 'Imported metadata must publish the alignment origin and flag');
+assert(html.includes("if(!importedModel.meta?.alignedToSiteFrame)"), 'Application must reject an unaligned import rather than drawing it offset');
+assert(html.includes('drift>1'), 'Application must warn when the 3DM world placement diverges from the embedded model');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');
