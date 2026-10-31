@@ -135,7 +135,7 @@ assert(html.includes('if(atSiteEdge(i,j))continue;'), 'Median flood must not see
 assert(html.includes('if(medianLookup&&medianLookup(px,py))return false;'), 'Traffic must keep off the medians');
 assert(html.includes('if(onCrossing(px,py))return false;'), 'Traffic must keep off the crossings');
 // Heading follows the lane work; the longest-run test is only a fallback.
-assert(html.includes('const ang=laneAngleAt(x,y)??axisAt(x,y);'), 'Car heading must follow the lane lines');
+assert(html.includes('const ang=laneAngleAt(x,y);if(ang===null)continue;'), 'Car heading must come from the lane lines, with no guess fallback');
 assert(html.includes('if(runLength(x,y,ang)<18)continue;'), 'A car must have road ahead and behind');
 // MEDIANS v32 — islands are enclosed by open line work, so they are found by
 // flooding the carriageway raster, not by reading closed curves.

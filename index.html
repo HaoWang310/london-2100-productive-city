@@ -3084,7 +3084,11 @@ function solveRoadVehiclePositions(limit){
  for(let t=0;t<9000&&placed.length<limit;t++){
   const x=minX+rnd()*(maxX-minX),y=minY+rnd()*(maxY-minY);
   if(!onRoad(x,y))continue;
-  const ang=laneAngleAt(x,y)??axisAt(x,y);if(ang===null)continue;
+  // No fallback: every one of the 7 cars that still looked wrong sat 17-52 m
+  // from any lane line, in stretches the source left unmarked, and the
+  // longest-run guess there is what aimed them across the road. Park only
+  // where the drawing actually states a direction.
+  const ang=laneAngleAt(x,y);if(ang===null)continue;
   // Whatever set the heading, the car must have real road ahead and behind.
   if(runLength(x,y,ang)<18)continue;
   const vx=-Math.sin(ang),vy=Math.cos(ang);
