@@ -148,6 +148,11 @@ assert(html.includes('if(group2.length<3)continue;'), 'A lone bar must not be tr
 assert(html.includes('if(!onRoad(ex+ux*t2*sgn2,ey+uy*t2*sgn2)){off=t2+.6;break}'), 'Signal poles must be walked out to the kerb');
 assert(html.includes('const px=-Math.sin(di),py=Math.cos(di);'), 'A crossing spans across its bars, not along them');
 assert(html.includes('const furniture=buildRoadFurniture(roadDesignGroup);'), 'Furniture is not built with the road detail');
+// PARCEL VIEW v34 — the Form library isolates one plot and hides the site mesh.
+// Water and planting are modelled against that site, so they must go with it or
+// they cut across the plot and show their section walls from the inside.
+assert(html.includes("if(state.mode==='report'&&(reportFormId||reportParcel!=='all')){waterGroup.visible=false;return}"), 'Water must be hidden in the parcel and Form views');
+assert(html.includes('g.visible=landscapeConfig.enabled&&allView&&(showAll||ids.includes(id));'), 'Planting must be hidden in the parcel and Form views');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

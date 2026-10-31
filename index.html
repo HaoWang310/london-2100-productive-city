@@ -2464,6 +2464,12 @@ function updateWaterAnimation(time){
 
 function updateWaterVisibility(){
  if(!waterGroup)return;
+ // FORM LIBRARY v34 — a parcel card isolates one plot and hides the site mesh the
+ // plot was cut out of. The water is modelled against that site, so on its own it
+ // keeps its full extent, crosses the plot and shows its own section walls from
+ // the inside: the torn faces seen in the parcel viewer. Water is site context,
+ // like the road markings and the cars, so it follows the same all-site rule.
+ if(state.mode==='report'&&(reportFormId||reportParcel!=='all')){waterGroup.visible=false;return}
  const ids=(state.mode==='report'?relatedReportParcelIds():state.selected&&parcelById.has(state.selected)?[state.selected]:[]);
  const showAll=state.mode==='report'?reportParcel==='all'&&!reportFormId:!state.isolated&&!state.selected;
  const hasChannel=ids.some(id=>model.parcels.some(p=>p.id===id&&nativeRecessedChannel().triangles.some(tri=>pointInPolygon([(tri[0][0]+tri[1][0]+tri[2][0])/3,(tri[0][1]+tri[1][1]+tri[2][1])/3],p.boundary))));
@@ -2502,7 +2508,10 @@ function relatedReportParcelIds(){
 function updateContextDecorations(){
  if(!decorationGroup)return;const ids=(state.mode==='report'?relatedReportParcelIds():state.selected&&parcelById.has(state.selected)?[state.selected]:[]);
  const showAll=state.mode==='report'?reportParcel==='all'&&!reportFormId:!state.isolated&&!state.selected;
- for(const [id,g] of detailByParcel){g.visible=landscapeConfig.enabled&&(showAll||ids.includes(id));}
+ // Planting stands on site levels, not on the parcel plate, so with the site mesh
+ // hidden it floats beside the plot. Same all-site rule as the water above.
+ const allView=state.mode!=='report'||(!reportFormId&&reportParcel==='all');
+ for(const [id,g] of detailByParcel){g.visible=landscapeConfig.enabled&&allView&&(showAll||ids.includes(id));}
 }
 
 // ROAD VEHICLES v17 — the positions below were solved against the untouched Rhino road mesh.

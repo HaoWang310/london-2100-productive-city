@@ -93,3 +93,17 @@
   一排白条才横跨马路**，按白条方向量会把灯杆放到路中央（踩过）。
   灯杆需从横道端向外搜索直到出路面，固定偏移不够（斑马线画不到路缘）。
   84 盏信号灯 / 112 盏路灯。
+
+## Parcel and Form views show the parcel only (v34)
+
+The Form library isolates one plot: the site mesh, the roads mesh and the ground
+plane were already hidden, but the water and the planting were not. Both are
+modelled against the site — the water keeps the full lagoon and channel extent,
+and the trees stand on site levels rather than on the parcel plate — so with the
+site gone the water slabs cut straight across the plot and showed their own
+section walls from the inside, which is the torn geometry seen in the viewer.
+
+Both now follow the same all-site rule the road markings, the medians, the
+furniture and the vehicles already used: visible in 全部场地 and in the three
+site modes, hidden as soon as a parcel card or a Form card is open. Nothing was
+removed from the water or planting geometry; only their visibility changed.
