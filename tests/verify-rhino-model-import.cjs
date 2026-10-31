@@ -21,7 +21,7 @@ assert(importer.includes('modelName:file.name'), 'Missing source provenance');
 assert(importer.includes('topologyVerified:false'), 'Unverified topology must be labelled');
 assert(importer.includes('names.structure>0&&unresolved.some'), 'Incomplete structures must be rejected');
 assert(importer.includes('if(!siteParts.length||!roadParts.length)'), 'Incomplete site or road meshes must be rejected');
-assert(importer.includes('return null; // Preserve existing embedded model'), 'Missing source must preserve fallback');
+assert(importer.includes('throw Error("Published Rhino source unavailable: HTTP "+response.status)'), 'Missing source must produce visible failure rather than stale model fallback');
 assert(importer.includes('window.latestModelBridge={getSavedModel,controls,parseFile}'), 'Public loader bridge is missing');
 assert(!importer.includes('database("set",m)'), 'Local IndexedDB model must not override public source');
 assert(html.includes('if(model.meta?.imported)'), 'Source-model branch is missing');
