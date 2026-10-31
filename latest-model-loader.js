@@ -206,39 +206,34 @@ async function parseFile(file,onProgress){
  }};
  return m;
 }
-function controls(){
- const parent=document.querySelector(".headerActions")||document.querySelector("header")||document.body;
- if(document.getElementById("latestRhinoImport"))return;
- const container=document.createElement("div");container.style.cssText="display:flex;align-items:center;gap:8px";
- const btn=document.createElement("button");btn.id="latestRhinoImport";btn.type="button";btn.className="pill";btn.style.cssText="white-space:nowrap;border-color:#666;color:#eee";
- btn.textContent="导入最新 3DM";
- const status=document.createElement("span");status.id="latestRhinoStatus";status.style.cssText="font-size:10px;color:#b7bec7;max-width:200px";
- const file=document.createElement("input");file.type="file";file.accept=".3dm";file.style.display="none";
- btn.onclick=()=>file.click();
- file.onchange=async()=>{
-  if(!file.files||!file.files[0])return;
-  btn.disabled=true;
-  try{
-   const m=await parseFile(file.files[0],s=>status.textContent=s);
-   await database("set",m);
-   status.textContent="已存到当前浏览器 · 正在重新载入";
-   location.reload();
-  }catch(e){
-   console.error("Rhino model import rejected",e);status.textContent="导入失败："+e.message;btn.disabled=false;
-  }
- };
- const reset=document.createElement("button");reset.type="button";reset.textContent="恢复内置版本";reset.className="pill";reset.style.cssText="font-size:10px;padding:8px 11px";
- reset.onclick=async()=>{await database("delete");location.reload()};
- container.append(btn,reset,status,file);parent.prepend(container);
- getSavedModel().then(m=>{status.textContent=m?"仅本机已导入："+(m.meta.modelName||"新模型"):"当前：GitHub 内置模型"}).catch(()=>{});
-}
+// Public GitHub Pages source is authoritative. Local IndexedDB uploads are not
+// used, so every visitor sees the same verified repository asset.
+const PUBLISHED_SOURCE="./2%282%29.3dm";
+let publishedTask=null;
+function controls(){ /* Public presentation: no import or restore dialog. */ }
 async function getSavedModel(){
- try{
-  const obj=await database("get");
-  if(!obj)return null;
-  if(obj.site&&obj.roads&&Array.isArray(obj.units)&&Array.isArray(obj.parcels)&&obj.meta?.imported)return obj;
- }catch(e){console.warn("Rhino local source unavailable",e)}
- return null;
+ if(publishedTask)return publishedTask;
+ publishedTask=(async()=>{
+  const response=await fetch(PUBLISHED_SOURCE,{cache:"no-cache"});
+  if(!response.ok){
+   if(response.status!==404)console.warn("Published Rhino source HTTP",response.status);
+   return null; // Preserve existing embedded model until source binary is published.
+  }
+  const blob=await response.blob();
+  if(blob.size<10240)throw Error("Published Rhino 3DM seems incomplete");
+  const source=new File([blob],"2(2).3dm",{type:"application/octet-stream"});
+  const parsed=await parseFile(source,status=>{
+   const label=document.getElementById("loadText");
+   if(label)label.textContent=status;
+  });
+  parsed.meta.source="2(2).3dm · GitHub Pages public default";
+  parsed.meta.publishedDefault=true;
+  return parsed;
+ })().catch(error=>{
+  console.error("Could not use published 2(2).3dm; keeping legacy embedded scene",error);
+  return null;
+ });
+ return publishedTask;
 }
 window.latestModelBridge={getSavedModel,controls,parseFile};
 })();
