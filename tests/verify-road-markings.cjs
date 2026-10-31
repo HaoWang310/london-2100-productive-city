@@ -45,7 +45,7 @@ for(let k=0;k+17<a.length;k+=18){
 console.log(JSON.stringify({version:report.version,junctions:report.junctions,
  entrances:report.entrances,crossings:report.crossings,unresolved:report.unresolved,
  zebraBars:bars,invalidOrientation:invalid,geometryVertices:model.roads.v.length,geometryFaces:model.roads.t.length},null,2));
-assert.equal(report.version,22);
+assert.equal(report.version,26);
 assert(report.entrances>=60,'Unusually few recognized road entrances');
 assert(report.crossings>=50,'Most road entries did not produce crossings');
 assert.equal(invalid,0,'Crosswalk stripes have incorrect dimensions');
