@@ -45,7 +45,7 @@ async function getRhino(){
 function append(target,source){
  if(!source||!source.v.length||!source.t.length)return;
  const base=target.v.length/3;
- target.v.push(...source.v);
+ for(let i=0;i<source.v.length;i++)target.v.push(source.v[i]);
  for(let i=0;i<source.t.length;i++)target.t.push(base+source.t[i]);
 }
 function newMesh(){return {v:[],t:[]}}
@@ -100,10 +100,9 @@ function hull(points){
  lo.pop();hi.pop();return lo.concat(hi);
 }
 function meshInfo(m){
- const xs=[],ys=[],zs=[],v=m.v;
- for(let i=0;i<v.length;i+=3){xs.push(v[i]);ys.push(v[i+1]);zs.push(v[i+2])}
- const min=[Math.min(...xs),Math.min(...ys),Math.min(...zs)];
- const max=[Math.max(...xs),Math.max(...ys),Math.max(...zs)];
+ const v=m.v;
+ const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
+ for(let i=0;i<v.length;i+=3){for(let j=0;j<3;j++){const q=v[i+j];if(q<min[j])min[j]=q;if(q>max[j])max[j]=q}}
  let surface=0,projection=0;
  for(let i=0;i<m.t.length;i+=3){
   const ia=m.t[i]*3,ib=m.t[i+1]*3,ic=m.t[i+2]*3;
