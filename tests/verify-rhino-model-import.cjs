@@ -78,7 +78,9 @@ assert(html.includes("const site=model?.site,basin=model?.parcels?.find(p=>p.id=
 // WATER BODY v28 — the footprint must carry the real bed elevation so the
 // surface can be depth-tinted and the site cut can be closed into a body.
 assert(html.includes('const tri=[poly[0],poly[j],poly[j+1]].map(p=>[p[0],p[1],p[2]]);'), 'Water footprint must keep the bed elevation');
-assert(html.includes('const SHALLOW=[0.66,0.82,0.90],DEEP=[0.09,0.26,0.40];'), 'Depth tint ramp is missing');
+assert(html.includes("const SHALLOW=new THREE.Color('#8fc6dd'),DEEP=new THREE.Color('#1d5878');"), 'Depth tint ramp is missing');
+assert(html.includes("const CUT_TOP=new THREE.Color('#8cc3dc'),CUT_BED=new THREE.Color('#1b4762');"), 'Section-cut ramp is missing');
+assert(html.includes('ramp(CUT_TOP,CUT_BED,waterline-p[1],wallColors);'), 'Section wall must shade by true depth');
 assert(html.includes("channelGeom.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));"), 'Water surface must carry per-vertex depth colour');
 assert(html.includes('vertexColors:true'), 'Water material must use the depth colours');
 assert(html.includes("wallMesh.name='场地切面上的水体剖面';"), 'Water body section wall is missing');

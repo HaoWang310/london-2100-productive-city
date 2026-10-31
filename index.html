@@ -2074,12 +2074,16 @@ function buildWaterLayer(){
  let maxDepth=0;
  for(const tri of native.triangles)for(const p of tri){const d=waterline-(p[2]??waterline);if(d>maxDepth)maxDepth=d}
  if(!(maxDepth>0))maxDepth=1;
- // Shallow margin -> open water. Linear in sqrt(depth) so shallows read quickly.
- const SHALLOW=[0.66,0.82,0.90],DEEP=[0.09,0.26,0.40];
- const depthTint=(d,out)=>{
+ // Shallow margin -> open water, and waterline -> bed on the cut. sqrt() so the
+ // shallows turn over quickly, as real water does. Colours go through
+ // THREE.Color so they follow the same handling as every other material here.
+ const SHALLOW=new THREE.Color('#8fc6dd'),DEEP=new THREE.Color('#1d5878');
+ const CUT_TOP=new THREE.Color('#8cc3dc'),CUT_BED=new THREE.Color('#1b4762');
+ const ramp=(from,to,d,out)=>{
   const k=Math.min(1,Math.sqrt(Math.max(0,d)/maxDepth));
-  out.push(SHALLOW[0]+(DEEP[0]-SHALLOW[0])*k,SHALLOW[1]+(DEEP[1]-SHALLOW[1])*k,SHALLOW[2]+(DEEP[2]-SHALLOW[2])*k);
+  out.push(from.r+(to.r-from.r)*k,from.g+(to.g-from.g)*k,from.b+(to.b-from.b)*k);
  };
+ const depthTint=(d,out)=>ramp(SHALLOW,DEEP,d,out);
  const positions=[],colors=[],boundaryEdges=new Map();
  const ekey=(a,b)=>{const x=a[0].toFixed(3)+','+a[1].toFixed(3),y=b[0].toFixed(3)+','+b[1].toFixed(3);return x<y?x+'|'+y:y+'|'+x};
  for(const tri of native.triangles){
@@ -2094,10 +2098,14 @@ function buildWaterLayer(){
  channelGeom.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
  channelGeom.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
  channelGeom.computeVertexNormals();
+ // No clearcoat or transmission: measured against this scene's lighting, any
+ // clearcoat blew the surface out to grey (sampled 219,220,222) and buried the
+ // depth colour. Matte-ish water keeps the blue and lets the ripples carry the
+ // highlights.
  const waterMaterial=new THREE.MeshPhysicalMaterial({
-  color:'#ffffff',vertexColors:true,roughness:.11,metalness:.02,transmission:.18,thickness:1.15,
-  ior:1.333,clearcoat:.94,clearcoatRoughness:.1,side:THREE.DoubleSide,
-  transparent:true,opacity:.84,depthTest:true,depthWrite:false
+  color:'#ffffff',vertexColors:true,roughness:.60,metalness:.02,
+  transmission:0,clearcoat:0,ior:1.333,side:THREE.DoubleSide,
+  transparent:true,opacity:.90,depthTest:true,depthWrite:false
  });
  const waterBase=new THREE.Mesh(channelGeom,waterMaterial);
  waterBase.name='P-24 与所有连通原始凹槽 · 真实水面';
@@ -2126,11 +2134,10 @@ function buildWaterLayer(){
    if(waterline-az<.02&&waterline-bz<.02)continue; // nothing to show
    const top=[[a[0],waterline,-a[1]],[b[0],waterline,-b[1]]];
    const bot=[[a[0],az,-a[1]],[b[0],bz,-b[1]]];
-   for(const [p,d] of [[top[0],waterline-az],[top[1],waterline-bz],[bot[1],waterline-bz],
-                       [top[0],waterline-az],[bot[1],waterline-bz],[bot[0],waterline-az]]){
+   for(const p of [top[0],top[1],bot[1],top[0],bot[1],bot[0]]){
     wall.push(p[0],p[1],p[2]);
-    // Darken with depth below the surface, so the cut shades downwards.
-    depthTint(p[1]<waterline-.001?Math.max(d,maxDepth*.55):d*.25,wallColors);
+    // Light just under the surface, deepening to the bed, by true depth.
+    ramp(CUT_TOP,CUT_BED,waterline-p[1],wallColors);
    }
   }
   if(wall.length){
@@ -2138,9 +2145,9 @@ function buildWaterLayer(){
    wallGeom.setAttribute('position',new THREE.Float32BufferAttribute(wall,3));
    wallGeom.setAttribute('color',new THREE.Float32BufferAttribute(wallColors,3));
    wallGeom.computeVertexNormals();
-   const wallMesh=new THREE.Mesh(wallGeom,new THREE.MeshStandardMaterial({
-    color:'#ffffff',vertexColors:true,roughness:.34,metalness:.02,
-    side:THREE.DoubleSide,transparent:true,opacity:.93,depthWrite:true
+   // Unlit and opaque: a section through a body of water, not a lit surface.
+   const wallMesh=new THREE.Mesh(wallGeom,new THREE.MeshBasicMaterial({
+    color:'#ffffff',vertexColors:true,side:THREE.DoubleSide,depthWrite:true
    }));
    wallMesh.name='场地切面上的水体剖面';wallMesh.userData.water=true;
    wallMesh.frustumCulled=false;wallMesh.renderOrder=-1;waterGroup.add(wallMesh);
