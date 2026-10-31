@@ -58,6 +58,14 @@ assert(importer.includes('const origin=[-shift[0],-shift[1],-shift[2]];'), 'Rhin
 assert(importer.includes('origin,alignedToSiteFrame:true,'), 'Imported metadata must publish the alignment origin and flag');
 assert(html.includes("if(!importedModel.meta?.alignedToSiteFrame)"), 'Application must reject an unaligned import rather than drawing it offset');
 assert(html.includes('drift>1'), 'Application must warn when the 3DM world placement diverges from the embedded model');
+// ROAD VEHICLES v27 — traffic must be solved from the live road mesh, never
+// restored from the v17 table that was fitted to the previous road geometry.
+assert(html.includes('function solveRoadVehiclePositions(limit){'), 'Runtime vehicle solver is missing');
+assert(html.includes('const positions=roadsDisplayOverride?solveRoadVehiclePositions(48):roadVehiclePositions;'), 'Imported roads must drive vehicle placement');
+assert(html.includes('if(idx.some(i=>Math.abs(rv[i*3+2]-top)>.02))continue;'), 'Vehicles must be placed on the road top surface only');
+assert(html.includes('if(!fits(lx,ly,ux,uy))continue;'), 'Car footprint must be verified against the road mesh');
+assert(!html.includes("vehicleGroup.name='2.3dm roads | legacy vehicle positions withheld'"), 'Vehicles are still withheld on the imported roads');
+assert(html.includes('if(model.meta?.imported&&!roadsDisplayOverride)toggle.disabled=true;'), 'Vehicle toggle must be usable once traffic is source-solved');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

@@ -1825,7 +1825,7 @@ const waterConfig={enabled:true};
 let waterGroup=null;
 const roadDesignConfig={enabled:true};
 let roadDesignGroup=null;
-const vehicleConfig={enabled:true,density:2};
+const vehicleConfig={enabled:true,density:2,count:48};
 let vehicleGroup=null;
 const vehicleTierGroups=[];
 
@@ -2440,9 +2440,91 @@ function initRoadDesignUI(){
 }
 
 const roadVehiclePositions=[[-217.79,-160.23,0.0,3],[247.22,158.4,3.5779,0],[-155.92,77.04,1.5708,2],[-175.13,127.62,4.8679,0],[-156.78,-5.84,2.5717,0],[64.24,-61.08,4.7124,2],[-183.65,-4.4,1.1369,0],[40.06,-62.06,2.422,0],[65.95,110.94,4.7997,2],[194.17,140.61,3.8505,0],[43.29,-3.11,0.0,0],[-102.63,-109.49,3.1416,0],[142.41,27.02,3.1416,1],[107.69,52.98,4.7124,2],[152.1,7.6,1.5708,1],[45.45,168.24,1.5708,2],[-234.64,47.83,1.3963,1],[285.8,98.14,1.6581,3],[-232.74,165.52,-0.2618,1],[-111.87,185.31,6.2832,3],[176.88,179.2,1.5708,2],[286.28,125.21,0.3491,3],[-184.24,-22.17,1.5708,0],[3.16,96.13,0.2618,1],[-92.29,168.75,0.0,0],[307.26,63.09,5.2138,2],[62.28,-6.07,3.0543,2],[-168.66,35.41,1.6581,2],[305.0,-22.27,3.7649,2],[-73.41,-96.75,1.443,2],[-249.79,-6.07,3.1416,0],[-26.78,59.88,4.824,2],[32.63,108.64,3.4907,1],[-172.4,9.94,4.7124,1],[-158.56,94.28,1.6581,3],[-166.54,156.54,0.0,3],[27.13,177.96,0.0496,3],[-152.51,-62.41,2.7925,0],[73.48,86.85,4.7124,1],[0.65,173.51,3.1416,3],[-204.7,-50.56,0.8806,3],[-203.56,-27.92,-0.3491,3],[265.19,-45.62,-2.5183,2],[303.32,24.17,3.4034,1],[159.69,37.27,4.7124,3],[1.11,-2.61,3.1416,3],[-252.35,-167.22,3.3891,2],[-278.73,-179.8,0.0,0]];
+// ROAD VEHICLES v27 — positions solved at runtime from whichever road mesh is
+// live, so they follow the 2.3dm carriageways instead of the retired v17 table
+// (which was fitted to the previous road geometry and cannot be re-used).
+// Geometry-first: every car is placed on real road triangles, never invented.
+function roadTopLevel(){
+ const rv=model.roads?.v;if(!rv?.length)return null;
+ let top=-Infinity;for(let i=2;i<rv.length;i+=3)if(rv[i]>top)top=rv[i];
+ return Number.isFinite(top)?top:null;
+}
+function solveRoadVehiclePositions(limit){
+ const rv=model.roads?.v,rf=model.roads?.t,top=roadTopLevel();
+ if(!rv?.length||!rf?.length||top===null)return [];
+ // The driving surface is the road mesh's top plane; ramps and the submerged
+ // channel sit below it and are deliberately left without traffic.
+ const cellSize=12,cells=new Map();
+ const key=(x,y)=>Math.floor(x/cellSize)+','+Math.floor(y/cellSize);
+ let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity,surface=0;
+ for(let f=0;f<rf.length;f+=3){
+  const idx=[rf[f],rf[f+1],rf[f+2]];
+  if(idx.some(i=>Math.abs(rv[i*3+2]-top)>.02))continue;
+  const pts=idx.map(i=>[rv[i*3],rv[i*3+1]]);
+  const tx0=Math.min(pts[0][0],pts[1][0],pts[2][0]),tx1=Math.max(pts[0][0],pts[1][0],pts[2][0]);
+  const ty0=Math.min(pts[0][1],pts[1][1],pts[2][1]),ty1=Math.max(pts[0][1],pts[1][1],pts[2][1]);
+  const tri={pts,minX:tx0,maxX:tx1,minY:ty0,maxY:ty1};surface++;
+  if(tx0<minX)minX=tx0;if(tx1>maxX)maxX=tx1;if(ty0<minY)minY=ty0;if(ty1>maxY)maxY=ty1;
+  for(let i=Math.floor(tx0/cellSize);i<=Math.floor(tx1/cellSize);i++)
+   for(let j=Math.floor(ty0/cellSize);j<=Math.floor(ty1/cellSize);j++){
+    const id=i+','+j;if(!cells.has(id))cells.set(id,[]);cells.get(id).push(tri);
+   }
+ }
+ if(!surface)return [];
+ const onRoad=(x,y)=>(cells.get(key(x,y))||[]).some(t=>
+  x>=t.minX-.001&&x<=t.maxX+.001&&y>=t.minY-.001&&y<=t.maxY+.001&&pointInTriangle2D(x,y,...t.pts));
+ // Fixed seed: every visitor sees the same traffic, and reloads do not reshuffle it.
+ let seed=20261031;
+ const rnd=()=>((seed=(seed*1103515245+12345)&0x7fffffff)/0x7fffffff);
+ // Local carriageway axis = the direction with the longest uninterrupted run.
+ const runLength=(x,y,ang)=>{
+  const ux=Math.cos(ang),uy=Math.sin(ang);let d=0;
+  for(const s of [1,-1])for(let k=1;k<=9;k++){
+   if(onRoad(x+ux*s*k*2,y+uy*s*k*2))d+=2;else break;
+  }
+  return d;
+ };
+ const axisAt=(x,y)=>{
+  let best=null,bestLen=0;
+  for(let i=0;i<12;i++){const ang=i*Math.PI/12,len=runLength(x,y,ang);if(len>bestLen){bestLen=len;best=ang}}
+  return bestLen>=14?best:null;
+ };
+ const edgeDist=(x,y,vx,vy)=>{let d=0;while(d<16&&onRoad(x+vx*(d+.3),y+vy*(d+.3)))d+=.3;return d};
+ const CAR_LEN=4.32,CAR_WID=1.83,MARGIN=.5;
+ const fits=(x,y,ux,uy)=>{
+  const vx=-uy,vy=ux,hl=CAR_LEN/2+MARGIN,hw=CAR_WID/2+MARGIN;
+  for(const a of [-hl,-hl/2,0,hl/2,hl])for(const b of [-hw,0,hw])
+   if(!onRoad(x+ux*a+vx*b,y+uy*a+vy*b))return false;
+  return true;
+ };
+ const placed=[];
+ for(let t=0;t<9000&&placed.length<limit;t++){
+  const x=minX+rnd()*(maxX-minX),y=minY+rnd()*(maxY-minY);
+  if(!onRoad(x,y))continue;
+  const ang=axisAt(x,y);if(ang===null)continue;
+  const vx=-Math.sin(ang),vy=Math.cos(ang);
+  const dl=edgeDist(x,y,vx,vy),dr=edgeDist(x,y,-vx,-vy),width=dl+dr;
+  // Too narrow for a car with clearance, or so wide it is a junction apron.
+  if(width<5.6||width>30)continue;
+  const cx=x+vx*(dl-dr)/2,cy=y+vy*(dl-dr)/2;
+  // London keeps left: a car heading along u sits in the lane left of centre.
+  const dir=rnd()<.5?1:-1,ux=Math.cos(ang)*dir,uy=Math.sin(ang)*dir;
+  const lane=Math.min(width/4,3.2),lx=cx+(-uy)*lane,ly=cy+ux*lane;
+  if(!fits(lx,ly,ux,uy))continue;
+  if(placed.some(p=>Math.hypot(p[0]-lx,p[1]-ly)<9))continue;
+  placed.push([lx,ly,Math.atan2(uy,ux),Math.floor(rnd()*4)]);
+ }
+ return placed;
+}
 function buildRoadVehicles(){
  vehicleGroup=new THREE.Group();vehicleGroup.name='道路微缩车辆 · 道路占位校验';scene.add(vehicleGroup);
  vehicleTierGroups.length=0;
+ const positions=roadsDisplayOverride?solveRoadVehiclePositions(48):roadVehiclePositions;
+ vehicleConfig.count=positions.length;
+ // Wheels were tuned against a road surface at z = 0.5; follow the live one.
+ const lift=(roadsDisplayOverride?(roadTopLevel()??.5):.5)-.5;
+ const perTier=Math.max(1,Math.ceil(positions.length/3));
+ if(!positions.length){updateRoadVehicleVisibility();return}
  const carBox=new THREE.BoxGeometry(1,1,1),wheelGeo=new THREE.CylinderGeometry(.35,.35,.21,7);wheelGeo.rotateX(Math.PI/2);
  const bodyMats=['#e7e9ec','#aeb5bd','#3d4652','#858d98'].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.43,metalness:.12}));
  const roofMat=new THREE.MeshStandardMaterial({color:'#c2c7ce',roughness:.46,metalness:.08});
@@ -2452,17 +2534,17 @@ function buildRoadVehicles(){
  for(let tier=0;tier<3;tier++){
   const g=new THREE.Group();g.name=['稀疏车辆','标准车辆','更多车辆'][tier];g.userData.tier=tier;vehicleGroup.add(g);vehicleTierGroups.push(g);
   const batch=batcher();
-  for(let i=tier*16;i<(tier+1)*16;i++){
-   const [x,y,a,color]=roadVehiclePositions[i];const z=-y,ang=-a,co=Math.cos(ang),si=Math.sin(ang);
+  for(let i=tier*perTier;i<Math.min((tier+1)*perTier,positions.length);i++){
+   const [x,y,a,color]=positions[i];const z=-y,ang=-a,co=Math.cos(ang),si=Math.sin(ang);
    const placed=(lx,lz)=>[x+lx*co-lz*si,z+lx*si+lz*co];
-   const put=(material,lx,lz,py,sx,sy,sz)=>{const q=placed(lx,lz);batch.add(carBox,material,q[0],py,q[1],sx,sy,sz,ang)};
+   const put=(material,lx,lz,py,sx,sy,sz)=>{const q=placed(lx,lz);batch.add(carBox,material,q[0],py+lift,q[1],sx,sy,sz,ang)};
    put(bodyMats[color],0,0,1.12,4.32,.61,1.83);
    put(roofMat,-.27,0,1.68,2.22,.52,1.44);
    put(glassMat,.66,0,1.62,.19,.44,1.47);
    put(glassMat,-1.22,0,1.62,.18,.42,1.45);
    put(glassMat,-.27,-.74,1.57,1.87,.35,.06);
    put(glassMat,-.27,.74,1.57,1.87,.35,.06);
-   for(const lx of [-1.29,1.29])for(const lz of [-.93,.93]){const q=placed(lx,lz);batch.add(wheelGeo,wheelMat,q[0],.79,q[1],1,1,1,ang)}
+   for(const lx of [-1.29,1.29])for(const lz of [-.93,.93]){const q=placed(lx,lz);batch.add(wheelGeo,wheelMat,q[0],.79+lift,q[1],1,1,1,ang)}
    for(const side of [-.60,.60]){
     put(lightMat,2.17,side,1.14,.07,.18,.24);
     put(rearMat,-2.17,side,1.14,.07,.17,.23);
@@ -2483,17 +2565,18 @@ function initRoadVehicleUI(){
  const main=document.querySelector('.stage .layers');
  const report=document.querySelector('#landscapeControlsMount');
  const toggle=document.createElement('button');toggle.id='vehicleToggleMain';toggle.type='button';toggle.className='layer';toggle.style.cssText='min-height:33px;border:1px solid #4a4f58;background:#262b32;color:#dde3e8;border-radius:7px;padding:7px 11px;cursor:pointer';
- const counter=()=>roadsDisplayOverride?'车辆 · 待新道路定位':model.meta?.imported?'车辆 · 待位置核对':vehicleConfig.enabled?`车辆：显示 · ${vehicleConfig.density*16} 辆`:'车辆：隐藏';
+ const shown=()=>{const per=Math.max(1,Math.ceil((vehicleConfig.count??48)/3));return Math.min(vehicleConfig.count??48,per*vehicleConfig.density)};
+ const counter=()=>!roadsDisplayOverride&&model.meta?.imported?'车辆 · 待位置核对':vehicleConfig.enabled?`车辆：显示 · ${shown()} 辆`:'车辆：隐藏';
  const sync=()=>{toggle.textContent=counter();toggle.setAttribute('aria-pressed',String(vehicleConfig.enabled));const twin=document.querySelector('#vehicleToggleReport');if(twin){twin.textContent=counter();twin.setAttribute('aria-pressed',String(vehicleConfig.enabled))}if(renderer?.isSoftware)renderer.lastSignature='';};
  toggle.addEventListener('click',()=>{vehicleConfig.enabled=!vehicleConfig.enabled;updateRoadVehicleVisibility();sync()});
- if(model.meta?.imported||roadsDisplayOverride)toggle.disabled=true;
+ if(model.meta?.imported&&!roadsDisplayOverride)toggle.disabled=true;
  if(main)main.append(toggle);
  if(report){const copy=toggle.cloneNode(true);copy.id='vehicleToggleReport';copy.addEventListener('click',()=>toggle.click());report.append(copy)}
  const density=document.createElement('select');density.id='vehicleDensity';density.setAttribute('aria-label','道路车辆密度');density.style.cssText='background:#252a31;color:#e5e8ed;border:1px solid #4a4f58;border-radius:7px;padding:6px 8px;min-height:33px;font-size:12px;cursor:pointer';
  density.innerHTML='<option value="1">少 · 16 辆</option><option value="2">标准 · 32 辆</option><option value="3">多 · 48 辆</option>';
  density.value=String(vehicleConfig.density);
  density.addEventListener('change',()=>{vehicleConfig.density=Number(density.value);updateRoadVehicleVisibility();sync()});
- if(model.meta?.imported)density.disabled=true;
+ if(model.meta?.imported&&!roadsDisplayOverride)density.disabled=true;
  if(main)main.append(density);
  sync();
 }
@@ -2513,8 +2596,10 @@ function buildScene(){
   roadDesignGroup=new THREE.Group();roadDesignGroup.name='2.3dm roads | legacy markings withheld';
   roadDesignGroup.userData={version:null,geometrySource:'2.3dm / Roads',unresolved:['道路标线须按新路口几何重新定位']};
   scene.add(roadDesignGroup);
-  vehicleGroup=new THREE.Group();vehicleGroup.name='2.3dm roads | legacy vehicle positions withheld';scene.add(vehicleGroup);
-  roadDesignConfig.enabled=false;vehicleConfig.enabled=false;
+  roadDesignConfig.enabled=false;
+  // Markings stay withheld, but traffic no longer depends on the retired
+  // coordinate table: v27 solves car positions from the live 2.3dm carriageways.
+  buildRoadVehicles();
  }else if(model.meta?.imported){
   // Only source Rhino roads. Legacy fixed junction seeds and vehicle coordinates cannot be reused.
   roadDesignGroup=new THREE.Group();roadDesignGroup.name='Latest Rhino roads | markings require recalibration';
