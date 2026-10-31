@@ -90,6 +90,11 @@ assert(html.includes('if(!onCut(a)||!onCut(b))continue;'), 'Only the site cut ma
 assert(html.includes('const kerb=new Set();'), 'Kerb-line recovery is missing');
 assert(html.includes('for(const k of kerb)selected.add(k);'), 'Kerb faces are not added back to the water');
 assert(html.includes('result.kerbFaces=kerb.size;'), 'Kerb recovery must be reported');
+// LANDSCAPE v29 — planting is cut against the live Roads mesh, not just the
+// baseline parcel polygons, so nothing is planted on a 2.3dm carriageway.
+assert(html.includes('function clearsCarriageway(x,y,r){'), 'Carriageway clearance test is missing');
+assert(html.includes('&&clearsCarriageway(x,y,r*.8)&&freeFromStructure(x,y,r)}'), 'Planting must clear the carriageway');
+assert(html.includes('const tint=Math.floor(rand()*3),spin=rand()*6.28'), 'Per-tree crown variation is missing');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

@@ -1988,7 +1988,43 @@ function freeFromStructure(x,y,radius){const kx=Math.floor(x/occupyCell),ky=Math
   if(structureGrid.has((kx+ix)+','+(ky+iy)))return false;
  }return true;
 }
-function siteCandidate(p,x,y,r){return polygonInset(x,y,p.boundary,Math.max(r*.55,1.4))&&!intersectsWaterFootprint(x,y,Math.max(1.4,r))&&freeFromStructure(x,y,r)}
+// LANDSCAPE v29 — the parcel polygons come from the embedded baseline and were
+// cut against the PREVIOUS road network, so a point well inside a parcel can
+// still sit on a 2.3dm carriageway. Test the live Roads mesh itself, with a
+// radius, so canopies and lawn edges clear the kerb rather than merely missing
+// the centreline. Planting already respects structures and water the same way.
+let roadPlantGrid=null;
+function roadPlantIndex(){
+ if(roadPlantGrid)return roadPlantGrid;
+ const rv=model?.roads?.v,rf=model?.roads?.t,cell=10,cells=new Map();
+ roadPlantGrid={cell,cells,ready:false};
+ if(!rv?.length||!rf?.length)return roadPlantGrid;
+ for(let k=0;k<rf.length;k+=3){
+  const p=[0,1,2].map(j=>{const i=rf[k+j]*3;return[rv[i],rv[i+1]]});
+  if(Math.abs((p[1][0]-p[0][0])*(p[2][1]-p[0][1])-(p[2][0]-p[0][0])*(p[1][1]-p[0][1]))<1e-6)continue;
+  const x0=Math.min(p[0][0],p[1][0],p[2][0]),x1=Math.max(p[0][0],p[1][0],p[2][0]);
+  const y0=Math.min(p[0][1],p[1][1],p[2][1]),y1=Math.max(p[0][1],p[1][1],p[2][1]);
+  const tri={p,x0,x1,y0,y1};
+  for(let i=Math.floor(x0/cell);i<=Math.floor(x1/cell);i++)for(let j=Math.floor(y0/cell);j<=Math.floor(y1/cell);j++){
+   const id=i+','+j;if(!cells.has(id))cells.set(id,[]);cells.get(id).push(tri);
+  }
+ }
+ roadPlantGrid.ready=cells.size>0;
+ return roadPlantGrid;
+}
+function onCarriageway(x,y){
+ const idx=roadPlantIndex();if(!idx.ready)return false;
+ const list=idx.cells.get(Math.floor(x/idx.cell)+','+Math.floor(y/idx.cell));
+ if(!list)return false;
+ return list.some(t=>x>=t.x0-.001&&x<=t.x1+.001&&y>=t.y0-.001&&y<=t.y1+.001&&pointInTriangle2D(x,y,...t.p));
+}
+function clearsCarriageway(x,y,r){
+ if(onCarriageway(x,y))return false;
+ const reach=Math.max(1.2,r);
+ for(let i=0;i<8;i++){const a=i*Math.PI/4;if(onCarriageway(x+Math.cos(a)*reach,y+Math.sin(a)*reach))return false}
+ return true;
+}
+function siteCandidate(p,x,y,r){return polygonInset(x,y,p.boundary,Math.max(r*.55,1.4))&&!intersectsWaterFootprint(x,y,Math.max(1.4,r))&&clearsCarriageway(x,y,r*.8)&&freeFromStructure(x,y,r)}
 const matLandscape={
  meadow:new THREE.MeshStandardMaterial({color:'#496b46',roughness:1,side:THREE.DoubleSide,metalness:0}),
  meadowAlt:new THREE.MeshStandardMaterial({color:'#547651',roughness:1,side:THREE.DoubleSide,metalness:0}),
@@ -2024,8 +2060,19 @@ function addMeadowPatch(batch,x,y,r,rand,mat){
 function addLandscapeTree(batch,x,y,scale,rand){
  const z=-y,ht=5.5+rand()*2.4;
  batch.add(trunkTemplate,matLandscape.bark,x,ht*.29*scale,z,scale,ht*.58*scale,scale);
+ // Every tree used the same four crown offsets and the same leaf palette in the
+ // same order, so a parcel read as one shape cloned. Give each tree its own
+ // palette rotation, its own crown spin and a small jitter per blob. Crown
+ // radius stays within the clearance the planting test assumes (max reach is
+ // about 4.3 m against the 5.1 m kerb margin), so nothing creeps onto a road.
+ const tint=Math.floor(rand()*3),spin=rand()*6.28,cs=Math.cos(spin),sn=Math.sin(spin);
  const crowns=[[-1.3,ht*.75,-.6,2.0],[1.4,ht*.78,.3,1.95],[.0,ht*.99,.25,2.2],[-.3,ht*.96,1.5,1.65]];
- crowns.forEach(([dx,cy,dz,r],i)=>{batch.add(leafTemplate,[matLandscape.leaf,matLandscape.leaf2,matLandscape.leaf3][i%3],x+dx*scale,cy*scale,z+dz*scale,r*scale,r*.78*scale,r*scale,rand()*6.28)});
+ crowns.forEach(([dx,cy,dz,r],i)=>{
+  const jx=dx+(rand()-.5)*.5,jz=dz+(rand()-.5)*.5,jr=r*(.85+rand()*.3);
+  const rx=jx*cs-jz*sn,rz=jx*sn+jz*cs;
+  batch.add(leafTemplate,[matLandscape.leaf,matLandscape.leaf2,matLandscape.leaf3][(i+tint)%3],
+   x+rx*scale,cy*(.95+rand()*.1)*scale,z+rz*scale,jr*scale,jr*.78*scale,jr*scale,rand()*6.28);
+ });
 }
 function buildLandscapeForParcel(p){
  const g=new THREE.Group();g.name='公园与绿化 '+p.id;g.userData.id=p.id;
