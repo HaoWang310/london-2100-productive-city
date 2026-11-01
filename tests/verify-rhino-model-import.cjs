@@ -253,8 +253,6 @@ assert(html.includes('for(const tri of water.triangles)paint(tri,3);'), 'Water m
 // with. They are painted over anything now, latest wins.
 assert(html.includes('{const v=roads.v,t=roads.t;\n  for(let k=0;k<t.length;k+=3)paint([0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1]]}),4);}'),
  'The carriageway class must be painted over anything');
-assert(html.includes('const walkable=k=>k===1||k===5;'), 'The walk to the street passes under the elevated structures');
-assert(html.includes('const nearBand=best+8/G;'), 'The frontage is the plot\'s own closest approach to a street');
 assert(html.includes("if(Math.abs(sgn(p[0],p[1],p[2]))<.02)continue;      // seen edge on, no footprint"), 'Structure footprints must be cut out of the land');
 // The same simplified outline serves the view, the area and the DXF.
 assert(html.includes('function simplifyRing(pts,eps){'), 'Plot outlines must be simplified once');
@@ -264,47 +262,26 @@ assert(html.includes('function exportPlotsCSV(){'), 'Plot schedule export is mis
 assert(html.includes("if(state.mode==='plots'){const lp=plotAt(e);"), 'Plots must be selectable in the view');
 // LAND USE v40 — green frame first, buildings second, capacity from the ratio.
 assert(html.includes('function planLandUse(){'), 'Land use planning is missing');
-assert(html.includes('const dWater=bfs(k=>k===3,ground);'), 'The three setback bands must be distance transforms');
 // The road distance carries which road cell it came from, so a band cell knows
 // which way it faces. Without it the arc length runs straight round a corner
 // and one parcel came out as a chevron sitting on two streets at once.
-assert(html.includes('d2[o]=nd;srcRoad[o]=srcRoad[c];qq[t7++]=o;'), 'The road distance must carry its source');
-assert(html.includes('for(let t=0;t<8;t++)remap.set(k2*8+t,(h[t]>=h[8]*.25?t:dom)*4096+k2);'), 'A parcel may run along a street but not turn a corner');
 // Quantising the facing outright split every curve at a sector line and the
 // site fell from 1.74 to 1.15 as the fragments failed the size tests.
-assert(html.includes('const hist=new Map();'), 'A slice must only divide where it genuinely faces two ways');
 // A structure's plan edge is a curved form cut by a half-metre grid, so it is
 // nibbled all along, and a clearance measured off it came through the
 // subdivision as a staircase down one side of a plot.
-assert(html.includes('for(let c=0;c<N;c++)structM[c]=de[c]>SR?1:0;'), 'The structure footprint must be closed before the clearance is measured');
-assert(html.includes('for(let c=0;c<N;c++)if(structM[c]){d2[c]=0;qq[t6++]=c}'), 'The clearance must be measured off the closed footprint');
-assert(html.includes('if(klass[c]===1&&dWater[c]>bw&&dRoad[c]>br&&dStruct[c]>bs)free[c]=1;'), 'Net developable ground must exclude all three bands');
-assert(html.includes('const gfaTarget=p.area*landUse.far;'), 'Capacity must come from the floor area ratio');
-assert(html.includes('short:Math.max(0,gfaTarget-footprint*landUse.storeys)'), 'A plot that cannot meet the ratio must report the shortfall, not force it');
 // And when the ratio asks for LESS than the frontage would give, the quantity
 // comes off the frontage, not the depth: a 4 m deep building is not a
 // building. Without this the 10 m floor took the site to 2.43 against 1.80.
-assert(html.includes('const keepRatio=ableArea>0?Math.min(1,footprintTarget/ableArea):1;'), 'Surplus capacity must be taken off the frontage');
 // Measured against the whole band the undersized ends were dropped twice over
 // and the site stalled at 1.43 whatever the ratio asked for.
-assert(html.includes('const able=order.filter(([b,e])=>e.n*G*G>=landUse.minParcel&&wideEnough(b,e));'), 'The ratio must be taken against the parcels that can actually be kept');
 // A plot has to hold a house, so area alone is not enough: a long thin shard
 // passes it. The largest inscribed circle has to span the minimum width.
-assert(html.includes('const wideEnough=(b,e)=>{'), 'Thin shards must be rejected on width, not only on area');
-assert(html.includes('return bestR*2*G>=landUse.minWidth;'), 'The width test must measure the inscribed circle');
 // And the band is opened before it is cut, so a taper or a tail never becomes
 // a parcel in the first place.
-assert(html.includes('if(use[c]===1&&grow[c]===INF){use[c]=-1;built-=G*G}'), 'The building band must be opened before it is split');
 // The cut runs across the street, not across one axis: a single axis fans the
 // cuts out where the frontage turns and the end parcels come to a point.
-assert(html.includes('Math.floor(sAl[c]*G/step)'), 'Parcels must be cut along the frontage');
-assert(html.includes('d[o]=nd;sAl[o]=sAl[c];q[tail++]=o;'), 'The band must carry its frontage position inward');
-assert(html.includes('if(kept>=footprintTarget*.95)break;'), 'A plot rounded down one parcel at a time must be topped back up');
-assert(html.includes('if(Math.floor((k2+1)*keepRatio)>Math.floor(k2*keepRatio))keep.add(b);'), 'Dropped parcels must be spread evenly along the street');
 // The building band grows inward FROM the street, so the green stays whole at the back.
-assert(html.includes('if(dRoad[c]<=nearBand){d[c]=0;q[tail++]=c}'), 'Depth must be measured from the frontage');
-assert(html.includes("const tag=-(20+gidx);for(const c of list)use[c]=tag;"), 'Each green piece needs its own tag or tracing picks up its neighbour');
-assert(html.includes("poly(ring,'BUILD_'+p.id)")&&html.includes("poly(ring,'GREEN_'+p.id)"), 'Buildings and green must export on their own layers');
 // THEME v39 — the interface was only half converted to dark: chips, view bar,
 // badge, labels, report cards and toast were still light-mode fills.
 assert(html.includes('<style id="apple-dark-v39">'), 'The dark theme layer is missing');
@@ -322,13 +299,10 @@ assert(html.includes('color,side:THREE.DoubleSide,depthWrite:true,depthTest:true
 assert(html.includes('m.rotation.x=-Math.PI/2;m.position.y=y;m.renderOrder=order;return m;'), 'The plot layers need an explicit order');
 // Open then close: the first takes the spikes off, the second fills the bites
 // the depth contour and a structure's ragged plan edge leave in its side.
-assert(html.includes("if(use[c]!==1&&grow[c]!==INF&&edgeD[c]===INF){use[c]=1;built+=G*G}"), 'The building band must be closed as well as opened');
-assert(html.includes("flat(g,'#2f4a33',.38,2)")&&html.includes("flat(b,'#e3e7ec',.42,3)"), 'Green and building areas must be drawn');
-assert(html.includes("m.material.color.set(on?'#0a84ff':hot?'#1d2026':'#0b0d10');"), 'Plot selection must use the system accent');
+assert(html.includes("part.material.color.set(on?'#0a84ff':hot?'#f4f6f9':'#d9dee5');"), 'Plot selection must use the system accent');
 // The coverage control reads a percentage, so its clamp is in percent too.
 // Clamped against .05 and .9 the typed 45 became 0.9, then /100 gave a 0.9%
 // cap that bound before every other setting and froze the whole plan.
-assert(html.includes("landUse.coverage=num('#luCoverage',5,90,landUse.coverage*100)/100;"), 'Coverage must be clamped in percent');
 // SMOOTHING v41 — a traced ring is a staircase of 0.5 m steps, and a 0.45 m
 // tolerance could not clear it because a step deviates less than that from the
 // line it draws. Simplify above the grid, then round only the gentle turns.
@@ -341,10 +315,23 @@ assert(html.includes('rings=traceRings(inside,box,R).map(smoothRing)'), 'Every t
 // region in two pieces into one piece with the other subtracted out of it.
 assert(html.includes('const outers=rings.filter(r=>shoelace(r)>0)'), 'Outlines must be told from holes by orientation');
 assert(html.includes('const holes=rings.filter(r=>shoelace(r)<0&&'), 'Only a negative ring inside the outline is a hole');
-assert(html.includes('if(sh.area<landUse.minParcel*.6){'), 'The floor must also be applied to the shape that is drawn');
 // One shape, one area: the table, the ratio and the DXF must agree.
-assert(html.includes('area:sh.area,outer:sh.outer,holes:sh.holes});'), 'Parcel areas must come off the drawn polygon');
+assert(html.includes('area:Math.abs(polyArea(r)),outer:r,holes:[]}));'), 'Lot areas must come off the drawn polygon');
 assert(html.includes('plots.push({raster:f.id,area:shape.area,'), 'Plot areas must come off the drawn polygon');
+// SUBDIVISION v43 — the plot itself, cut into lots, on the POLYGON. Every
+// shape problem of the frontage band came from the raster it was carved out
+// of; a straight cut across a polygon cannot leave a sliver or a staircase.
+assert(html.includes('function subdividePolygon(poly,target,rand,depth){'), 'The subdivision must work on the polygon');
+assert(html.includes('function clipHalf(poly,nx,ny,c,keepPositive){'), 'A lot is a polygon cut by a line');
+// Cut across the long side of the plot's own tightest box, or a diagonal
+// street leaves wedges.
+assert(html.includes('function tightBox(poly){'), 'The cut direction must come from the plot, not from a fixed axis');
+assert(html.includes('const alongU=du>=dv;'), 'The cut must run across the longer side');
+// One control, and it moves the pattern rather than the quantities.
+assert(html.includes('<label class="luSlider">随机<input id="luSeed" type="range"'), 'The random control is missing');
+assert(html.includes("const rand=seeded('land-subdivision-v43-'+lotSeed);"), 'The seed must drive the subdivision');
+assert(html.includes('buildLandPlots(true);renderPlotPanel();updateLandPlots();'), 'Moving the seed must not re-solve the plots');
+assert(!html.includes('luCoverage')&&!html.includes('luFar'), 'The ratio and green controls are set aside for now');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');
