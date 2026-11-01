@@ -246,14 +246,24 @@ assert(html.includes('<button data-mode="plots">用地</button>'), 'The land mod
 assert(html.includes("document.body.classList.toggle('plotsMode',mode==='plots');"), 'The land panel is not shown with the mode');
 assert(html.includes("if(!landPlots.length)buildLandPlots();"), 'Plots must be solved on entering the mode');
 // Roads, water and the plan projection of every structure are painted out.
-assert(html.includes('for(const tri of water.triangles)paint(tri,2,1);'), 'Water must be cut out of the land');
+assert(html.includes('for(const tri of water.triangles)paint(tri,3,1);'), 'Water must be cut out of the land');
 assert(html.includes("if(Math.abs(sgn(p[0],p[1],p[2]))<.02)continue;      // seen edge on, no footprint"), 'Structure footprints must be cut out of the land');
 // The same simplified outline serves the view, the area and the DXF.
-assert(html.includes('const rdp=(pts,eps)=>{'), 'Plot outlines must be simplified once');
-assert(html.includes("out.push('0','LWPOLYLINE','8','PLOT_'+p.id,"), 'DXF export is missing');
+assert(html.includes('function simplifyRing(pts,eps){'), 'Plot outlines must be simplified once');
+assert(html.includes("poly(ring,'PLOT_'+p.id)"), 'DXF export is missing');
 assert(html.includes("(x+o[0]).toFixed(3),'20',(y+o[1]).toFixed(3)"), 'DXF must carry Rhino world coordinates');
 assert(html.includes('function exportPlotsCSV(){'), 'Plot schedule export is missing');
 assert(html.includes("if(state.mode==='plots'){const lp=plotAt(e);"), 'Plots must be selectable in the view');
+// LAND USE v40 — green frame first, buildings second, capacity from the ratio.
+assert(html.includes('function planLandUse(){'), 'Land use planning is missing');
+assert(html.includes('const dWater=bfs(k=>k===3),dRoad=bfs(k=>k===4),dStruct=bfs(k=>k===5);'), 'The three setback bands must be distance transforms');
+assert(html.includes('if(klass[c]===1&&dWater[c]>bw&&dRoad[c]>br&&dStruct[c]>bs)free[c]=1;'), 'Net developable ground must exclude all three bands');
+assert(html.includes('const gfaTarget=p.area*landUse.far;'), 'Capacity must come from the floor area ratio');
+assert(html.includes('short:Math.max(0,gfaTarget-footprint*landUse.storeys)'), 'A plot that cannot meet the ratio must report the shortfall, not force it');
+// The building band grows inward FROM the street, so the green stays whole at the back.
+assert(html.includes('if(onStreet){d[c]=0;q[tail++]=c}'), 'Depth must be measured from the frontage');
+assert(html.includes("const tag=-(20+gidx);for(const c of list)use[c]=tag;"), 'Each green piece needs its own tag or tracing picks up its neighbour');
+assert(html.includes("poly(ring,'BUILD_'+p.id)")&&html.includes("poly(ring,'GREEN_'+p.id)"), 'Buildings and green must export on their own layers');
 // THEME v39 — the interface was only half converted to dark: chips, view bar,
 // badge, labels, report cards and toast were still light-mode fills.
 assert(html.includes('<style id="apple-dark-v39">'), 'The dark theme layer is missing');
@@ -263,7 +273,8 @@ assert(html.includes('--sys-blue:#0a84ff;'), 'The system accent is missing');
 for (const sel of ['.layer,.viewbar,.explodePanel,.badge,.label,.tooltip,.toast,.plotsPanel,.formOverview{'])
  assert(html.includes(sel), 'Floating chrome must be a material, not a white card: ' + sel);
 // Black ground in the land mode, picked plots in the same accent as the UI.
-assert(html.includes("color:'#07080a',side:THREE.DoubleSide,"), 'Land plots must read black');
+assert(html.includes("const base=flat(p,'#07080a',.82,.34);"), 'Land plots must read black');
+assert(html.includes("flat(g,'#30d158',.3,.38)")&&html.includes("flat(b,'#e8ebf0',.92,.42)"), 'Green and building areas must be drawn');
 assert(html.includes("m.material.color.set(on?'#0a84ff':hot?'#1d2026':'#07080a');"), 'Plot selection must use the system accent');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');

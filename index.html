@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FORM / ASSEMBLY — Studio v12 · 可收起结构单元库</title><style>
-:root{--ink:#f5f5f7;--muted:#848484;--line:#303238;--soft:#1e2024;--purple:#383a3d;--gold:#d3b986}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#15171a;font-size:13px;overflow:hidden}button,input,select{font:inherit}button{cursor:pointer;border:0;background:transparent;color:inherit}button:focus-visible,input:focus-visible{outline:2px solid #a4a7ae;outline-offset:3px}button:disabled{opacity:.3;cursor:default}button:hover{background:#26292e}header{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 30px;gap:28px;background:#15171a;position:relative;z-index:5}.brand{font-size:17px;letter-spacing:1.8px;font-weight:650;white-space:nowrap}.brand span{color:#a8a8a8;font-weight:350;margin:0 4px}.edition{font-size:10px;letter-spacing:1.5px;color:#929292;margin-top:6px}.nav{display:flex;gap:3px;padding:4px;border:1px solid var(--line);border-radius:30px;margin:auto}.nav button{padding:9px 22px;border-radius:24px;color:#a4a7ae}.nav button.active{background:#e9ecf0;color:#111215;box-shadow:0 2px 5px #0001}.headerActions{display:flex;align-items:center;gap:8px}.round{border:1px solid var(--line);border-radius:50%;width:36px;height:36px;font-size:17px}.pill{padding:10px 17px;border:1px solid var(--line);border-radius:22px;white-space:nowrap}.black{background:#e9ecf0;color:#111215}.black:hover{background:#444}.app{display:flex;height:calc(100dvh - 76px)}aside{width:254px;flex-shrink:0;border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--surface-1);z-index:2}.sideHead{padding:25px 22px 18px}.eyebrow{font-size:10px;letter-spacing:2px;color:#8a8a8a;text-transform:uppercase}.sideHead h2{font-size:20px;letter-spacing:-.5px;font-weight:550;margin:10px 0 8px}.small{font-size:11px;line-height:1.7;color:var(--muted)}.search{border:1px solid var(--line);background:#1e2024;border-radius:10px;width:100%;padding:9px 12px;margin-top:17px;color:#333}.switchTabs{display:flex;padding:0 18px 14px;gap:4px}.switchTabs button{flex:1;border-radius:7px;font-size:11px;padding:7px 3px;color:#a4a7ae}.switchTabs button.active{background:#26292e;color:#e9ecf0}.unitList{overflow:auto;flex:1;padding:0 10px 12px;scrollbar-width:thin}.unitRow{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;text-align:left;border-radius:9px;position:relative}.unitRow.active{background:#26292e}.unitRow .symbol{width:27px;height:27px;border:1px solid #d9d9de;border-radius:7px;display:grid;place-items:center;font-size:13px;color:#a4a7ae;background:#15171a}.unitRow.active .symbol{background:#e9ecf0;color:var(--text-primary);border-color:#e9ecf0}.unitRow .txt{flex:1}.unitRow strong{font-size:12px;font-weight:550;letter-spacing:.3px}.unitRow small{font-size:10px;color:#909095;display:block;margin-top:4px}.unitRow .dot{width:5px;height:5px;border-radius:50%;background:#b7b7bd}.sideFoot{border-top:1px solid var(--line);padding:16px 22px;font-size:10px;color:#929295;line-height:1.8}.sideFoot b{color:#414145;font-weight:500}.stage{flex:1;position:relative;min-width:0;overflow:hidden;background:#101114}#viewport{width:100%;height:100%;position:absolute;inset:0}canvas{display:block;touch-action:none}.stageTitle{position:absolute;top:29px;left:32px;pointer-events:none;z-index:1}.stageTitle h1{font-size:31px;letter-spacing:-1.3px;font-weight:450;margin:9px 0 11px}.stageTitle p{color:#838387;font-size:11px;margin:0;max-width:450px;line-height:1.8}.counter{display:flex;gap:25px;margin-top:22px}.counter b{font-size:21px;font-weight:450;letter-spacing:-.6px}.counter small{display:block;color:#98989e;font-size:10px;margin-top:6px}.layers{position:absolute;top:28px;right:26px;z-index:2;display:flex;flex-direction:column;align-items:flex-end;gap:7px}.layer{font-size:11px;background:#ffffffd9;border:1px solid #e4e4e8;padding:8px 11px;border-radius:20px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(12px)}.layer.off{opacity:.4}.swatch{height:6px;width:6px;border-radius:50%;background:#a4a7ae}.canvasFoot{position:absolute;bottom:103px;left:30px;font-size:10px;color:#a1a1a8;pointer-events:none;letter-spacing:.3px}.viewbar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:#fffffff2;border:1px solid #dedee4;border-radius:16px;box-shadow:0 8px 30px #00000008;display:flex;align-items:center;padding:6px;gap:3px;z-index:3;backdrop-filter:blur(20px);white-space:nowrap}.viewbar button{font-size:11px;border-radius:10px;padding:10px 13px;color:#717176}.viewbar button.active{background:#232326;color:#15171a}.separator{height:20px;width:1px;background:#e4e4e7;margin:0 4px}.explodePanel{position:absolute;bottom:99px;left:50%;transform:translateX(-50%);width:min(410px,75%);background:#ffffffed;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:none;z-index:3;backdrop-filter:blur(16px)}.sliderHead{display:flex;justify-content:space-between;font-size:11px;margin-bottom:10px}.sliderHead span{color:#a4a7ae}input[type=range]{accent-color:#28282b;width:100%;height:4px;cursor:pointer}.inspector{width:280px;border-left:1px solid var(--line);background:var(--surface-1);display:flex;flex-direction:column;flex-shrink:0;z-index:2}.inspectContent{padding:27px 23px;overflow:auto;flex:1}.inspectContent h2{font-size:30px;letter-spacing:-1px;font-weight:450;margin:13px 0 6px}.inspectContent .subtitle{font-size:11px;color:#a4a7ae;line-height:1.8}.miniMap{width:100%;height:136px;background:#1e2024;border:1px solid #efeff0;border-radius:12px;margin:24px 0 19px;overflow:hidden}.miniMap svg{width:100%;height:100%}.sectionLabel{font-size:10px;letter-spacing:1px;color:#a4a7ae;margin:24px 0 12px}.dataLine{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #26292e;font-size:11px}.dataLine span{color:#8b8b90}.dataLine b{font-weight:450;text-align:right}.inspector button.wide{display:block;width:100%;margin-top:9px;border-radius:10px;padding:11px;font-size:11px;border:1px solid var(--line)}.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.tag{border:1px solid #e5e5e9;border-radius:7px;padding:6px 9px;font-size:10px;background:#1e2024}.hint{font-size:10px;line-height:1.9;color:#969ca6;margin-top:20px}.inspector .bottom{border-top:1px solid var(--line);padding:16px 23px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#a4a7ae}.bottom button{border:1px solid var(--line);border-radius:7px;padding:5px 10px}.badge{position:absolute;left:32px;bottom:28px;background:#fff9;border:1px solid #dddde1;border-radius:20px;padding:9px 13px;font-size:10px;color:#6e6e75;z-index:2}.badge::before{content:"";display:inline-block;background:#74747d;width:5px;height:5px;border-radius:50%;margin-right:7px}.tooltip{position:absolute;pointer-events:none;background:#202024e8;color:var(--text-primary);padding:7px 10px;font-size:11px;border-radius:8px;display:none;z-index:9}.labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}.label{position:absolute;font-size:9px;font-weight:500;transform:translate(-50%,-50%);background:#ffffffe8;border:1px solid #d1d1d8;padding:3px 5px;border-radius:4px;color:#666;white-space:nowrap}.report{position:absolute;inset:0;background:#1e2024;z-index:4;display:none;overflow:auto;padding:34px 38px}.reportTop{display:flex;justify-content:space-between;align-items:center;gap:14px}.report h1{font-size:30px;font-weight:450;margin:9px 0}.report p{font-size:12px;color:#929295;line-height:1.9}.reportTabs{display:flex;gap:6px;margin:24px 0 23px;border-bottom:1px solid #ddd}.reportTabs button{font-size:12px;padding:12px 16px;color:#a4a7ae;border-bottom:2px solid transparent}.reportTabs button.active{color:#e9ecf0;border-bottom-color:#e9ecf0}.statsGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.statCard{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:12px;padding:20px}.statCard small{font-size:10px;color:#a4a7ae}.statCard b{display:block;font-size:25px;font-weight:450;margin-top:12px}.statCard span{display:block;color:#969ca6;font-size:10px;margin-top:8px}.reportBody{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:14px;padding:23px;overflow-x:auto}.reportBody h3{font-size:15px;font-weight:500;margin:0 0 17px}.reportBody table{border-collapse:collapse;width:100%;text-align:left;white-space:nowrap;font-size:11px}.reportBody th{font-size:10px;color:#9a9a9f;font-weight:450;border-bottom:1px solid #ddd;padding:12px 10px}.reportBody td{padding:12px 10px;border-bottom:1px solid #efeff2}.reportBody tr[data-id]{cursor:pointer}.reportBody tr[data-id]:hover{background:#f6f6f8}.reportNote{font-size:10px!important;max-width:850px}.planWrap{display:grid;grid-template-columns:1.2fr 1fr;gap:25px;margin-bottom:26px}.planWrap svg{width:100%;height:280px;background:#f8f8fa;border-radius:10px}.steps{display:grid;gap:13px}.step{border-bottom:1px solid #eee;padding:14px 0;display:flex;gap:15px}.step b{font-weight:500;font-size:13px}.step span{color:#969ca6;font-size:10px;letter-spacing:1px}.step p{margin:6px 0 0;font-size:11px}.modalBackdrop{position:fixed;inset:0;background:#0004;backdrop-filter:blur(8px);z-index:20;display:none;align-items:center;justify-content:center}.modal{background:#15171a;border-radius:20px;width:480px;max-width:90vw;padding:30px;box-shadow:0 25px 90px #0002}.modal h2{font-size:23px;font-weight:500;margin:0 0 20px}.modal p{font-size:12px;color:#a4a7ae;line-height:1.9}.modal table{width:100%;font-size:12px;border-collapse:collapse}.modal td{padding:11px 0;border-bottom:1px solid #eee}.modal td:last-child{text-align:right;color:#a4a7ae}.toast{position:fixed;bottom:25px;left:50%;transform:translate(-50%,20px);background:#202024;color:var(--text-primary);font-size:12px;padding:13px 20px;border-radius:30px;z-index:50;opacity:0;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}.loader{position:fixed;inset:0;background:#1e2024;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px}.loader .mark{font-size:24px;letter-spacing:5px;font-weight:400}.loader .progress{width:150px;height:2px;background:#ddd;overflow:hidden}.loader .progress::after{content:"";display:block;background:#e9ecf0;width:50%;height:100%;animation:load 1s infinite alternate}.loader p{font-size:11px;color:#a4a7ae}@keyframes load{to{transform:translateX(100%)}}.reportMode .inspector{display:none}.present header{height:60px}.present .app{height:calc(100dvh - 60px)}.present aside,.present .inspector{display:none}.present .stageTitle h1{font-size:40px}.present .stageTitle{top:35px;left:42px}.present .stageTitle p{font-size:13px}.assemblyActions{display:none;margin-top:12px;gap:5px}.assemblyActions button{font-size:10px;padding:8px 10px;border:1px solid #ddd;border-radius:8px}.mobileSide{display:none}.plotsPanel{position:absolute;top:28px;left:32px;width:244px;max-height:calc(100% - 190px);background:#16181cf2;border:1px solid var(--line);border-radius:13px;display:none;flex-direction:column;z-index:3;backdrop-filter:blur(14px);overflow:hidden}body.plotsMode .plotsPanel{display:flex}body.plotsMode .stageTitle{display:none}.plotsHead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:13px 14px 10px;border-bottom:1px solid var(--line)}.plotsHead strong{font-size:13px;font-weight:600;display:block}.plotsHead small{display:block;font-size:10px;color:#9aa1ab;margin-top:4px}.plotsHead button{font-size:10px;border:1px solid var(--line);border-radius:7px;padding:5px 8px;color:#c8ced7;white-space:nowrap}.plotsChosen{font-size:10px;color:#d9c79a;padding:8px 14px;border-bottom:1px solid var(--line)}.plotList{overflow:auto;flex:1;padding:6px;scrollbar-width:thin;min-height:90px}.plotRow{width:100%;display:flex;justify-content:space-between;gap:10px;padding:7px 9px;border-radius:7px;font-size:11px;color:#b9bfc8;text-align:left}.plotRow:hover{background:#262a30}.plotRow.on{background:#3a3220;color:#ffd98a}.plotsFoot{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--line)}.plotsFoot button{flex:1;font-size:10px;border:1px solid var(--line);border-radius:8px;padding:8px 6px;color:#e1e5ea;background:#22262c}.plotsFoot button:hover{background:#333941}
+:root{--ink:#f5f5f7;--muted:#848484;--line:#303238;--soft:#1e2024;--purple:#383a3d;--gold:#d3b986}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#15171a;font-size:13px;overflow:hidden}button,input,select{font:inherit}button{cursor:pointer;border:0;background:transparent;color:inherit}button:focus-visible,input:focus-visible{outline:2px solid #a4a7ae;outline-offset:3px}button:disabled{opacity:.3;cursor:default}button:hover{background:#26292e}header{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 30px;gap:28px;background:#15171a;position:relative;z-index:5}.brand{font-size:17px;letter-spacing:1.8px;font-weight:650;white-space:nowrap}.brand span{color:#a8a8a8;font-weight:350;margin:0 4px}.edition{font-size:10px;letter-spacing:1.5px;color:#929292;margin-top:6px}.nav{display:flex;gap:3px;padding:4px;border:1px solid var(--line);border-radius:30px;margin:auto}.nav button{padding:9px 22px;border-radius:24px;color:#a4a7ae}.nav button.active{background:#e9ecf0;color:#111215;box-shadow:0 2px 5px #0001}.headerActions{display:flex;align-items:center;gap:8px}.round{border:1px solid var(--line);border-radius:50%;width:36px;height:36px;font-size:17px}.pill{padding:10px 17px;border:1px solid var(--line);border-radius:22px;white-space:nowrap}.black{background:#e9ecf0;color:#111215}.black:hover{background:#444}.app{display:flex;height:calc(100dvh - 76px)}aside{width:254px;flex-shrink:0;border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--surface-1);z-index:2}.sideHead{padding:25px 22px 18px}.eyebrow{font-size:10px;letter-spacing:2px;color:#8a8a8a;text-transform:uppercase}.sideHead h2{font-size:20px;letter-spacing:-.5px;font-weight:550;margin:10px 0 8px}.small{font-size:11px;line-height:1.7;color:var(--muted)}.search{border:1px solid var(--line);background:#1e2024;border-radius:10px;width:100%;padding:9px 12px;margin-top:17px;color:#333}.switchTabs{display:flex;padding:0 18px 14px;gap:4px}.switchTabs button{flex:1;border-radius:7px;font-size:11px;padding:7px 3px;color:#a4a7ae}.switchTabs button.active{background:#26292e;color:#e9ecf0}.unitList{overflow:auto;flex:1;padding:0 10px 12px;scrollbar-width:thin}.unitRow{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;text-align:left;border-radius:9px;position:relative}.unitRow.active{background:#26292e}.unitRow .symbol{width:27px;height:27px;border:1px solid #d9d9de;border-radius:7px;display:grid;place-items:center;font-size:13px;color:#a4a7ae;background:#15171a}.unitRow.active .symbol{background:#e9ecf0;color:var(--text-primary);border-color:#e9ecf0}.unitRow .txt{flex:1}.unitRow strong{font-size:12px;font-weight:550;letter-spacing:.3px}.unitRow small{font-size:10px;color:#909095;display:block;margin-top:4px}.unitRow .dot{width:5px;height:5px;border-radius:50%;background:#b7b7bd}.sideFoot{border-top:1px solid var(--line);padding:16px 22px;font-size:10px;color:#929295;line-height:1.8}.sideFoot b{color:#414145;font-weight:500}.stage{flex:1;position:relative;min-width:0;overflow:hidden;background:#101114}#viewport{width:100%;height:100%;position:absolute;inset:0}canvas{display:block;touch-action:none}.stageTitle{position:absolute;top:29px;left:32px;pointer-events:none;z-index:1}.stageTitle h1{font-size:31px;letter-spacing:-1.3px;font-weight:450;margin:9px 0 11px}.stageTitle p{color:#838387;font-size:11px;margin:0;max-width:450px;line-height:1.8}.counter{display:flex;gap:25px;margin-top:22px}.counter b{font-size:21px;font-weight:450;letter-spacing:-.6px}.counter small{display:block;color:#98989e;font-size:10px;margin-top:6px}.layers{position:absolute;top:28px;right:26px;z-index:2;display:flex;flex-direction:column;align-items:flex-end;gap:7px}.layer{font-size:11px;background:#ffffffd9;border:1px solid #e4e4e8;padding:8px 11px;border-radius:20px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(12px)}.layer.off{opacity:.4}.swatch{height:6px;width:6px;border-radius:50%;background:#a4a7ae}.canvasFoot{position:absolute;bottom:103px;left:30px;font-size:10px;color:#a1a1a8;pointer-events:none;letter-spacing:.3px}.viewbar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:#fffffff2;border:1px solid #dedee4;border-radius:16px;box-shadow:0 8px 30px #00000008;display:flex;align-items:center;padding:6px;gap:3px;z-index:3;backdrop-filter:blur(20px);white-space:nowrap}.viewbar button{font-size:11px;border-radius:10px;padding:10px 13px;color:#717176}.viewbar button.active{background:#232326;color:#15171a}.separator{height:20px;width:1px;background:#e4e4e7;margin:0 4px}.explodePanel{position:absolute;bottom:99px;left:50%;transform:translateX(-50%);width:min(410px,75%);background:#ffffffed;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:none;z-index:3;backdrop-filter:blur(16px)}.sliderHead{display:flex;justify-content:space-between;font-size:11px;margin-bottom:10px}.sliderHead span{color:#a4a7ae}input[type=range]{accent-color:#28282b;width:100%;height:4px;cursor:pointer}.inspector{width:280px;border-left:1px solid var(--line);background:var(--surface-1);display:flex;flex-direction:column;flex-shrink:0;z-index:2}.inspectContent{padding:27px 23px;overflow:auto;flex:1}.inspectContent h2{font-size:30px;letter-spacing:-1px;font-weight:450;margin:13px 0 6px}.inspectContent .subtitle{font-size:11px;color:#a4a7ae;line-height:1.8}.miniMap{width:100%;height:136px;background:#1e2024;border:1px solid #efeff0;border-radius:12px;margin:24px 0 19px;overflow:hidden}.miniMap svg{width:100%;height:100%}.sectionLabel{font-size:10px;letter-spacing:1px;color:#a4a7ae;margin:24px 0 12px}.dataLine{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #26292e;font-size:11px}.dataLine span{color:#8b8b90}.dataLine b{font-weight:450;text-align:right}.inspector button.wide{display:block;width:100%;margin-top:9px;border-radius:10px;padding:11px;font-size:11px;border:1px solid var(--line)}.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.tag{border:1px solid #e5e5e9;border-radius:7px;padding:6px 9px;font-size:10px;background:#1e2024}.hint{font-size:10px;line-height:1.9;color:#969ca6;margin-top:20px}.inspector .bottom{border-top:1px solid var(--line);padding:16px 23px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#a4a7ae}.bottom button{border:1px solid var(--line);border-radius:7px;padding:5px 10px}.badge{position:absolute;left:32px;bottom:28px;background:#fff9;border:1px solid #dddde1;border-radius:20px;padding:9px 13px;font-size:10px;color:#6e6e75;z-index:2}.badge::before{content:"";display:inline-block;background:#74747d;width:5px;height:5px;border-radius:50%;margin-right:7px}.tooltip{position:absolute;pointer-events:none;background:#202024e8;color:var(--text-primary);padding:7px 10px;font-size:11px;border-radius:8px;display:none;z-index:9}.labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}.label{position:absolute;font-size:9px;font-weight:500;transform:translate(-50%,-50%);background:#ffffffe8;border:1px solid #d1d1d8;padding:3px 5px;border-radius:4px;color:#666;white-space:nowrap}.report{position:absolute;inset:0;background:#1e2024;z-index:4;display:none;overflow:auto;padding:34px 38px}.reportTop{display:flex;justify-content:space-between;align-items:center;gap:14px}.report h1{font-size:30px;font-weight:450;margin:9px 0}.report p{font-size:12px;color:#929295;line-height:1.9}.reportTabs{display:flex;gap:6px;margin:24px 0 23px;border-bottom:1px solid #ddd}.reportTabs button{font-size:12px;padding:12px 16px;color:#a4a7ae;border-bottom:2px solid transparent}.reportTabs button.active{color:#e9ecf0;border-bottom-color:#e9ecf0}.statsGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.statCard{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:12px;padding:20px}.statCard small{font-size:10px;color:#a4a7ae}.statCard b{display:block;font-size:25px;font-weight:450;margin-top:12px}.statCard span{display:block;color:#969ca6;font-size:10px;margin-top:8px}.reportBody{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:14px;padding:23px;overflow-x:auto}.reportBody h3{font-size:15px;font-weight:500;margin:0 0 17px}.reportBody table{border-collapse:collapse;width:100%;text-align:left;white-space:nowrap;font-size:11px}.reportBody th{font-size:10px;color:#9a9a9f;font-weight:450;border-bottom:1px solid #ddd;padding:12px 10px}.reportBody td{padding:12px 10px;border-bottom:1px solid #efeff2}.reportBody tr[data-id]{cursor:pointer}.reportBody tr[data-id]:hover{background:#f6f6f8}.reportNote{font-size:10px!important;max-width:850px}.planWrap{display:grid;grid-template-columns:1.2fr 1fr;gap:25px;margin-bottom:26px}.planWrap svg{width:100%;height:280px;background:#f8f8fa;border-radius:10px}.steps{display:grid;gap:13px}.step{border-bottom:1px solid #eee;padding:14px 0;display:flex;gap:15px}.step b{font-weight:500;font-size:13px}.step span{color:#969ca6;font-size:10px;letter-spacing:1px}.step p{margin:6px 0 0;font-size:11px}.modalBackdrop{position:fixed;inset:0;background:#0004;backdrop-filter:blur(8px);z-index:20;display:none;align-items:center;justify-content:center}.modal{background:#15171a;border-radius:20px;width:480px;max-width:90vw;padding:30px;box-shadow:0 25px 90px #0002}.modal h2{font-size:23px;font-weight:500;margin:0 0 20px}.modal p{font-size:12px;color:#a4a7ae;line-height:1.9}.modal table{width:100%;font-size:12px;border-collapse:collapse}.modal td{padding:11px 0;border-bottom:1px solid #eee}.modal td:last-child{text-align:right;color:#a4a7ae}.toast{position:fixed;bottom:25px;left:50%;transform:translate(-50%,20px);background:#202024;color:var(--text-primary);font-size:12px;padding:13px 20px;border-radius:30px;z-index:50;opacity:0;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}.loader{position:fixed;inset:0;background:#1e2024;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px}.loader .mark{font-size:24px;letter-spacing:5px;font-weight:400}.loader .progress{width:150px;height:2px;background:#ddd;overflow:hidden}.loader .progress::after{content:"";display:block;background:#e9ecf0;width:50%;height:100%;animation:load 1s infinite alternate}.loader p{font-size:11px;color:#a4a7ae}@keyframes load{to{transform:translateX(100%)}}.reportMode .inspector{display:none}.present header{height:60px}.present .app{height:calc(100dvh - 60px)}.present aside,.present .inspector{display:none}.present .stageTitle h1{font-size:40px}.present .stageTitle{top:35px;left:42px}.present .stageTitle p{font-size:13px}.assemblyActions{display:none;margin-top:12px;gap:5px}.assemblyActions button{font-size:10px;padding:8px 10px;border:1px solid #ddd;border-radius:8px}.mobileSide{display:none}.plotsPanel{position:absolute;top:28px;left:32px;width:244px;max-height:calc(100% - 190px);background:#16181cf2;border:1px solid var(--line);border-radius:13px;display:none;flex-direction:column;z-index:3;backdrop-filter:blur(14px);overflow:hidden}body.plotsMode .plotsPanel{display:flex}body.plotsMode .stageTitle{display:none}.plotsHead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:13px 14px 10px;border-bottom:1px solid var(--line)}.plotsHead strong{font-size:13px;font-weight:600;display:block}.plotsHead small{display:block;font-size:10px;color:#9aa1ab;margin-top:4px}.plotsHead button{font-size:10px;border:1px solid var(--line);border-radius:7px;padding:5px 8px;color:#c8ced7;white-space:nowrap}.plotsChosen{font-size:10px;color:#d9c79a;padding:8px 14px;border-bottom:1px solid var(--line)}.plotList{overflow:auto;flex:1;padding:6px;scrollbar-width:thin;min-height:90px}.plotRow{width:100%;display:flex;justify-content:space-between;gap:10px;padding:7px 9px;border-radius:7px;font-size:11px;color:#b9bfc8;text-align:left}.plotRow:hover{background:#262a30}.plotRow.on{background:#3a3220;color:#ffd98a}.plotsFoot{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--line)}.plotsFoot button{flex:1;font-size:10px;border:1px solid var(--line);border-radius:8px;padding:8px 6px;color:#e1e5ea;background:#22262c}.plotsFoot button:hover{background:#333941}.luForm{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 12px;border-bottom:.5px solid var(--sys-sep)}.luForm label{display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--sys-label-2)}.luForm input{width:100%;padding:6px 8px;font-size:12px;border-radius:7px;border:.5px solid var(--sys-sep);background:var(--sys-fill);color:var(--sys-label)}.luForm #luApply{grid-column:1/-1;margin-top:2px;padding:8px;font-size:11px;border-radius:8px;background:var(--sys-blue);color:#fff}.luForm #luApply:hover{background:#3d9bff}.luTotals{display:grid;grid-template-columns:auto auto;gap:3px 10px;padding:9px 13px;font-size:10px;border-bottom:.5px solid var(--sys-sep)}.luTotals span{color:var(--sys-label-2)}.luTotals b{font-weight:600;text-align:right}.plotHeadRow{display:flex;gap:6px;padding:6px 15px 4px;font-size:9px;color:var(--sys-label-3);letter-spacing:.3px}.plotHeadRow span:first-child,.plotRow span:first-child{flex:1}.plotCell{width:46px;text-align:right;flex:none}
 @media(max-width:1150px){aside{width:215px}.inspector{width:235px}.inspectContent{padding:24px 18px}header{padding:0 20px;gap:16px}.nav button{padding:9px 16px}.badge{display:none}.stageTitle{left:24px}.stageTitle h1{font-size:26px}.counter{gap:18px}.layers{right:17px}.layer{font-size:10px}.viewbar button{padding:10px}.report{padding:25px}.statsGrid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:900px){.inspector{position:absolute;right:0;top:76px;bottom:0;width:245px;box-shadow:-12px 0 40px #0001;display:none}.inspector.open{display:flex}aside{width:195px}.headerActions .pill{display:none}.brand{font-size:14px}.edition{font-size:8px}.nav button{padding:9px 12px}.stageTitle h1{font-size:24px}.counter{display:none}.planWrap{grid-template-columns:1fr}.layers{top:130px}.canvasFoot{font-size:9px}.mobileSide{display:inline-block}.stageTitle p{max-width:320px}.reportTop{align-items:flex-start}.reportTop .pill{font-size:10px;padding:8px}}
 @media(max-width:600px){header{height:68px;padding:0 12px;gap:8px}.brand{font-size:12px;letter-spacing:1px}.edition{font-size:7px}.nav{margin-left:auto}.nav button{padding:8px 10px;font-size:11px}.headerActions{display:none}.app{height:calc(100dvh - 68px)}aside{width:152px}.sideHead{padding:20px 13px 15px}.sideHead h2{font-size:17px}.sideHead .small{font-size:10px}.switchTabs{padding:0 8px 10px}.switchTabs button{font-size:10px}.unitRow{padding:10px 5px;gap:6px}.unitRow .symbol{width:21px;height:23px}.unitRow strong{font-size:10px}.unitRow small{font-size:9px}.sideFoot{padding:12px;font-size:9px}.stageTitle{top:23px;left:17px}.stageTitle h1{font-size:21px}.stageTitle p{display:none}.layers{top:100px;right:10px}.layer{font-size:9px;padding:6px 8px}.viewbar{bottom:18px;flex-wrap:wrap;justify-content:center;width:90%;border-radius:12px}.viewbar button{padding:8px;font-size:10px}.canvasFoot{display:none}.explodePanel{bottom:114px;width:90%;padding:12px}.report{padding:20px 15px}.report h1{font-size:23px}.reportTop{display:block}.reportTabs{gap:0;overflow:auto}.reportTabs button{font-size:10px;padding:10px;white-space:nowrap}.reportBody{padding:15px}.statCard{padding:15px}.statsGrid{gap:8px}.inspector{top:68px}.present .stageTitle h1{font-size:28px}.present .stageTitle{left:25px}.present .nav button{padding:8px 9px}.present .brand{font-size:11px}}
@@ -3405,34 +3405,105 @@ function completeCrossings(){
    junctionBoxes:boxes.length},
   zones,boxes};
 }
-// LAND PLOTS v38 — the cells the roads and the structures cut the site into.
-// The site mesh is far too coarse to answer this face by face: its top surface
-// is a few hundred big triangles, and one of them can span a whole street, so
-// a centroid test keeps the triangle and the road vanishes. Measured: that
-// route found 32 road crossings out of 1,013 land faces and left the plots
-// shapeless. So the plan is rasterised instead, at 0.5 m: the ground above the
-// waterline is painted in, then the water, the carriageways and the plan
-// projection of every structure are painted out, and what is still connected
-// is a plot. Boundaries are traced off the raster and simplified, so the same
-// outline serves the view, the area figure and the DXF.
+// LAND PLOTS v40 — the cells the roads and the structures cut the site into,
+// and the subdivision that follows from them.
+//
+// The site mesh cannot answer the first question face by face: its top surface
+// is a few hundred big triangles and one of them can span a whole street, so a
+// centroid test keeps the triangle and the road disappears. Measured, that
+// route found 32 road crossings among 1,013 land faces. So the plan is
+// rasterised at 0.5 m instead, and every later question — frontage, setback,
+// depth from the street, capacity — is asked of the same raster.
+//
+// The subdivision takes the green first and the buildings second. Peeling the
+// riparian, street and under-structure bands before anything is cut is what
+// stops the green ending up as the offcuts: what is left is the net
+// developable ground, the footprint the floor area ratio asks for is laid
+// against the street frontage, and the remainder stays whole at the back.
 const PLOT_G=.5,PLOT_MIN=60,PLOT_SIMPLIFY=.45;
+const landUse={far:1.8,storeys:6,coverage:.45,waterBuffer:10,streetBand:4,
+ structClear:3,parcelWidth:18,minDepth:10,maxDepth:30,minParcel:120};
 let plotGroup=null,landPlots=[],plotMeshes=[],plotSelection=new Set(),plotHover=null;
+let plotRaster=null,landUseTotals=null;
+// --- shared raster helpers --------------------------------------------------
+function traceRings(inside,box,R){
+ const {W,G,X0,Y0}=R;
+ const out=new Map();
+ const add=(ax,ay,bx,by)=>{const k=ax+','+ay;if(!out.has(k))out.set(k,[]);out.get(k).push([bx,by])};
+ for(let j=box[1];j<=box[3];j++)for(let i=box[0];i<=box[2];i++){
+  if(!inside(i,j))continue;
+  if(!inside(i,j-1))add(i,j,i+1,j);
+  if(!inside(i+1,j))add(i+1,j,i+1,j+1);
+  if(!inside(i,j+1))add(i+1,j+1,i,j+1);
+  if(!inside(i-1,j))add(i,j+1,i,j);
+ }
+ const rings=[];
+ while(out.size){
+  const first=out.keys().next().value;
+  const ring=[];let cur=first,guard=0;
+  while(guard++<400000){
+   const list=out.get(cur);
+   if(!list||!list.length){out.delete(cur);break}
+   const [nx,ny]=list.pop();
+   if(!list.length)out.delete(cur);
+   ring.push([nx,ny]);cur=nx+','+ny;
+   if(cur===first)break;
+  }
+  if(ring.length>=4)rings.push(ring.map(([i,j])=>[X0+i*G,Y0+j*G]));
+ }
+ return rings;
+}
+function dropCollinear(r){
+ const o=[];
+ for(let i=0;i<r.length;i++){
+  const a=r[(i-1+r.length)%r.length],b=r[i],c=r[(i+1)%r.length];
+  if(Math.abs((b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]))>1e-9)o.push(b);
+ }
+ return o.length>=3?o:r;
+}
+function simplifyRing(pts,eps){
+ if(pts.length<3)return pts;
+ const dist=(p,a,b)=>{
+  const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy);
+  if(L<1e-9)return Math.hypot(p[0]-a[0],p[1]-a[1]);
+  return Math.abs((p[0]-a[0])*dy-(p[1]-a[1])*dx)/L;
+ };
+ const keep=new Uint8Array(pts.length);keep[0]=keep[pts.length-1]=1;
+ const work=[[0,pts.length-1]];
+ while(work.length){
+  const [a,b]=work.pop();if(b-a<2)continue;
+  let best=-1,bi=-1;
+  for(let i=a+1;i<b;i++){const d=dist(pts[i],pts[a],pts[b]);if(d>best){best=d;bi=i}}
+  if(best>eps){keep[bi]=1;work.push([a,bi],[bi,b])}
+ }
+ return pts.filter((_,i)=>keep[i]);
+}
+function shoelace(r){let s=0;for(let i=0;i<r.length;i++){const a=r[i],b=r[(i+1)%r.length];s+=a[0]*b[1]-b[0]*a[1]}return s/2}
+function regionShape(inside,box,R,minRing){
+ let rings=traceRings(inside,box,R).map(r=>simplifyRing(dropCollinear(r),PLOT_SIMPLIFY)).filter(r=>r.length>=3);
+ if(!rings.length)return null;
+ rings.sort((a,b)=>Math.abs(shoelace(b))-Math.abs(shoelace(a)));
+ return {outer:rings[0],holes:rings.slice(1).filter(r=>Math.abs(shoelace(r))>(minRing||4))};
+}
+// --- 1. the plots -----------------------------------------------------------
+// klass: 0 off site, 1 open ground, 3 water, 4 carriageway, 5 structure
 function solveLandPlots(){
  const site=siteDisplayOverride||model?.site,roads=model?.roads;
  if(!site?.v?.length||!roads?.v?.length)return [];
  const G=PLOT_G,X0=-314,Y0=-189,W=Math.ceil(628/G),H=Math.ceil(378/G);
- const cell=new Uint8Array(W*H);
+ const klass=new Uint8Array(W*H),elev=new Float32Array(W*H);
  const sgn=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]);
- const paint=(p,val,only)=>{
+ const paint=(p,val,only,z)=>{
   const i0=Math.max(0,Math.floor((Math.min(p[0][0],p[1][0],p[2][0])-X0)/G));
   const i1=Math.min(W-1,Math.ceil((Math.max(p[0][0],p[1][0],p[2][0])-X0)/G));
   const j0=Math.max(0,Math.floor((Math.min(p[0][1],p[1][1],p[2][1])-Y0)/G));
   const j1=Math.min(H-1,Math.ceil((Math.max(p[0][1],p[1][1],p[2][1])-Y0)/G));
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
    const id=j*W+i;
-   if(only!==undefined&&cell[id]!==only)continue;
-   if(cell[id]===val)continue;
-   if(pointInTriangle2D(X0+(i+.5)*G,Y0+(j+.5)*G,p[0],p[1],p[2]))cell[id]=val;
+   if(only!==undefined&&klass[id]!==only)continue;
+   if(klass[id]===val&&z===undefined)continue;
+   if(!pointInTriangle2D(X0+(i+.5)*G,Y0+(j+.5)*G,p[0],p[1],p[2]))continue;
+   klass[id]=val;if(z!==undefined)elev[id]=z;
   }
  };
  const water=nativeRecessedChannel(),waterline=water.waterline;
@@ -3441,122 +3512,266 @@ function solveLandPlots(){
   const p=[0,1,2].map(j=>{const i=sf[k+j]*3;return[sv[i],sv[i+1],sv[i+2]]});
   if(Math.abs(sgn(p[0],p[1],p[2]))<=.08)continue;      // a wall holds no plan area
   if(Math.min(p[0][2],p[1][2],p[2][2])<waterline)continue;
-  paint(p.map(q=>[q[0],q[1]]),1);
+  paint(p.map(q=>[q[0],q[1]]),1,undefined,(p[0][2]+p[1][2]+p[2][2])/3);
  }
- for(const tri of water.triangles)paint(tri,2,1);
+ for(const tri of water.triangles)paint(tri,3,1);
  {const v=roads.v,t=roads.t;
-  for(let k=0;k<t.length;k+=3)paint([0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1]]}),2,1);}
+  for(let k=0;k<t.length;k+=3)paint([0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1]]}),4,1);}
  for(const u of model.units){
   const v=u.mesh.v,t=u.mesh.t;
   for(let k=0;k<t.length;k+=3){
    const p=[0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1]]});
    if(Math.abs(sgn(p[0],p[1],p[2]))<.02)continue;      // seen edge on, no footprint
-   paint(p,2,1);
+   paint(p,5,1);
   }
  }
- // connected open ground
  const comp=new Int32Array(W*H).fill(-1),stack=new Int32Array(W*H),found=[];
  for(let s=0;s<W*H;s++){
-  if(cell[s]!==1||comp[s]>=0)continue;
-  const id=found.length;let n=0,sp=0,sx=0,sy=0;stack[sp++]=s;comp[s]=id;
+  if(klass[s]!==1||comp[s]>=0)continue;
+  const id=found.length;let n=0,sp=0,sx=0,sy=0,lo=1e9,hi=-1e9;
+  let i0=1e9,j0=1e9,i1=-1,j1=-1;
+  stack[sp++]=s;comp[s]=id;
   while(sp){
    const c=stack[--sp];n++;const i=c%W,j=(c-i)/W;sx+=i;sy+=j;
-   if(i>0&&cell[c-1]===1&&comp[c-1]<0){comp[c-1]=id;stack[sp++]=c-1}
-   if(i<W-1&&cell[c+1]===1&&comp[c+1]<0){comp[c+1]=id;stack[sp++]=c+1}
-   if(j>0&&cell[c-W]===1&&comp[c-W]<0){comp[c-W]=id;stack[sp++]=c-W}
-   if(j<H-1&&cell[c+W]===1&&comp[c+W]<0){comp[c+W]=id;stack[sp++]=c+W}
+   if(i<i0)i0=i;if(i>i1)i1=i;if(j<j0)j0=j;if(j>j1)j1=j;
+   if(elev[c]<lo)lo=elev[c];if(elev[c]>hi)hi=elev[c];
+   if(i>0&&klass[c-1]===1&&comp[c-1]<0){comp[c-1]=id;stack[sp++]=c-1}
+   if(i<W-1&&klass[c+1]===1&&comp[c+1]<0){comp[c+1]=id;stack[sp++]=c+1}
+   if(j>0&&klass[c-W]===1&&comp[c-W]<0){comp[c-W]=id;stack[sp++]=c-W}
+   if(j<H-1&&klass[c+W]===1&&comp[c+W]<0){comp[c+W]=id;stack[sp++]=c+W}
   }
-  found.push({id,n,cx:X0+(sx/n+.5)*G,cy:Y0+(sy/n+.5)*G});
+  found.push({id,n,cx:X0+(sx/n+.5)*G,cy:Y0+(sy/n+.5)*G,minZ:lo,maxZ:hi,
+   box:[Math.max(0,i0-1),Math.max(0,j0-1),Math.min(W-1,i1+1),Math.min(H-1,j1+1)]});
  }
- // boundary, traced off the raster as cell edges and chained into rings
- const ringsOf=id=>{
-  const out=new Map();
-  const add=(ax,ay,bx,by)=>{const k=ax+','+ay;if(!out.has(k))out.set(k,[]);out.get(k).push([bx,by])};
-  for(let j=0;j<H;j++)for(let i=0;i<W;i++){
-   if(comp[j*W+i]!==id)continue;
-   if(!(j>0&&comp[(j-1)*W+i]===id))add(i,j,i+1,j);
-   if(!(i<W-1&&comp[j*W+i+1]===id))add(i+1,j,i+1,j+1);
-   if(!(j<H-1&&comp[(j+1)*W+i]===id))add(i+1,j+1,i,j+1);
-   if(!(i>0&&comp[j*W+i-1]===id))add(i,j+1,i,j);
-  }
-  const rings=[];
-  while(out.size){
-   const first=out.keys().next().value;
-   const ring=[];let cur=first,guard=0;
-   while(guard++<400000){
-    const list=out.get(cur);
-    if(!list||!list.length){out.delete(cur);break}
-    const [nx,ny]=list.pop();
-    if(!list.length)out.delete(cur);
-    ring.push([nx,ny]);
-    cur=nx+','+ny;
-    if(cur===first)break;
-   }
-   if(ring.length>=4)rings.push(ring.map(([i,j])=>[X0+i*G,Y0+j*G]));
-  }
-  return rings;
- };
- // staircase out, then Douglas-Peucker: the same line is drawn, measured and
- // exported, so it is simplified once here and never again.
- const collinear=r=>{
-  const o=[];
-  for(let i=0;i<r.length;i++){
-   const a=r[(i-1+r.length)%r.length],b=r[i],c=r[(i+1)%r.length];
-   if(Math.abs((b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]))>1e-9)o.push(b);
-  }
-  return o.length>=3?o:r;
- };
- const rdp=(pts,eps)=>{
-  if(pts.length<3)return pts;
-  const d=(p,a,b)=>{
-   const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy);
-   if(L<1e-9)return Math.hypot(p[0]-a[0],p[1]-a[1]);
-   return Math.abs((p[0]-a[0])*dy-(p[1]-a[1])*dx)/L;
-  };
-  const keep=new Uint8Array(pts.length);keep[0]=keep[pts.length-1]=1;
-  const work=[[0,pts.length-1]];
-  while(work.length){
-   const [a,b]=work.pop();if(b-a<2)continue;
-   let best=-1,bi=-1;
-   for(let i=a+1;i<b;i++){const dd=d(pts[i],pts[a],pts[b]);if(dd>best){best=dd;bi=i}}
-   if(best>eps){keep[bi]=1;work.push([a,bi],[bi,b])}
-  }
-  return pts.filter((_,i)=>keep[i]);
- };
- const shoelace=r=>{let s=0;for(let i=0;i<r.length;i++){const a=r[i],b=r[(i+1)%r.length];s+=a[0]*b[1]-b[0]*a[1]}return s/2};
+ plotRaster={W,H,G,X0,Y0,klass,comp,elev,waterline};
  const plots=[];
  for(const f of found){
   const area=f.n*G*G;
   if(area<PLOT_MIN)continue;
-  let rings=ringsOf(f.id).map(r=>rdp(collinear(r),PLOT_SIMPLIFY)).filter(r=>r.length>=3);
-  if(!rings.length)continue;
-  rings.sort((a,b)=>Math.abs(shoelace(b))-Math.abs(shoelace(a)));
-  const outer=rings[0],holes=rings.slice(1).filter(r=>Math.abs(shoelace(r))>4);
-  plots.push({id:'L-'+String(plots.length+1).padStart(2,'0'),area,
-   center:[f.cx,f.cy],outer,holes,
-   perimeter:outer.reduce((s,q,i)=>s+Math.hypot(q[0]-outer[(i+1)%outer.length][0],q[1]-outer[(i+1)%outer.length][1]),0)});
+  const shape=regionShape((i,j)=>i>=0&&j>=0&&i<W&&j<H&&comp[j*W+i]===f.id,f.box,plotRaster);
+  if(!shape)continue;
+  // Frontage, counted off the raster: every cell edge that faces something
+  // other than this plot says what the plot is next to.
+  const front={road:0,water:0,structure:0,plot:0,edge:0};
+  let slope=0,slopeN=0;
+  for(let j=f.box[1];j<=f.box[3];j++)for(let i=f.box[0];i<=f.box[2];i++){
+   const c=j*W+i;if(comp[c]!==f.id)continue;
+   const look=(ii,jj)=>{
+    if(ii<0||jj<0||ii>=W||jj>=H)return 'edge';
+    const d=jj*W+ii;
+    if(comp[d]===f.id)return null;
+    const k=klass[d];
+    return k===4?'road':k===3?'water':k===5?'structure':k===1?'plot':'edge';
+   };
+   for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){
+    const t=look(i+di,j+dj);if(t)front[t]+=G;
+   }
+   const ex=(i+1<W&&comp[c+1]===f.id?elev[c+1]:elev[c])-(i>0&&comp[c-1]===f.id?elev[c-1]:elev[c]);
+   const ey=(j+1<H&&comp[c+W]===f.id?elev[c+W]:elev[c])-(j>0&&comp[c-W]===f.id?elev[c-W]:elev[c]);
+   slope+=Math.hypot(ex,ey)/(2*G);slopeN++;
+  }
+  const zones=roadCrossingOverride?.zones||[];
+  let toCrossing=null;
+  for(const z of zones){const d=Math.hypot(z.cx-f.cx,z.cy-f.cy);if(toCrossing===null||d<toCrossing)toCrossing=d}
+  plots.push({raster:f.id,area,center:[f.cx,f.cy],box:f.box,
+   outer:shape.outer,holes:shape.holes,
+   perimeter:shape.outer.reduce((s,q,i)=>s+Math.hypot(q[0]-shape.outer[(i+1)%shape.outer.length][0],q[1]-shape.outer[(i+1)%shape.outer.length][1]),0),
+   front,freeboard:f.minZ-plotRaster.waterline,
+   slope:slopeN?slope/slopeN*100:0,toCrossing,
+   parcels:[],green:[],capacity:null});
  }
  plots.sort((a,b)=>b.area-a.area);
  plots.forEach((p,i)=>{p.id='L-'+String(i+1).padStart(2,'0')});
  return plots;
 }
+// --- 2. the green frame, then the buildings ---------------------------------
+// Three bands are reserved before anything is cut: a riparian strip along the
+// water, a planting strip along the carriageway, and a clearance under the
+// elevated structures. Each is a distance transform over the raster, so the
+// band follows the real edge rather than an offset of a simplified outline.
+function planLandUse(){
+ if(!plotRaster||!landPlots.length)return null;
+ const {W,H,G,klass,comp}=plotRaster;
+ const N=W*H,INF=1e9;
+ const bfs=from=>{
+  const d=new Int32Array(N).fill(INF);
+  const q=new Int32Array(N);let head=0,tail=0;
+  for(let c=0;c<N;c++)if(from(klass[c])){d[c]=0;q[tail++]=c}
+  while(head<tail){
+   const c=q[head++],nd=d[c]+1,i=c%W,j=(c-i)/W;
+   if(i>0&&klass[c-1]===1&&d[c-1]>nd){d[c-1]=nd;q[tail++]=c-1}
+   if(i<W-1&&klass[c+1]===1&&d[c+1]>nd){d[c+1]=nd;q[tail++]=c+1}
+   if(j>0&&klass[c-W]===1&&d[c-W]>nd){d[c-W]=nd;q[tail++]=c-W}
+   if(j<H-1&&klass[c+W]===1&&d[c+W]>nd){d[c+W]=nd;q[tail++]=c+W}
+  }
+  return d;
+ };
+ const dWater=bfs(k=>k===3),dRoad=bfs(k=>k===4),dStruct=bfs(k=>k===5);
+ const bw=landUse.waterBuffer/G,br=landUse.streetBand/G,bs=landUse.structClear/G;
+ const free=new Uint8Array(N);                       // net developable ground
+ for(let c=0;c<N;c++)
+  if(klass[c]===1&&dWater[c]>bw&&dRoad[c]>br&&dStruct[c]>bs)free[c]=1;
+ const use=new Int32Array(N).fill(-1);               // 0 green, >0 parcel index
+ const q=new Int32Array(N),cells=new Int32Array(N);
+ let parcelNo=0;const totals={plots:0,net:0,footprint:0,gfa:0,green:0,short:0};
+ for(const p of landPlots){
+  p.parcels=[];p.green=[];
+  const box=p.box,id=p.raster;
+  let net=0;for(let j=box[1];j<=box[3];j++)for(let i=box[0];i<=box[2];i++){
+   const c=j*W+i;if(comp[c]===id&&free[c])net++}
+  const netArea=net*G*G;
+  // Capacity. The ratio is a site-wide intention; each plot is tested against
+  // it and the shortfall is reported rather than forced.
+  const gfaTarget=p.area*landUse.far;
+  const want=gfaTarget/Math.max(1,landUse.storeys);
+  const cap=Math.min(landUse.coverage*p.area,netArea);
+  const footprintTarget=Math.min(want,cap);
+  // Depth from the street. The frontage is where the plot meets a carriageway;
+  // the band grows inward until it holds the footprint the ratio asks for.
+  let head=0,tail=0;const d=new Int32Array(N).fill(INF);
+  for(let j=box[1];j<=box[3];j++)for(let i=box[0];i<=box[2];i++){
+   const c=j*W+i;if(comp[c]!==id||!free[c])continue;
+   let onStreet=false;
+   for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){
+    const ii=i+di,jj=j+dj;if(ii<0||jj<0||ii>=W||jj>=H)continue;
+    if(dRoad[jj*W+ii]<=br+1||klass[jj*W+ii]===4)onStreet=true;
+   }
+   if(onStreet){d[c]=0;q[tail++]=c}
+  }
+  const hasFrontage=tail>0;
+  while(head<tail){
+   const c=q[head++],nd=d[c]+1,i=c%W,j=(c-i)/W;
+   for(const o of [c-1,c+1,c-W,c+W]){
+    if(o<0||o>=N)continue;
+    if(comp[o]!==id||!free[o]||d[o]<=nd)continue;
+    d[o]=nd;q[tail++]=o;
+   }
+  }
+  let depth=0,built=0;
+  if(hasFrontage&&footprintTarget>0){
+   const hist=new Float64Array(Math.ceil(landUse.maxDepth/G)+2);
+   for(let k2=0;k2<tail;k2++){const c=q[k2];const b=Math.min(hist.length-1,d[c]);hist[b]+=G*G}
+   let acc=0,k2=0;
+   for(;k2<hist.length;k2++){acc+=hist[k2];if(acc>=footprintTarget)break}
+   depth=Math.max(landUse.minDepth/G,Math.min(landUse.maxDepth/G,k2));
+   for(let m=0;m<tail;m++){const c=q[m];if(d[c]<=depth){use[c]=1;built+=G*G}}
+  }
+  // Split the band along the frontage into parcels of one width each.
+  const strip=[];for(let m=0;m<tail;m++){const c=q[m];if(use[c]===1)strip.push(c)}
+  if(strip.length){
+   let mx=0,my=0;for(const c of strip){const i=c%W;mx+=i;my+=(c-i)/W}
+   mx/=strip.length;my/=strip.length;
+   let sxx=0,syy=0,sxy=0;
+   for(const c of strip){const i=c%W,j=(c-i)/W,dx=i-mx,dy=j-my;sxx+=dx*dx;syy+=dy*dy;sxy+=dx*dy}
+   const ang=.5*Math.atan2(2*sxy,sxx-syy),ax=Math.cos(ang),ay=Math.sin(ang);
+   let lo=INF,hi=-INF;
+   for(const c of strip){const i=c%W,j=(c-i)/W,t=(i*ax+j*ay)*G;if(t<lo)lo=t;if(t>hi)hi=t}
+   const n=Math.max(1,Math.round((hi-lo)/landUse.parcelWidth));
+   const step=(hi-lo)/n;
+   const bucket=new Map();
+   for(const c of strip){
+    const i=c%W,j=(c-i)/W,t=(i*ax+j*ay)*G;
+    const b=Math.max(0,Math.min(n-1,Math.floor((t-lo)/step)));
+    use[c]=2+b;
+    if(!bucket.has(b))bucket.set(b,{n:0,box:[W,H,0,0]});
+    const e=bucket.get(b);e.n++;
+    if(i<e.box[0])e.box[0]=i;if(j<e.box[1])e.box[1]=j;
+    if(i>e.box[2])e.box[2]=i;if(j>e.box[3])e.box[3]=j;
+   }
+   for(const [b,e] of [...bucket.entries()].sort((a,c)=>a[0]-c[0])){
+    const a2=e.n*G*G;if(a2<landUse.minParcel)continue;
+    const bx=[Math.max(0,e.box[0]-1),Math.max(0,e.box[1]-1),Math.min(W-1,e.box[2]+1),Math.min(H-1,e.box[3]+1)];
+    const sh=regionShape((i,j)=>i>=0&&j>=0&&i<W&&j<H&&comp[j*W+i]===id&&use[j*W+i]===2+b,bx,plotRaster);
+    if(!sh)continue;
+    p.parcels.push({id:p.id+'-B'+String(p.parcels.length+1).padStart(2,'0'),
+     area:a2,outer:sh.outer,holes:sh.holes});
+   }
+  }
+  // Everything else in the plot is green, kept as whole pieces.
+  for(let j=box[1];j<=box[3];j++)for(let i=box[0];i<=box[2];i++){
+   const c=j*W+i;if(comp[c]===id&&use[c]<0)use[c]=0;
+  }
+  // Each green piece gets its own tag, so tracing one cannot pick up another.
+  let gidx=0;
+  for(let j=box[1];j<=box[3];j++)for(let i=box[0];i<=box[2];i++){
+   const s=j*W+i;if(comp[s]!==id||use[s]!==0)continue;
+   let sp=0,n2=0,i0=W,j0=H,i1=0,j1=0,count=0;
+   cells[sp++]=s;use[s]=-9;
+   const list=[];
+   while(sp){
+    const c=cells[--sp];n2++;list.push(c);const i2=c%W,j2=(c-i2)/W;
+    if(i2<i0)i0=i2;if(i2>i1)i1=i2;if(j2<j0)j0=j2;if(j2>j1)j1=j2;
+    for(const o of [c-1,c+1,c-W,c+W]){
+     if(o<0||o>=N)continue;
+     if(comp[o]!==id||use[o]!==0)continue;
+     use[o]=-9;cells[sp++]=o;
+    }
+   }
+   const tag=-(20+gidx);for(const c of list)use[c]=tag;
+   gidx++;
+   const a2=n2*G*G;if(a2<40)continue;
+   const bx=[Math.max(0,i0-1),Math.max(0,j0-1),Math.min(W-1,i1+1),Math.min(H-1,j1+1)];
+   const sh=regionShape((i,j)=>i>=0&&j>=0&&i<W&&j<H&&comp[j*W+i]===id&&use[j*W+i]===tag,bx,plotRaster);
+   if(sh)p.green.push({id:p.id+'-G'+String(p.green.length+1).padStart(2,'0'),area:a2,outer:sh.outer,holes:sh.holes});
+  }
+  const footprint=p.parcels.reduce((s,x)=>s+x.area,0);
+  const greenArea=p.green.reduce((s,x)=>s+x.area,0);
+  p.capacity={netArea,footprint,greenArea,
+   gfa:footprint*landUse.storeys,
+   far:p.area?footprint*landUse.storeys/p.area:0,
+   coverage:p.area?footprint/p.area:0,
+   greenRatio:p.area?greenArea/p.area:0,
+   target:gfaTarget,hasFrontage,
+   short:Math.max(0,gfaTarget-footprint*landUse.storeys)};
+  totals.plots++;totals.net+=netArea;totals.footprint+=footprint;
+  totals.gfa+=p.capacity.gfa;totals.green+=greenArea;totals.short+=p.capacity.short;
+  parcelNo+=p.parcels.length;
+ }
+ const siteArea=landPlots.reduce((s,p)=>s+p.area,0);
+ landUseTotals={...totals,parcels:parcelNo,siteArea,
+  far:siteArea?totals.gfa/siteArea:0,
+  coverage:siteArea?totals.footprint/siteArea:0,
+  greenRatio:siteArea?totals.green/siteArea:0,
+  noFrontage:landPlots.filter(p=>!p.capacity.hasFrontage).length};
+ console.info('Land use planned from the floor area ratio',landUseTotals);
+ return landUseTotals;
+}
+// --- 3. the view ------------------------------------------------------------
 function buildLandPlots(){
+ if(plotGroup){scene.remove(plotGroup);plotGroup=null}
  plotGroup=new THREE.Group();plotGroup.name='用地划分 · 道路与结构切分';plotGroup.visible=false;
  scene.add(plotGroup);
- landPlots=solveLandPlots();plotMeshes=[];
- for(const p of landPlots){
-  const sh=new THREE.Shape(p.outer.map(([x,y])=>new THREE.Vector2(x,y)));
-  for(const h of p.holes)sh.holes.push(new THREE.Path(h.map(([x,y])=>new THREE.Vector2(x,y))));
-  const mesh=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({
-   color:'#07080a',side:THREE.DoubleSide,
-   transparent:true,opacity:.82,depthWrite:false,
+ if(!landPlots.length)landPlots=solveLandPlots();
+ planLandUse();
+ plotMeshes=[];
+ const flat=(rings,color,opacity,y)=>{
+  const sh=new THREE.Shape(rings.outer.map(([x,y2])=>new THREE.Vector2(x,y2)));
+  for(const h of rings.holes||[])sh.holes.push(new THREE.Path(h.map(([x,y2])=>new THREE.Vector2(x,y2))));
+  const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({
+   color,side:THREE.DoubleSide,transparent:true,opacity,depthWrite:false,
    polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}));
-  mesh.rotation.x=-Math.PI/2;mesh.position.y=.34;mesh.userData={plot:p};
+  m.rotation.x=-Math.PI/2;m.position.y=y;return m;
+ };
+ for(const p of landPlots){
+  const base=flat(p,'#07080a',.82,.34);
+  base.userData={plot:p};
   const pts=p.outer.map(([x,y])=>new THREE.Vector3(x,.37,-y));pts.push(pts[0].clone());
   const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
    new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.5,depthWrite:false}));
-  mesh.userData.line=line;
-  plotGroup.add(mesh);plotGroup.add(line);plotMeshes.push(mesh);
+  base.userData.line=line;base.userData.parts=[];
+  plotGroup.add(base);plotGroup.add(line);plotMeshes.push(base);
+  for(const g of p.green){
+   const m=flat(g,'#30d158',.3,.38);m.userData.kind='green';
+   plotGroup.add(m);base.userData.parts.push(m);
+  }
+  for(const b of p.parcels){
+   const m=flat(b,'#e8ebf0',.92,.42);m.userData.kind='build';
+   plotGroup.add(m);base.userData.parts.push(m);
+   const q=b.outer.map(([x,y])=>new THREE.Vector3(x,.44,-y));q.push(q[0].clone());
+   const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(q),
+    new THREE.LineBasicMaterial({color:0x8d939c,transparent:true,opacity:.8,depthWrite:false}));
+   plotGroup.add(l);base.userData.parts.push(l);
+  }
  }
  console.info('Land plots cut by the roads and the structures',{plots:landPlots.length,
   areaM2:Math.round(landPlots.reduce((s,p)=>s+p.area,0)),grid:PLOT_G,minArea:PLOT_MIN});
@@ -3573,6 +3788,8 @@ function updateLandPlots(){
   m.material.opacity=on?.72:hot?.86:.82;
   m.userData.line.material.color.set(on?0x9fd0ff:0xffffff);
   m.userData.line.material.opacity=on?.95:.5;
+  for(const part of m.userData.parts)part.material.opacity=
+   part.userData.kind==='green'?(on?.46:.3):part.userData.kind==='build'?(on?1:.92):.8;
  }
 }
 function plotAt(e){
@@ -3584,7 +3801,7 @@ function plotAt(e){
  return hit.length?hit[0].object.userData.plot.id:null;
 }
 function togglePlot(id,additive){
- if(!additive)  {const only=plotSelection.size===1&&plotSelection.has(id);plotSelection.clear();if(!only)plotSelection.add(id)}
+ if(!additive){const only=plotSelection.size===1&&plotSelection.has(id);plotSelection.clear();if(!only)plotSelection.add(id)}
  else if(plotSelection.has(id))plotSelection.delete(id);
  else plotSelection.add(id);
  renderPlotPanel();updateLandPlots();
@@ -3594,14 +3811,24 @@ function renderPlotPanel(){
  const body=document.querySelector('#plotList');if(!body)return;
  const sel=[...plotSelection];
  const chosen=sel.length?landPlots.filter(p=>plotSelection.has(p.id)):landPlots;
+ const T=landUseTotals||{};
  document.querySelector('#plotSummary').textContent=
   `${landPlots.length} 块 · ${fmt(Math.round(landPlots.reduce((s,p)=>s+p.area,0)))} m²`;
+ document.querySelector('#plotTotals').innerHTML=
+  `<span>实际容积率</span><b>${(T.far||0).toFixed(2)}</b>`+
+  `<span>建筑密度</span><b>${Math.round((T.coverage||0)*100)}%</b>`+
+  `<span>绿地率</span><b>${Math.round((T.greenRatio||0)*100)}%</b>`+
+  `<span>总建筑面积</span><b>${fmt(Math.round(T.gfa||0))} m²</b>`;
  document.querySelector('#plotChosen').textContent=sel.length
   ?`已选 ${sel.length} 块 · ${fmt(Math.round(chosen.reduce((s,p)=>s+p.area,0)))} m²`
-  :'未选择 · 导出全部';
- body.innerHTML=landPlots.map(p=>
-  `<button type="button" class="plotRow${plotSelection.has(p.id)?' on':''}" data-plot="${p.id}">
-    <span>${p.id}</span><span>${fmt(Math.round(p.area))} m²</span></button>`).join('');
+  :`${T.parcels||0} 个建筑地块 · ${T.noFrontage||0} 块无临街面`;
+ body.innerHTML=landPlots.map(p=>{
+  const c=p.capacity||{};
+  return `<button type="button" class="plotRow${plotSelection.has(p.id)?' on':''}" data-plot="${p.id}">
+    <span>${p.id}</span><span class="plotCell">${fmt(Math.round(p.area))}</span>
+    <span class="plotCell">${c.far?c.far.toFixed(2):'—'}</span>
+    <span class="plotCell">${c.greenRatio!=null?Math.round(c.greenRatio*100)+'%':'—'}</span></button>`;
+ }).join('');
  body.querySelectorAll('[data-plot]').forEach(b=>{
   b.onclick=ev=>togglePlot(b.dataset.plot,ev.shiftKey||ev.metaKey||ev.ctrlKey);
   b.onpointerenter=()=>{plotHover=b.dataset.plot;updateLandPlots()};
@@ -3618,41 +3845,72 @@ function exportPlotsDXF(){
  const o=model.meta?.origin||[0,0,0];
  const out=['0','SECTION','2','HEADER','9','$ACADVER','1','AC1015','0','ENDSEC',
             '0','SECTION','2','ENTITIES'];
+ const poly=(ring,layer)=>{
+  // ASCII layer names: the file carries no TABLES section, so the reader has to
+  // create the layer, and a non-ASCII name is where that goes wrong.
+  out.push('0','LWPOLYLINE','8',layer,'100','AcDbEntity','100','AcDbPolyline',
+           '90',String(ring.length),'70','1');
+  for(const [x,y] of ring)out.push('10',(x+o[0]).toFixed(3),'20',(y+o[1]).toFixed(3));
+ };
  for(const p of list){
-  for(const ring of [p.outer,...p.holes]){
-   // ASCII layer names: the file carries no TABLES section, so the reader has to
-   // create the layer, and a non-ASCII name is where that goes wrong.
-   out.push('0','LWPOLYLINE','8','PLOT_'+p.id,'100','AcDbEntity','100','AcDbPolyline',
-            '90',String(ring.length),'70','1');
-   for(const [x,y] of ring)out.push('10',(x+o[0]).toFixed(3),'20',(y+o[1]).toFixed(3));
-  }
+  for(const ring of [p.outer,...p.holes])poly(ring,'PLOT_'+p.id);
+  for(const b of p.parcels)for(const ring of [b.outer,...b.holes])poly(ring,'BUILD_'+p.id);
+  for(const g of p.green)for(const ring of [g.outer,...g.holes])poly(ring,'GREEN_'+p.id);
  }
  out.push('0','ENDSEC','0','EOF');
  download(new Blob([out.join('\r\n')],{type:'application/dxf'}),'LONDON2100_用地.dxf');
- toast(`已导出 ${list.length} 块用地 · Rhino 世界坐标`);
+ toast(`已导出 ${list.length} 块用地 · 含建筑与绿地 · Rhino 世界坐标`);
 }
 function exportPlotsCSV(){
  const list=plotsForExport();if(!list.length)return;
  const o=model.meta?.origin||[0,0,0];
  const esc=x=>'"'+String(x).replace(/"/g,'""')+'"';
- const rows=[['编号','面积 m²','周长 m','中心 X (Rhino)','中心 Y (Rhino)','外轮廓点数','内孔数']]
-  .concat(list.map(p=>[p.id,p.area.toFixed(1),p.perimeter.toFixed(1),
-   (p.center[0]+o[0]).toFixed(2),(p.center[1]+o[1]).toFixed(2),p.outer.length,p.holes.length]));
+ const rows=[['编号','用地面积 m²','周长 m','临路长 m','临水长 m','临结构长 m',
+  '高出水位 m','平均坡度 %','到过街口 m','净可建 m²','建筑占地 m²','总建筑面积 m²',
+  '实际容积率','建筑密度','绿地率','建筑地块数','中心 X (Rhino)','中心 Y (Rhino)']]
+  .concat(list.map(p=>{const c=p.capacity||{};return [p.id,p.area.toFixed(1),p.perimeter.toFixed(1),
+   p.front.road.toFixed(1),p.front.water.toFixed(1),p.front.structure.toFixed(1),
+   p.freeboard.toFixed(2),p.slope.toFixed(1),p.toCrossing==null?'':p.toCrossing.toFixed(1),
+   (c.netArea||0).toFixed(1),(c.footprint||0).toFixed(1),(c.gfa||0).toFixed(1),
+   (c.far||0).toFixed(2),((c.coverage||0)*100).toFixed(1)+'%',((c.greenRatio||0)*100).toFixed(1)+'%',
+   p.parcels.length,(p.center[0]+o[0]).toFixed(2),(p.center[1]+o[1]).toFixed(2)]}));
  download(new Blob(['﻿'+rows.map(r=>r.map(esc).join(',')).join('\r\n')],
   {type:'text/csv;charset=utf-8'}),'LONDON2100_用地.csv');
- toast(`已导出 ${list.length} 块用地的面积表`);
+ toast(`已导出 ${list.length} 块用地的指标表`);
+}
+function replanLandUse(){
+ const num=(id,min,max,def)=>{
+  const el=document.querySelector(id);if(!el)return def;
+  const v=Number(el.value);return isFinite(v)?Math.max(min,Math.min(max,v)):def;
+ };
+ landUse.far=num('#luFar',.2,8,landUse.far);
+ landUse.storeys=Math.round(num('#luStoreys',1,40,landUse.storeys));
+ landUse.waterBuffer=num('#luWater',0,40,landUse.waterBuffer);
+ landUse.coverage=num('#luCoverage',.05,.9,landUse.coverage*100)/100;
+ buildLandPlots();renderPlotPanel();updateLandPlots();
+ if(renderer?.isSoftware)renderer.lastSignature='';
 }
 function initPlotsUI(){
  const stage=document.querySelector('.stage');if(!stage||document.querySelector('#plotsPanel'))return;
  const el=document.createElement('div');el.id='plotsPanel';el.className='plotsPanel';
  el.innerHTML=`<div class="plotsHead"><div><strong>用地划分</strong><small id="plotSummary">—</small></div>
    <button type="button" id="plotClear">清除选择</button></div>
-  <div class="plotsChosen" id="plotChosen">未选择 · 导出全部</div>
+  <div class="luForm">
+   <label>容积率<input id="luFar" type="number" step="0.1" min="0.2" max="8" value="${landUse.far}"></label>
+   <label>层数<input id="luStoreys" type="number" step="1" min="1" max="40" value="${landUse.storeys}"></label>
+   <label>滨水退让 m<input id="luWater" type="number" step="1" min="0" max="40" value="${landUse.waterBuffer}"></label>
+   <label>建筑密度 %<input id="luCoverage" type="number" step="5" min="5" max="90" value="${Math.round(landUse.coverage*100)}"></label>
+   <button type="button" id="luApply">重新划分</button>
+  </div>
+  <div class="luTotals" id="plotTotals"></div>
+  <div class="plotsChosen" id="plotChosen">—</div>
+  <div class="plotHeadRow"><span>地块</span><span class="plotCell">面积</span><span class="plotCell">容积率</span><span class="plotCell">绿地</span></div>
   <div class="plotList" id="plotList"></div>
   <div class="plotsFoot"><button type="button" id="plotDxf">导出 DXF ↓</button>
    <button type="button" id="plotCsv">导出 CSV ↓</button></div>`;
  stage.appendChild(el);
  el.querySelector('#plotClear').onclick=()=>{plotSelection.clear();renderPlotPanel();updateLandPlots()};
+ el.querySelector('#luApply').onclick=replanLandUse;
  el.querySelector('#plotDxf').onclick=exportPlotsDXF;
  el.querySelector('#plotCsv').onclick=exportPlotsCSV;
  renderPlotPanel();
