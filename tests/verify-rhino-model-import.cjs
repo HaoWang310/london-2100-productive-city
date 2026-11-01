@@ -195,6 +195,22 @@ assert(html.includes("const all=model.parcels.flatMap(p=>p.boundary).concat(over
 assert(html.includes(".formOverviewWater{fill:#2c5f7a;"), 'Navigator water style is missing');
 assert(html.includes("pointer-events:none;vector-effect:non-scaling-stroke}.formOverviewWater") || html.includes(".formOverviewWater{fill:#2c5f7a;stroke:#2c5f7a;stroke-width:.7;pointer-events:none"), 'Navigator water must not swallow parcel clicks');
 assert(html.includes("const water=overviewWaterFootprint();const pts=model.parcels"), 'All-site thumbnail must draw the same water');
+// CROSSINGS v37 — the source stops its rows short of the kerb and leaves some
+// junction arms bare; the completion must stay measured, not styled.
+assert(html.includes('function completeCrossings(){'), 'Crossing completion is missing');
+assert(html.includes('let roadCrossingOverride=null;'), 'Completed crossings need their own channel');
+assert(html.includes('const med=buildRoadMedians(roadDesignGroup);\n   if(med)roadDesignGroup.userData.medians=med;\n   roadCrossingOverride=completeCrossings();'),
+ 'Medians must be found from the source line work before the crossings are completed');
+assert(html.includes('if(roadCrossingOverride)ribbon(roadCrossingOverride.v,roadCrossingOverride.w);'), 'Completed crossings are not drawn');
+assert(html.includes('for(const src of [roadLineOverride,roadCrossingOverride]){'), 'Signals must read the completed crossings');
+// A bar is laid only where the whole of it is on the carriageway and off a median.
+assert(html.includes('const barFits=(mx,my,ux,uy,len)=>{'), 'Bars must be tested against the carriageway');
+assert(html.includes('if(!clearOfMedian(mx,my))continue;'), 'A crossing must not run across a planted median');
+// The narrowest section wins, or a junction mouth stretches one crossing across it.
+assert(html.includes('for(const s of [-10,-6,-3,0,3,6,10]){'), 'Crossing reach must be the narrowest section nearby');
+// Bar length, width and pitch are read from the source rows, never typed in.
+assert(html.includes('const BAR=median(rungs.map(r=>Math.hypot(r[2]-r[0],r[3]-r[1])));'), 'Bar length must come from the source');
+assert(html.includes('const PITCH=pitches.length?median(pitches):1;'), 'Bar pitch must come from the source');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

@@ -137,3 +137,35 @@ more such elements, they will be named in the console line at load.
 No vertex is moved and nothing is added; only faces that bound no solid are
 dropped. The OBJ export says so in its header and still writes Rhino world
 coordinates.
+
+## Crossings completed against the carriageway (v37)
+
+The 2.3dm Default layer draws 46 crossings as rows of 5 m bars at a 1 m pitch,
+0.55 m wide. Measured against the Roads mesh, a row is 4 m, 9 m or 10 m long
+where the carriageway at that point is 8 m to 14 m wide, so every zebra stopped
+short of both kerbs. Grouping the rows gives 20 junctions with 59 arms between
+them, and 13 of those arms carry no crossing in the drawing at all.
+
+`completeCrossings()` closes both gaps without styling anything by hand. The bar
+length (5.00 m), bar width (0.55 m) and pitch (1.00 m) are the medians of the
+source's own rows. How far a row may run is read from the Roads mesh: a bar is
+laid only where the whole 5 m of it is on the carriageway, and never across a
+planted median. 181 bars were added to the 46 source rows, and 6 new crossings
+(70 bars) on arms that had none.
+
+Two traps are worth keeping in mind.
+
+A single perpendicular walk does not find the kerb at a junction: the road opens
+sideways into the mouth and the walk runs on, which stretched one crossing to
+44 m. The reach is therefore the NARROWEST section found within 10 m along the
+traffic direction, which gives 7 m to 14 m — the real carriageway widths.
+
+Medians are detected by flooding the carriageway raster against the source line
+work, so they have to be found BEFORE the completed bars exist, or the new bars
+burn in as walls and invent islands. `buildRoadMedians` reads `roadLineOverride`
+only; the completed bars live in `roadCrossingOverride` and are drawn, and read
+by the signals, but never rasterised.
+
+Still source-led, so still open: the drawing decides where a crossing belongs.
+The 6 added ones only fill arms of junctions the drawing already marks; a
+junction the drawing ignores entirely stays unmarked.

@@ -3025,6 +3025,196 @@ function buildRoadMedians(group){
  batch.commit(group,'隔离带灌木');
  return {areaM2:+(cells*G*G).toFixed(0),cells,shrubs};
 }
+// ROAD CROSSINGS v37 — completing what the source draws.
+// The 2.3dm Default layer draws 46 crossings as rows of 5 m bars at a 1 m
+// pitch, but a row is only 4 to 10 m long where the carriageway is 8 to 14 m
+// wide, so the zebra stops short of both kerbs; and across the 20 junctions
+// the drawing has 59 arms, 13 of them with no crossing at all.
+// Nothing is styled by hand. The bar length, the bar width and the pitch are
+// measured from the source's own rows; how far a row may run is read from the
+// Roads mesh, a bar being laid only where the whole of it sits on the
+// carriageway; and the width is taken as the NARROWEST section within 10 m
+// along the traffic direction, because at a junction mouth the perpendicular
+// walk runs off into the side road and would stretch one crossing to 44 m.
+let roadCrossingOverride=null;
+function completeCrossings(){
+ const roads=model?.roads,lv=roadLineOverride?.v,lw=roadLineOverride?.w;
+ if(!roads?.v?.length||!roads?.t?.length||!lv?.length||!lw)return null;
+ const rv=roads.v,rf=roads.t;
+ const sgn=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]);
+ const RG=8,cellMap=new Map();
+ for(let k=0;k<rf.length;k+=3){
+  const q=[0,1,2].map(j=>{const i=rf[k+j]*3;return[rv[i],rv[i+1]]});
+  if(Math.abs(sgn(...q))<1e-6)continue;
+  const x0=Math.min(q[0][0],q[1][0],q[2][0]),x1=Math.max(q[0][0],q[1][0],q[2][0]);
+  const y0=Math.min(q[0][1],q[1][1],q[2][1]),y1=Math.max(q[0][1],q[1][1],q[2][1]);
+  const tri={q,x0,x1,y0,y1};
+  for(let i=Math.floor(x0/RG);i<=Math.floor(x1/RG);i++)for(let j=Math.floor(y0/RG);j<=Math.floor(y1/RG);j++){
+   const id=i+','+j;if(!cellMap.has(id))cellMap.set(id,[]);cellMap.get(id).push(tri);
+  }
+ }
+ const onRoad=(x,y)=>(cellMap.get(Math.floor(x/RG)+','+Math.floor(y/RG))||[])
+  .some(t=>x>=t.x0-.001&&x<=t.x1+.001&&y>=t.y0-.001&&y<=t.y1+.001&&pointInTriangle2D(x,y,...t.q));
+ // a bar is only laid where every part of it is on the carriageway
+ const barFits=(mx,my,ux,uy,len)=>{
+  const hx=ux*len/2,hy=uy*len/2;
+  for(let s=0;s<=10;s++){const k=s/10-.5;if(!onRoad(mx+hx*k*2,my+hy*k*2))return false}
+  return true;
+ };
+ const clearOfMedian=(x,y)=>!(typeof medianLookup==='function'&&medianLookup&&medianLookup(x,y));
+ // --- the source's own crossings -------------------------------------------
+ const rungs=[],zw=[];
+ for(let s=0,seg=0;s+5<lv.length;s+=6,seg++){
+  if((lw[seg]||0)<.3)continue;
+  rungs.push([lv[s],lv[s+1],lv[s+3],lv[s+4]]);zw.push(lw[seg]);
+ }
+ if(!rungs.length)return null;
+ const used=new Array(rungs.length).fill(false),rows=[];
+ for(let i=0;i<rungs.length;i++){
+  if(used[i])continue;
+  const g=[i];used[i]=true;
+  const mi=[(rungs[i][0]+rungs[i][2])/2,(rungs[i][1]+rungs[i][3])/2];
+  const di=Math.atan2(rungs[i][3]-rungs[i][1],rungs[i][2]-rungs[i][0]);
+  for(let j=0;j<rungs.length;j++){
+   if(used[j])continue;
+   const mj=[(rungs[j][0]+rungs[j][2])/2,(rungs[j][1]+rungs[j][3])/2];
+   if(Math.hypot(mj[0]-mi[0],mj[1]-mi[1])>9)continue;
+   const dj=Math.atan2(rungs[j][3]-rungs[j][1],rungs[j][2]-rungs[j][0]);
+   if(Math.abs(Math.cos(di-dj))<.9)continue;
+   g.push(j);used[j]=true;
+  }
+  if(g.length<3)continue;
+  rows.push({g,di});
+ }
+ if(!rows.length)return null;
+ const median=a=>{const b=[...a].sort((x,y)=>x-y);return b[Math.floor(b.length/2)]};
+ const BAR=median(rungs.map(r=>Math.hypot(r[2]-r[0],r[3]-r[1])));
+ const WID=median(zw);
+ const pitches=[];
+ for(const {g,di} of rows){
+  const px=-Math.sin(di),py=Math.cos(di);
+  const t=g.map(k=>{const r=rungs[k];return((r[0]+r[2])/2)*px+((r[1]+r[3])/2)*py}).sort((a,b)=>a-b);
+  for(let i=1;i<t.length;i++)pitches.push(t[i]-t[i-1]);
+ }
+ const PITCH=pitches.length?median(pitches):1;
+ const out={v:[],w:[]};
+ const emit=(mx,my,ux,uy)=>{
+  out.v.push(mx-ux*BAR/2,my-uy*BAR/2,0,mx+ux*BAR/2,my+uy*BAR/2,0);out.w.push(WID);
+ };
+ // the bars carry no z of their own; the ribbon builder lays them on the deck
+ let deck=0;for(let i=2;i<lv.length;i+=3)if(lv[i]>deck)deck=lv[i];
+ const setZ=()=>{for(let i=2;i<out.v.length;i+=3)out.v[i]=deck};
+ // --- 1. run every row out to its kerbs ------------------------------------
+ const centres=[];let added=0;
+ for(const {g,di} of rows){
+  const ux=Math.cos(di),uy=Math.sin(di),px=-uy,py=ux;
+  const ms=g.map(k=>{const r=rungs[k];return{mx:(r[0]+r[2])/2,my:(r[1]+r[3])/2}});
+  const ts=ms.map(m=>m.mx*px+m.my*py);
+  const lo=Math.min(...ts),hi=Math.max(...ts);
+  const cx=ms.reduce((s,m)=>s+m.mx,0)/ms.length,cy=ms.reduce((s,m)=>s+m.my,0)/ms.length;
+  centres.push([cx,cy]);
+  const base=cx*px+cy*py;
+  const endLo=[cx+px*(lo-base),cy+py*(lo-base)],endHi=[cx+px*(hi-base),cy+py*(hi-base)];
+  // The narrowest section within 10 m along the traffic direction: at the
+  // junction mouth the road opens sideways and a single walk never stops.
+  const reach=(ex,ey,dir)=>{
+   let limit=Infinity;
+   for(const s of [-10,-6,-3,0,3,6,10]){
+    let n=0;
+    for(let k=PITCH;k<=40;k+=PITCH){
+     if(barFits(ex+px*dir*k+ux*s,ey+py*dir*k+uy*s,ux,uy,BAR))n=k;else break;
+    }
+    if(n<limit)limit=n;
+   }
+   return limit;
+  };
+  for(const [end,dir] of [[endLo,-1],[endHi,1]]){
+   const span=reach(end[0],end[1],dir);
+   for(let k=PITCH;k<=span+1e-9;k+=PITCH){
+    const mx=end[0]+px*dir*k,my=end[1]+py*dir*k;
+    if(!clearOfMedian(mx,my))continue;
+    emit(mx,my,ux,uy);added++;
+   }
+  }
+ }
+ // --- 2. junctions, and the arms the drawing left bare ----------------------
+ const seen=new Array(centres.length).fill(false),groups=[];
+ for(let i=0;i<centres.length;i++){
+  if(seen[i])continue;
+  const q=[i];seen[i]=true;
+  for(let a=0;a<q.length;a++)for(let j=0;j<centres.length;j++){
+   if(seen[j])continue;
+   if(Math.hypot(centres[j][0]-centres[q[a]][0],centres[j][1]-centres[q[a]][1])<34){seen[j]=true;q.push(j)}
+  }
+  groups.push(q);
+ }
+ // The junction centre is where the carriageway is widest — the largest circle
+ // that still fits inside it. Averaging the crossings puts it on an arm.
+ const clearRadius=(x,y)=>{
+  let m=99;
+  for(let a=0;a<8;a++){
+   const t=a*Math.PI/4;let r=0;
+   for(let d=1;d<=20;d++){if(!onRoad(x+Math.cos(t)*d,y+Math.sin(t)*d))break;r=d}
+   if(r<m)m=r;
+  }
+  return m;
+ };
+ const placed=[];
+ for(const q of groups){
+  const gx=q.reduce((s,i)=>s+centres[i][0],0)/q.length;
+  const gy=q.reduce((s,i)=>s+centres[i][1],0)/q.length;
+  let cx=gx,cy=gy,best=-1;
+  for(let dx=-22;dx<=22;dx+=2)for(let dy=-22;dy<=22;dy+=2){
+   const x=gx+dx,y=gy+dy;if(!onRoad(x,y))continue;
+   const r=clearRadius(x,y);if(r>best){best=r;cx=x;cy=y}
+  }
+  // An arm is a direction in which the carriageway keeps going past the mouth.
+  const open=[];
+  for(let a=0;a<360;a+=5){
+   const t=a*Math.PI/180;let ok=true;
+   for(let d=10;d<=24;d+=2)if(!onRoad(cx+Math.cos(t)*d,cy+Math.sin(t)*d)){ok=false;break}
+   if(ok)open.push(a);
+  }
+  const runs=[];
+  for(const a of open){const L=runs[runs.length-1];if(L&&a-L[L.length-1]<=10)L.push(a);else runs.push([a])}
+  if(runs.length>1&&runs[0][0]===0&&runs[runs.length-1].slice(-1)[0]>=350)runs[0]=runs.pop().concat(runs[0].map(x=>x+360));
+  const bearings=q.map(i=>(Math.atan2(centres[i][1]-cy,centres[i][0]-cx)*180/Math.PI+360)%360);
+  for(const run of runs){
+   const dirDeg=(run.reduce((s,x)=>s+x,0)/run.length)%360;
+   if(bearings.some(h=>Math.abs(((h-dirDeg+540)%360)-180)<38))continue;
+   const ang=dirDeg*Math.PI/180,ux=Math.cos(ang),uy=Math.sin(ang),px=-uy,py=ux;
+   // Stand clear of the mouth, then take the narrowest section on offer.
+   let pick=null;
+   for(let s=6;s<=16;s++){
+    const mx=cx+ux*s,my=cy+uy*s;
+    let a=0,b=0;
+    for(let k=PITCH/2;k<=30;k+=PITCH/2){if(barFits(mx-px*k,my-py*k,ux,uy,BAR))a=k;else break}
+    for(let k=PITCH/2;k<=30;k+=PITCH/2){if(barFits(mx+px*k,my+py*k,ux,uy,BAR))b=k;else break}
+    const w=a+b;
+    if(w<4||w>24)continue;
+    if(!pick||w<pick.w-.5)pick={s,a,b,w,mx,my};
+   }
+   if(!pick)continue;
+   if(centres.some(c=>Math.hypot(c[0]-pick.mx,c[1]-pick.my)<11))continue;
+   if(placed.some(c=>Math.hypot(c[0]-pick.mx,c[1]-pick.my)<11))continue;
+   const bars=[];
+   for(let t=-pick.a+PITCH/2;t<=pick.b-PITCH/2+1e-9;t+=PITCH){
+    const mx=pick.mx+px*t,my=pick.my+py*t;
+    if(!barFits(mx,my,ux,uy,BAR))continue;
+    if(!clearOfMedian(mx,my))continue;
+    bars.push([mx,my]);
+   }
+   if(bars.length<4)continue;
+   for(const [mx,my] of bars)emit(mx,my,ux,uy);
+   placed.push([pick.mx,pick.my]);
+  }
+ }
+ setZ();
+ return {v:out.v,w:out.w,
+  report:{sourceCrossings:rows.length,barLength:+BAR.toFixed(2),barWidth:+WID.toFixed(2),
+   pitch:+PITCH.toFixed(2),junctions:groups.length,barsToKerb:added,
+   newCrossings:placed.length,barsAdded:out.w.length}};
+}
 // ROAD FURNITURE v34 — signals and street lighting, both positioned from the
 // source rather than scattered. Signals go where the drawing already puts a
 // crossing: a zebra's rungs span the carriageway, so the ENDS of a rung
@@ -3061,9 +3251,12 @@ function buildRoadFurniture(group){
  const matGreen=new THREE.MeshBasicMaterial({color:'#5fbf6a'});
  const deck=top;
  // --- signals at the ends of every crossing ---
- const lv=roadLineOverride?.v,lw=roadLineOverride?.w;
+ // Read the completed crossings too, or a signal would stand where the source
+ // row happened to stop rather than at the kerb the row now reaches.
  const rungs=[];
- if(lv&&lw){
+ for(const src of [roadLineOverride,roadCrossingOverride]){
+  const lv=src?.v,lw=src?.w;
+  if(!lv||!lw)continue;
   for(let s2=0,seg=0;s2+5<lv.length;s2+=6,seg++){
    if((lw[seg]||0)<.3)continue;
    rungs.push([lv[s2],lv[s2+1],lv[s2+3],lv[s2+4]]);
@@ -3417,15 +3610,25 @@ function buildScene(){
    // LineBasicMaterial.linewidth, so a zebra drawn as lines stays one pixel
    // wide however bold it should read. Build a ribbon per segment at the width
    // the importer classified — 0.55 m for a crossing rung, 0.16 m for lane work.
-   const lv=roadLineOverride.v,lw=roadLineOverride.w||[],pos=[];
-   for(let s2=0,seg=0;s2+5<lv.length;s2+=6,seg++){
-    const ax=lv[s2],ay=lv[s2+1],az=lv[s2+2],bx=lv[s2+3],by=lv[s2+4],bz=lv[s2+5];
-    const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy);
-    if(d<1e-6)continue;
-    const h=(lw[seg]||.16)/2,nx=-dy/d*h,ny=dx/d*h,y1=az+.014,y2=bz+.014;
-    pos.push(ax+nx,y1,-(ay+ny), bx+nx,y2,-(by+ny), bx-nx,y2,-(by-ny),
-             ax+nx,y1,-(ay+ny), bx-nx,y2,-(by-ny), ax-nx,y1,-(ay-ny));
-   }
+   // Medians come first: they are read by flooding the carriageway against the
+   // SOURCE line work, so they must be found before the completed crossings
+   // are added, and a completed bar must not be laid across one.
+   const med=buildRoadMedians(roadDesignGroup);
+   if(med)roadDesignGroup.userData.medians=med;
+   roadCrossingOverride=completeCrossings();
+   const pos=[];
+   const ribbon=(lv,lw)=>{
+    for(let s2=0,seg=0;s2+5<lv.length;s2+=6,seg++){
+     const ax=lv[s2],ay=lv[s2+1],az=lv[s2+2],bx=lv[s2+3],by=lv[s2+4],bz=lv[s2+5];
+     const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy);
+     if(d<1e-6)continue;
+     const h=(lw[seg]||.16)/2,nx=-dy/d*h,ny=dx/d*h,y1=az+.014,y2=bz+.014;
+     pos.push(ax+nx,y1,-(ay+ny), bx+nx,y2,-(by+ny), bx-nx,y2,-(by-ny),
+              ax+nx,y1,-(ay+ny), bx-nx,y2,-(by-ny), ax-nx,y1,-(ay-ny));
+    }
+   };
+   ribbon(roadLineOverride.v,roadLineOverride.w||[]);
+   if(roadCrossingOverride)ribbon(roadCrossingOverride.v,roadCrossingOverride.w);
    const lg=new THREE.BufferGeometry();
    lg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
    lg.computeVertexNormals();
@@ -3436,11 +3639,10 @@ function buildScene(){
    }));
    lines.name='2.3dm Default 图层划线';lines.userData.roadDetail=true;
    lines.frustumCulled=false;roadDesignGroup.add(lines);
-   const med=buildRoadMedians(roadDesignGroup);
-   if(med)roadDesignGroup.userData.medians=med;
    const furniture=buildRoadFurniture(roadDesignGroup);
    if(furniture)roadDesignGroup.userData.furniture=furniture;
-   console.info('Road line work drawn from the source',{segments:roadLineOverride.v.length/6,medians:med,furniture});
+   console.info('Road line work drawn from the source',{segments:roadLineOverride.v.length/6,
+    crossings:roadCrossingOverride?.report||null,medians:med,furniture});
   }
   // Markings stay withheld, but traffic no longer depends on the retired
   // coordinate table: v27 solves car positions from the live 2.3dm carriageways.
