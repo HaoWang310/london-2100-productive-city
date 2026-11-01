@@ -3670,7 +3670,44 @@ function planLandUse(){
  // the street: the walk to the road passes under them, even though nothing
  // may be built there. Otherwise 39 of the 65 plots came out landlocked.
  const walkable=k=>k===1||k===5;
- const dWater=bfs(k=>k===3,ground),dRoad=bfs(k=>k===4,walkable),dStruct=bfs(k=>k===5,ground);
+ // The structures' plan edge is the outline of a curved form cut by a
+ // half-metre grid, so it is nibbled all the way along, and a clearance band
+ // measured off it inherits every nibble — which comes through the
+ // subdivision as a staircase down one side of a plot. Close the footprint
+ // before measuring from it: dilate by SR, erode by SR, so a notch narrower
+ // than twice that fills while the outline itself stays put.
+ const SR=Math.round(4/G),anywhere=()=>true;
+ const structM=new Uint8Array(N);
+ {
+  const dd=bfs(k=>k===5,anywhere);
+  for(let c=0;c<N;c++)if(dd[c]<=SR)structM[c]=1;
+  const de=new Int32Array(N).fill(INF),qq=new Int32Array(N);
+  let h5=0,t5=0;
+  for(let c=0;c<N;c++)if(!structM[c]){de[c]=0;qq[t5++]=c}
+  while(h5<t5){
+   const c=qq[h5++],nd=de[c]+1;if(nd>SR+1)continue;
+   const i=c%W,j=(c-i)/W;
+   if(i>0&&de[c-1]>nd){de[c-1]=nd;qq[t5++]=c-1}
+   if(i<W-1&&de[c+1]>nd){de[c+1]=nd;qq[t5++]=c+1}
+   if(j>0&&de[c-W]>nd){de[c-W]=nd;qq[t5++]=c-W}
+   if(j<H-1&&de[c+W]>nd){de[c+W]=nd;qq[t5++]=c+W}
+  }
+  for(let c=0;c<N;c++)structM[c]=de[c]>SR?1:0;
+ }
+ const dWater=bfs(k=>k===3,ground),dRoad=bfs(k=>k===4,walkable);
+ // measured off the closed footprint, and never through a structure
+ const dStruct=(()=>{
+  const d2=new Int32Array(N).fill(INF),qq=new Int32Array(N);let h6=0,t6=0;
+  for(let c=0;c<N;c++)if(structM[c]){d2[c]=0;qq[t6++]=c}
+  while(h6<t6){
+   const c=qq[h6++],nd=d2[c]+1,i=c%W,j=(c-i)/W;
+   if(i>0&&klass[c-1]===1&&d2[c-1]>nd){d2[c-1]=nd;qq[t6++]=c-1}
+   if(i<W-1&&klass[c+1]===1&&d2[c+1]>nd){d2[c+1]=nd;qq[t6++]=c+1}
+   if(j>0&&klass[c-W]===1&&d2[c-W]>nd){d2[c-W]=nd;qq[t6++]=c-W}
+   if(j<H-1&&klass[c+W]===1&&d2[c+W]>nd){d2[c+W]=nd;qq[t6++]=c+W}
+  }
+  return d2;
+ })();
  const bw=landUse.waterBuffer/G,br=landUse.streetBand/G,bs=landUse.structClear/G;
  const free=new Uint8Array(N);                       // net developable ground
  for(let c=0;c<N;c++)

@@ -264,7 +264,12 @@ assert(html.includes('function exportPlotsCSV(){'), 'Plot schedule export is mis
 assert(html.includes("if(state.mode==='plots'){const lp=plotAt(e);"), 'Plots must be selectable in the view');
 // LAND USE v40 — green frame first, buildings second, capacity from the ratio.
 assert(html.includes('function planLandUse(){'), 'Land use planning is missing');
-assert(html.includes('const dWater=bfs(k=>k===3,ground),dRoad=bfs(k=>k===4,walkable),dStruct=bfs(k=>k===5,ground);'), 'The three setback bands must be distance transforms');
+assert(html.includes('const dWater=bfs(k=>k===3,ground),dRoad=bfs(k=>k===4,walkable);'), 'The three setback bands must be distance transforms');
+// A structure's plan edge is a curved form cut by a half-metre grid, so it is
+// nibbled all along, and a clearance measured off it came through the
+// subdivision as a staircase down one side of a plot.
+assert(html.includes('for(let c=0;c<N;c++)structM[c]=de[c]>SR?1:0;'), 'The structure footprint must be closed before the clearance is measured');
+assert(html.includes('for(let c=0;c<N;c++)if(structM[c]){d2[c]=0;qq[t6++]=c}'), 'The clearance must be measured off the closed footprint');
 assert(html.includes('if(klass[c]===1&&dWater[c]>bw&&dRoad[c]>br&&dStruct[c]>bs)free[c]=1;'), 'Net developable ground must exclude all three bands');
 assert(html.includes('const gfaTarget=p.area*landUse.far;'), 'Capacity must come from the floor area ratio');
 assert(html.includes('short:Math.max(0,gfaTarget-footprint*landUse.storeys)'), 'A plot that cannot meet the ratio must report the shortfall, not force it');
