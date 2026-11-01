@@ -3942,7 +3942,11 @@ function replanLandUse(){
  landUse.far=num('#luFar',.2,8,landUse.far);
  landUse.storeys=Math.round(num('#luStoreys',1,40,landUse.storeys));
  landUse.waterBuffer=num('#luWater',0,40,landUse.waterBuffer);
- landUse.coverage=num('#luCoverage',.05,.9,landUse.coverage*100)/100;
+ // The field is a percentage and so is the fallback, so the clamp has to be
+ // one too: against .05 and .9 the typed 45 was pinned to 0.9 and then
+ // divided, leaving a 0.9% coverage cap that swallowed every other setting —
+ // the ratio box did nothing at all, because the cap always bound first.
+ landUse.coverage=num('#luCoverage',5,90,landUse.coverage*100)/100;
  buildLandPlots();renderPlotPanel();updateLandPlots();
  if(renderer?.isSoftware)renderer.lastSignature='';
 }

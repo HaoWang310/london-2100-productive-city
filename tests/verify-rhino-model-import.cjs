@@ -293,6 +293,10 @@ for (const sel of ['.layer,.viewbar,.explodePanel,.badge,.label,.tooltip,.toast,
 assert(html.includes("const base=flat(p,'#07080a',.82,.34);"), 'Land plots must read black');
 assert(html.includes("flat(g,'#30d158',.3,.38)")&&html.includes("flat(b,'#e8ebf0',.92,.42)"), 'Green and building areas must be drawn');
 assert(html.includes("m.material.color.set(on?'#0a84ff':hot?'#1d2026':'#07080a');"), 'Plot selection must use the system accent');
+// The coverage control reads a percentage, so its clamp is in percent too.
+// Clamped against .05 and .9 the typed 45 became 0.9, then /100 gave a 0.9%
+// cap that bound before every other setting and froze the whole plan.
+assert(html.includes("landUse.coverage=num('#luCoverage',5,90,landUse.coverage*100)/100;"), 'Coverage must be clamped in percent');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');
