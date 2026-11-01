@@ -169,3 +169,31 @@ by the signals, but never rasterised.
 Still source-led, so still open: the drawing decides where a crossing belongs.
 The 6 added ones only fill arms of junctions the drawing already marks; a
 junction the drawing ignores entirely stays unmarked.
+
+## 用地 mode — the plots the roads and structures cut the site into (v38)
+
+A fifth mode between 装配 and 报表. Everything the road network, the water and
+the elevated structures leave enclosed in plan is a plot: 65 of them,
+105,893 m², selectable one at a time and exportable.
+
+The site mesh cannot answer this face by face. Its top surface is a few hundred
+large triangles and one of them can span a whole street, so a centroid test
+keeps the triangle and the road disappears — measured, that route found 32 road
+crossings among 1,013 land faces. `solveLandPlots()` rasterises the plan at
+0.5 m instead: ground above the waterline painted in, then water, carriageways
+and the plan projection of every structure painted out, and each connected
+remainder is a plot. About 0.4 s, run once on first entering the mode.
+
+Boundaries are traced back off the raster as cell edges, chained into rings,
+stripped of collinear points and simplified with Douglas-Peucker at 0.45 m, so
+one outline serves the view, the area and the DXF. Inner rings become holes
+(none in the current source).
+
+DXF writes one LWPOLYLINE per ring in Rhino world coordinates, local +
+meta.origin, on ASCII layers PLOT_L-01…; the file has no TABLES section, so the
+reader creates the layer from the entity and a non-ASCII name is where that
+goes wrong.
+
+Open: the plots carry no land use yet. Tagging each as 建筑 or 农业 and
+colouring by that is the natural next step, and the tag would travel in the CSV
+and in the DXF layer name.
