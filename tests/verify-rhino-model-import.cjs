@@ -170,7 +170,7 @@ assert(html.includes('const furniture=buildRoadFurniture(roadDesignGroup);'), 'F
 // Water and planting are modelled against that site, so they must go with it or
 // they cut across the plot and show their section walls from the inside.
 assert(html.includes("if(state.mode==='report'&&(reportFormId||reportParcel!=='all')){waterGroup.visible=false;return}"), 'Water must be hidden in the parcel and Form views');
-assert(html.includes('g.visible=landscapeConfig.enabled&&allView&&(showAll||ids.includes(id));'), 'Planting must be hidden in the parcel and Form views');
+assert(html.includes('g.visible=landscapeConfig.enabled&&allView&&!plots&&(showAll||ids.includes(id));'), 'Planting must be hidden in the parcel, Form and land views');
 // FIN TRIM v35 — a strip of a slab's edge wall that runs past the surfaces it
 // belongs to is drawn as a hair sticking out of the Form. Run the real trim
 // over the embedded model and check what it did, not just that it is present.
@@ -238,6 +238,22 @@ assert(html.includes('for(let s2=Math.ceil(r)+3;s2<=Math.ceil(r)+14;s2++){'), 'A
 // Bar length, width and pitch are read from the source rows, never typed in.
 assert(html.includes('const BAR=median(rungs.map(r=>Math.hypot(r[2]-r[0],r[3]-r[1])));'), 'Bar length must come from the source');
 assert(html.includes('const PITCH=pitches.length?median(pitches):1;'), 'Bar pitch must come from the source');
+// LAND PLOTS v38 — the cells the roads and the structures cut the site into.
+// The site mesh is too coarse to answer this face by face, so the plan is
+// rasterised and the boundary traced back off the raster.
+assert(html.includes('function solveLandPlots(){'), 'Land plot solver is missing');
+assert(html.includes('<button data-mode="plots">用地</button>'), 'The land mode is not in the nav');
+assert(html.includes("document.body.classList.toggle('plotsMode',mode==='plots');"), 'The land panel is not shown with the mode');
+assert(html.includes("if(!landPlots.length)buildLandPlots();"), 'Plots must be solved on entering the mode');
+// Roads, water and the plan projection of every structure are painted out.
+assert(html.includes('for(const tri of water.triangles)paint(tri,2,1);'), 'Water must be cut out of the land');
+assert(html.includes("if(Math.abs(sgn(p[0],p[1],p[2]))<.02)continue;      // seen edge on, no footprint"), 'Structure footprints must be cut out of the land');
+// The same simplified outline serves the view, the area and the DXF.
+assert(html.includes('const rdp=(pts,eps)=>{'), 'Plot outlines must be simplified once');
+assert(html.includes("out.push('0','LWPOLYLINE','8','用地_'+p.id,"), 'DXF export is missing');
+assert(html.includes("(x+o[0]).toFixed(3),'20',(y+o[1]).toFixed(3)"), 'DXF must carry Rhino world coordinates');
+assert(html.includes('function exportPlotsCSV(){'), 'Plot schedule export is missing');
+assert(html.includes("if(state.mode==='plots'){const lp=plotAt(e);"), 'Plots must be selectable in the view');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

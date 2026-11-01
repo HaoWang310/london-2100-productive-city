@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FORM / ASSEMBLY — Studio v12 · 可收起结构单元库</title><style>
-:root{--ink:#f5f5f7;--muted:#848484;--line:#303238;--soft:#1e2024;--purple:#383a3d;--gold:#d3b986}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#15171a;font-size:13px;overflow:hidden}button,input,select{font:inherit}button{cursor:pointer;border:0;background:transparent;color:inherit}button:focus-visible,input:focus-visible{outline:2px solid #a4a7ae;outline-offset:3px}button:disabled{opacity:.3;cursor:default}button:hover{background:#26292e}header{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 30px;gap:28px;background:#15171a;position:relative;z-index:5}.brand{font-size:17px;letter-spacing:1.8px;font-weight:650;white-space:nowrap}.brand span{color:#a8a8a8;font-weight:350;margin:0 4px}.edition{font-size:10px;letter-spacing:1.5px;color:#929292;margin-top:6px}.nav{display:flex;gap:3px;padding:4px;border:1px solid var(--line);border-radius:30px;margin:auto}.nav button{padding:9px 22px;border-radius:24px;color:#a4a7ae}.nav button.active{background:#e9ecf0;color:#111215;box-shadow:0 2px 5px #0001}.headerActions{display:flex;align-items:center;gap:8px}.round{border:1px solid var(--line);border-radius:50%;width:36px;height:36px;font-size:17px}.pill{padding:10px 17px;border:1px solid var(--line);border-radius:22px;white-space:nowrap}.black{background:#e9ecf0;color:#111215}.black:hover{background:#444}.app{display:flex;height:calc(100dvh - 76px)}aside{width:254px;flex-shrink:0;border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--surface-1);z-index:2}.sideHead{padding:25px 22px 18px}.eyebrow{font-size:10px;letter-spacing:2px;color:#8a8a8a;text-transform:uppercase}.sideHead h2{font-size:20px;letter-spacing:-.5px;font-weight:550;margin:10px 0 8px}.small{font-size:11px;line-height:1.7;color:var(--muted)}.search{border:1px solid var(--line);background:#1e2024;border-radius:10px;width:100%;padding:9px 12px;margin-top:17px;color:#333}.switchTabs{display:flex;padding:0 18px 14px;gap:4px}.switchTabs button{flex:1;border-radius:7px;font-size:11px;padding:7px 3px;color:#a4a7ae}.switchTabs button.active{background:#26292e;color:#e9ecf0}.unitList{overflow:auto;flex:1;padding:0 10px 12px;scrollbar-width:thin}.unitRow{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;text-align:left;border-radius:9px;position:relative}.unitRow.active{background:#26292e}.unitRow .symbol{width:27px;height:27px;border:1px solid #d9d9de;border-radius:7px;display:grid;place-items:center;font-size:13px;color:#a4a7ae;background:#15171a}.unitRow.active .symbol{background:#e9ecf0;color:var(--text-primary);border-color:#e9ecf0}.unitRow .txt{flex:1}.unitRow strong{font-size:12px;font-weight:550;letter-spacing:.3px}.unitRow small{font-size:10px;color:#909095;display:block;margin-top:4px}.unitRow .dot{width:5px;height:5px;border-radius:50%;background:#b7b7bd}.sideFoot{border-top:1px solid var(--line);padding:16px 22px;font-size:10px;color:#929295;line-height:1.8}.sideFoot b{color:#414145;font-weight:500}.stage{flex:1;position:relative;min-width:0;overflow:hidden;background:#101114}#viewport{width:100%;height:100%;position:absolute;inset:0}canvas{display:block;touch-action:none}.stageTitle{position:absolute;top:29px;left:32px;pointer-events:none;z-index:1}.stageTitle h1{font-size:31px;letter-spacing:-1.3px;font-weight:450;margin:9px 0 11px}.stageTitle p{color:#838387;font-size:11px;margin:0;max-width:450px;line-height:1.8}.counter{display:flex;gap:25px;margin-top:22px}.counter b{font-size:21px;font-weight:450;letter-spacing:-.6px}.counter small{display:block;color:#98989e;font-size:10px;margin-top:6px}.layers{position:absolute;top:28px;right:26px;z-index:2;display:flex;flex-direction:column;align-items:flex-end;gap:7px}.layer{font-size:11px;background:#ffffffd9;border:1px solid #e4e4e8;padding:8px 11px;border-radius:20px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(12px)}.layer.off{opacity:.4}.swatch{height:6px;width:6px;border-radius:50%;background:#a4a7ae}.canvasFoot{position:absolute;bottom:103px;left:30px;font-size:10px;color:#a1a1a8;pointer-events:none;letter-spacing:.3px}.viewbar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:#fffffff2;border:1px solid #dedee4;border-radius:16px;box-shadow:0 8px 30px #00000008;display:flex;align-items:center;padding:6px;gap:3px;z-index:3;backdrop-filter:blur(20px);white-space:nowrap}.viewbar button{font-size:11px;border-radius:10px;padding:10px 13px;color:#717176}.viewbar button.active{background:#232326;color:#15171a}.separator{height:20px;width:1px;background:#e4e4e7;margin:0 4px}.explodePanel{position:absolute;bottom:99px;left:50%;transform:translateX(-50%);width:min(410px,75%);background:#ffffffed;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:none;z-index:3;backdrop-filter:blur(16px)}.sliderHead{display:flex;justify-content:space-between;font-size:11px;margin-bottom:10px}.sliderHead span{color:#a4a7ae}input[type=range]{accent-color:#28282b;width:100%;height:4px;cursor:pointer}.inspector{width:280px;border-left:1px solid var(--line);background:var(--surface-1);display:flex;flex-direction:column;flex-shrink:0;z-index:2}.inspectContent{padding:27px 23px;overflow:auto;flex:1}.inspectContent h2{font-size:30px;letter-spacing:-1px;font-weight:450;margin:13px 0 6px}.inspectContent .subtitle{font-size:11px;color:#a4a7ae;line-height:1.8}.miniMap{width:100%;height:136px;background:#1e2024;border:1px solid #efeff0;border-radius:12px;margin:24px 0 19px;overflow:hidden}.miniMap svg{width:100%;height:100%}.sectionLabel{font-size:10px;letter-spacing:1px;color:#a4a7ae;margin:24px 0 12px}.dataLine{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #26292e;font-size:11px}.dataLine span{color:#8b8b90}.dataLine b{font-weight:450;text-align:right}.inspector button.wide{display:block;width:100%;margin-top:9px;border-radius:10px;padding:11px;font-size:11px;border:1px solid var(--line)}.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.tag{border:1px solid #e5e5e9;border-radius:7px;padding:6px 9px;font-size:10px;background:#1e2024}.hint{font-size:10px;line-height:1.9;color:#969ca6;margin-top:20px}.inspector .bottom{border-top:1px solid var(--line);padding:16px 23px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#a4a7ae}.bottom button{border:1px solid var(--line);border-radius:7px;padding:5px 10px}.badge{position:absolute;left:32px;bottom:28px;background:#fff9;border:1px solid #dddde1;border-radius:20px;padding:9px 13px;font-size:10px;color:#6e6e75;z-index:2}.badge::before{content:"";display:inline-block;background:#74747d;width:5px;height:5px;border-radius:50%;margin-right:7px}.tooltip{position:absolute;pointer-events:none;background:#202024e8;color:var(--text-primary);padding:7px 10px;font-size:11px;border-radius:8px;display:none;z-index:9}.labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}.label{position:absolute;font-size:9px;font-weight:500;transform:translate(-50%,-50%);background:#ffffffe8;border:1px solid #d1d1d8;padding:3px 5px;border-radius:4px;color:#666;white-space:nowrap}.report{position:absolute;inset:0;background:#1e2024;z-index:4;display:none;overflow:auto;padding:34px 38px}.reportTop{display:flex;justify-content:space-between;align-items:center;gap:14px}.report h1{font-size:30px;font-weight:450;margin:9px 0}.report p{font-size:12px;color:#929295;line-height:1.9}.reportTabs{display:flex;gap:6px;margin:24px 0 23px;border-bottom:1px solid #ddd}.reportTabs button{font-size:12px;padding:12px 16px;color:#a4a7ae;border-bottom:2px solid transparent}.reportTabs button.active{color:#e9ecf0;border-bottom-color:#e9ecf0}.statsGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.statCard{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:12px;padding:20px}.statCard small{font-size:10px;color:#a4a7ae}.statCard b{display:block;font-size:25px;font-weight:450;margin-top:12px}.statCard span{display:block;color:#969ca6;font-size:10px;margin-top:8px}.reportBody{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:14px;padding:23px;overflow-x:auto}.reportBody h3{font-size:15px;font-weight:500;margin:0 0 17px}.reportBody table{border-collapse:collapse;width:100%;text-align:left;white-space:nowrap;font-size:11px}.reportBody th{font-size:10px;color:#9a9a9f;font-weight:450;border-bottom:1px solid #ddd;padding:12px 10px}.reportBody td{padding:12px 10px;border-bottom:1px solid #efeff2}.reportBody tr[data-id]{cursor:pointer}.reportBody tr[data-id]:hover{background:#f6f6f8}.reportNote{font-size:10px!important;max-width:850px}.planWrap{display:grid;grid-template-columns:1.2fr 1fr;gap:25px;margin-bottom:26px}.planWrap svg{width:100%;height:280px;background:#f8f8fa;border-radius:10px}.steps{display:grid;gap:13px}.step{border-bottom:1px solid #eee;padding:14px 0;display:flex;gap:15px}.step b{font-weight:500;font-size:13px}.step span{color:#969ca6;font-size:10px;letter-spacing:1px}.step p{margin:6px 0 0;font-size:11px}.modalBackdrop{position:fixed;inset:0;background:#0004;backdrop-filter:blur(8px);z-index:20;display:none;align-items:center;justify-content:center}.modal{background:#15171a;border-radius:20px;width:480px;max-width:90vw;padding:30px;box-shadow:0 25px 90px #0002}.modal h2{font-size:23px;font-weight:500;margin:0 0 20px}.modal p{font-size:12px;color:#a4a7ae;line-height:1.9}.modal table{width:100%;font-size:12px;border-collapse:collapse}.modal td{padding:11px 0;border-bottom:1px solid #eee}.modal td:last-child{text-align:right;color:#a4a7ae}.toast{position:fixed;bottom:25px;left:50%;transform:translate(-50%,20px);background:#202024;color:var(--text-primary);font-size:12px;padding:13px 20px;border-radius:30px;z-index:50;opacity:0;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}.loader{position:fixed;inset:0;background:#1e2024;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px}.loader .mark{font-size:24px;letter-spacing:5px;font-weight:400}.loader .progress{width:150px;height:2px;background:#ddd;overflow:hidden}.loader .progress::after{content:"";display:block;background:#e9ecf0;width:50%;height:100%;animation:load 1s infinite alternate}.loader p{font-size:11px;color:#a4a7ae}@keyframes load{to{transform:translateX(100%)}}.reportMode .inspector{display:none}.present header{height:60px}.present .app{height:calc(100dvh - 60px)}.present aside,.present .inspector{display:none}.present .stageTitle h1{font-size:40px}.present .stageTitle{top:35px;left:42px}.present .stageTitle p{font-size:13px}.assemblyActions{display:none;margin-top:12px;gap:5px}.assemblyActions button{font-size:10px;padding:8px 10px;border:1px solid #ddd;border-radius:8px}.mobileSide{display:none}
+:root{--ink:#f5f5f7;--muted:#848484;--line:#303238;--soft:#1e2024;--purple:#383a3d;--gold:#d3b986}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#15171a;font-size:13px;overflow:hidden}button,input,select{font:inherit}button{cursor:pointer;border:0;background:transparent;color:inherit}button:focus-visible,input:focus-visible{outline:2px solid #a4a7ae;outline-offset:3px}button:disabled{opacity:.3;cursor:default}button:hover{background:#26292e}header{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 30px;gap:28px;background:#15171a;position:relative;z-index:5}.brand{font-size:17px;letter-spacing:1.8px;font-weight:650;white-space:nowrap}.brand span{color:#a8a8a8;font-weight:350;margin:0 4px}.edition{font-size:10px;letter-spacing:1.5px;color:#929292;margin-top:6px}.nav{display:flex;gap:3px;padding:4px;border:1px solid var(--line);border-radius:30px;margin:auto}.nav button{padding:9px 22px;border-radius:24px;color:#a4a7ae}.nav button.active{background:#e9ecf0;color:#111215;box-shadow:0 2px 5px #0001}.headerActions{display:flex;align-items:center;gap:8px}.round{border:1px solid var(--line);border-radius:50%;width:36px;height:36px;font-size:17px}.pill{padding:10px 17px;border:1px solid var(--line);border-radius:22px;white-space:nowrap}.black{background:#e9ecf0;color:#111215}.black:hover{background:#444}.app{display:flex;height:calc(100dvh - 76px)}aside{width:254px;flex-shrink:0;border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--surface-1);z-index:2}.sideHead{padding:25px 22px 18px}.eyebrow{font-size:10px;letter-spacing:2px;color:#8a8a8a;text-transform:uppercase}.sideHead h2{font-size:20px;letter-spacing:-.5px;font-weight:550;margin:10px 0 8px}.small{font-size:11px;line-height:1.7;color:var(--muted)}.search{border:1px solid var(--line);background:#1e2024;border-radius:10px;width:100%;padding:9px 12px;margin-top:17px;color:#333}.switchTabs{display:flex;padding:0 18px 14px;gap:4px}.switchTabs button{flex:1;border-radius:7px;font-size:11px;padding:7px 3px;color:#a4a7ae}.switchTabs button.active{background:#26292e;color:#e9ecf0}.unitList{overflow:auto;flex:1;padding:0 10px 12px;scrollbar-width:thin}.unitRow{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;text-align:left;border-radius:9px;position:relative}.unitRow.active{background:#26292e}.unitRow .symbol{width:27px;height:27px;border:1px solid #d9d9de;border-radius:7px;display:grid;place-items:center;font-size:13px;color:#a4a7ae;background:#15171a}.unitRow.active .symbol{background:#e9ecf0;color:var(--text-primary);border-color:#e9ecf0}.unitRow .txt{flex:1}.unitRow strong{font-size:12px;font-weight:550;letter-spacing:.3px}.unitRow small{font-size:10px;color:#909095;display:block;margin-top:4px}.unitRow .dot{width:5px;height:5px;border-radius:50%;background:#b7b7bd}.sideFoot{border-top:1px solid var(--line);padding:16px 22px;font-size:10px;color:#929295;line-height:1.8}.sideFoot b{color:#414145;font-weight:500}.stage{flex:1;position:relative;min-width:0;overflow:hidden;background:#101114}#viewport{width:100%;height:100%;position:absolute;inset:0}canvas{display:block;touch-action:none}.stageTitle{position:absolute;top:29px;left:32px;pointer-events:none;z-index:1}.stageTitle h1{font-size:31px;letter-spacing:-1.3px;font-weight:450;margin:9px 0 11px}.stageTitle p{color:#838387;font-size:11px;margin:0;max-width:450px;line-height:1.8}.counter{display:flex;gap:25px;margin-top:22px}.counter b{font-size:21px;font-weight:450;letter-spacing:-.6px}.counter small{display:block;color:#98989e;font-size:10px;margin-top:6px}.layers{position:absolute;top:28px;right:26px;z-index:2;display:flex;flex-direction:column;align-items:flex-end;gap:7px}.layer{font-size:11px;background:#ffffffd9;border:1px solid #e4e4e8;padding:8px 11px;border-radius:20px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(12px)}.layer.off{opacity:.4}.swatch{height:6px;width:6px;border-radius:50%;background:#a4a7ae}.canvasFoot{position:absolute;bottom:103px;left:30px;font-size:10px;color:#a1a1a8;pointer-events:none;letter-spacing:.3px}.viewbar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:#fffffff2;border:1px solid #dedee4;border-radius:16px;box-shadow:0 8px 30px #00000008;display:flex;align-items:center;padding:6px;gap:3px;z-index:3;backdrop-filter:blur(20px);white-space:nowrap}.viewbar button{font-size:11px;border-radius:10px;padding:10px 13px;color:#717176}.viewbar button.active{background:#232326;color:#15171a}.separator{height:20px;width:1px;background:#e4e4e7;margin:0 4px}.explodePanel{position:absolute;bottom:99px;left:50%;transform:translateX(-50%);width:min(410px,75%);background:#ffffffed;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:none;z-index:3;backdrop-filter:blur(16px)}.sliderHead{display:flex;justify-content:space-between;font-size:11px;margin-bottom:10px}.sliderHead span{color:#a4a7ae}input[type=range]{accent-color:#28282b;width:100%;height:4px;cursor:pointer}.inspector{width:280px;border-left:1px solid var(--line);background:var(--surface-1);display:flex;flex-direction:column;flex-shrink:0;z-index:2}.inspectContent{padding:27px 23px;overflow:auto;flex:1}.inspectContent h2{font-size:30px;letter-spacing:-1px;font-weight:450;margin:13px 0 6px}.inspectContent .subtitle{font-size:11px;color:#a4a7ae;line-height:1.8}.miniMap{width:100%;height:136px;background:#1e2024;border:1px solid #efeff0;border-radius:12px;margin:24px 0 19px;overflow:hidden}.miniMap svg{width:100%;height:100%}.sectionLabel{font-size:10px;letter-spacing:1px;color:#a4a7ae;margin:24px 0 12px}.dataLine{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #26292e;font-size:11px}.dataLine span{color:#8b8b90}.dataLine b{font-weight:450;text-align:right}.inspector button.wide{display:block;width:100%;margin-top:9px;border-radius:10px;padding:11px;font-size:11px;border:1px solid var(--line)}.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.tag{border:1px solid #e5e5e9;border-radius:7px;padding:6px 9px;font-size:10px;background:#1e2024}.hint{font-size:10px;line-height:1.9;color:#969ca6;margin-top:20px}.inspector .bottom{border-top:1px solid var(--line);padding:16px 23px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#a4a7ae}.bottom button{border:1px solid var(--line);border-radius:7px;padding:5px 10px}.badge{position:absolute;left:32px;bottom:28px;background:#fff9;border:1px solid #dddde1;border-radius:20px;padding:9px 13px;font-size:10px;color:#6e6e75;z-index:2}.badge::before{content:"";display:inline-block;background:#74747d;width:5px;height:5px;border-radius:50%;margin-right:7px}.tooltip{position:absolute;pointer-events:none;background:#202024e8;color:var(--text-primary);padding:7px 10px;font-size:11px;border-radius:8px;display:none;z-index:9}.labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}.label{position:absolute;font-size:9px;font-weight:500;transform:translate(-50%,-50%);background:#ffffffe8;border:1px solid #d1d1d8;padding:3px 5px;border-radius:4px;color:#666;white-space:nowrap}.report{position:absolute;inset:0;background:#1e2024;z-index:4;display:none;overflow:auto;padding:34px 38px}.reportTop{display:flex;justify-content:space-between;align-items:center;gap:14px}.report h1{font-size:30px;font-weight:450;margin:9px 0}.report p{font-size:12px;color:#929295;line-height:1.9}.reportTabs{display:flex;gap:6px;margin:24px 0 23px;border-bottom:1px solid #ddd}.reportTabs button{font-size:12px;padding:12px 16px;color:#a4a7ae;border-bottom:2px solid transparent}.reportTabs button.active{color:#e9ecf0;border-bottom-color:#e9ecf0}.statsGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.statCard{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:12px;padding:20px}.statCard small{font-size:10px;color:#a4a7ae}.statCard b{display:block;font-size:25px;font-weight:450;margin-top:12px}.statCard span{display:block;color:#969ca6;font-size:10px;margin-top:8px}.reportBody{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:14px;padding:23px;overflow-x:auto}.reportBody h3{font-size:15px;font-weight:500;margin:0 0 17px}.reportBody table{border-collapse:collapse;width:100%;text-align:left;white-space:nowrap;font-size:11px}.reportBody th{font-size:10px;color:#9a9a9f;font-weight:450;border-bottom:1px solid #ddd;padding:12px 10px}.reportBody td{padding:12px 10px;border-bottom:1px solid #efeff2}.reportBody tr[data-id]{cursor:pointer}.reportBody tr[data-id]:hover{background:#f6f6f8}.reportNote{font-size:10px!important;max-width:850px}.planWrap{display:grid;grid-template-columns:1.2fr 1fr;gap:25px;margin-bottom:26px}.planWrap svg{width:100%;height:280px;background:#f8f8fa;border-radius:10px}.steps{display:grid;gap:13px}.step{border-bottom:1px solid #eee;padding:14px 0;display:flex;gap:15px}.step b{font-weight:500;font-size:13px}.step span{color:#969ca6;font-size:10px;letter-spacing:1px}.step p{margin:6px 0 0;font-size:11px}.modalBackdrop{position:fixed;inset:0;background:#0004;backdrop-filter:blur(8px);z-index:20;display:none;align-items:center;justify-content:center}.modal{background:#15171a;border-radius:20px;width:480px;max-width:90vw;padding:30px;box-shadow:0 25px 90px #0002}.modal h2{font-size:23px;font-weight:500;margin:0 0 20px}.modal p{font-size:12px;color:#a4a7ae;line-height:1.9}.modal table{width:100%;font-size:12px;border-collapse:collapse}.modal td{padding:11px 0;border-bottom:1px solid #eee}.modal td:last-child{text-align:right;color:#a4a7ae}.toast{position:fixed;bottom:25px;left:50%;transform:translate(-50%,20px);background:#202024;color:var(--text-primary);font-size:12px;padding:13px 20px;border-radius:30px;z-index:50;opacity:0;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}.loader{position:fixed;inset:0;background:#1e2024;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px}.loader .mark{font-size:24px;letter-spacing:5px;font-weight:400}.loader .progress{width:150px;height:2px;background:#ddd;overflow:hidden}.loader .progress::after{content:"";display:block;background:#e9ecf0;width:50%;height:100%;animation:load 1s infinite alternate}.loader p{font-size:11px;color:#a4a7ae}@keyframes load{to{transform:translateX(100%)}}.reportMode .inspector{display:none}.present header{height:60px}.present .app{height:calc(100dvh - 60px)}.present aside,.present .inspector{display:none}.present .stageTitle h1{font-size:40px}.present .stageTitle{top:35px;left:42px}.present .stageTitle p{font-size:13px}.assemblyActions{display:none;margin-top:12px;gap:5px}.assemblyActions button{font-size:10px;padding:8px 10px;border:1px solid #ddd;border-radius:8px}.mobileSide{display:none}.plotsPanel{position:absolute;top:28px;left:32px;width:244px;max-height:calc(100% - 190px);background:#16181cf2;border:1px solid var(--line);border-radius:13px;display:none;flex-direction:column;z-index:3;backdrop-filter:blur(14px);overflow:hidden}body.plotsMode .plotsPanel{display:flex}body.plotsMode .stageTitle{display:none}.plotsHead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:13px 14px 10px;border-bottom:1px solid var(--line)}.plotsHead strong{font-size:13px;font-weight:600;display:block}.plotsHead small{display:block;font-size:10px;color:#9aa1ab;margin-top:4px}.plotsHead button{font-size:10px;border:1px solid var(--line);border-radius:7px;padding:5px 8px;color:#c8ced7;white-space:nowrap}.plotsChosen{font-size:10px;color:#d9c79a;padding:8px 14px;border-bottom:1px solid var(--line)}.plotList{overflow:auto;flex:1;padding:6px;scrollbar-width:thin;min-height:90px}.plotRow{width:100%;display:flex;justify-content:space-between;gap:10px;padding:7px 9px;border-radius:7px;font-size:11px;color:#b9bfc8;text-align:left}.plotRow:hover{background:#262a30}.plotRow.on{background:#3a3220;color:#ffd98a}.plotsFoot{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--line)}.plotsFoot button{flex:1;font-size:10px;border:1px solid var(--line);border-radius:8px;padding:8px 6px;color:#e1e5ea;background:#22262c}.plotsFoot button:hover{background:#333941}
 @media(max-width:1150px){aside{width:215px}.inspector{width:235px}.inspectContent{padding:24px 18px}header{padding:0 20px;gap:16px}.nav button{padding:9px 16px}.badge{display:none}.stageTitle{left:24px}.stageTitle h1{font-size:26px}.counter{gap:18px}.layers{right:17px}.layer{font-size:10px}.viewbar button{padding:10px}.report{padding:25px}.statsGrid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:900px){.inspector{position:absolute;right:0;top:76px;bottom:0;width:245px;box-shadow:-12px 0 40px #0001;display:none}.inspector.open{display:flex}aside{width:195px}.headerActions .pill{display:none}.brand{font-size:14px}.edition{font-size:8px}.nav button{padding:9px 12px}.stageTitle h1{font-size:24px}.counter{display:none}.planWrap{grid-template-columns:1fr}.layers{top:130px}.canvasFoot{font-size:9px}.mobileSide{display:inline-block}.stageTitle p{max-width:320px}.reportTop{align-items:flex-start}.reportTop .pill{font-size:10px;padding:8px}}
 @media(max-width:600px){header{height:68px;padding:0 12px;gap:8px}.brand{font-size:12px;letter-spacing:1px}.edition{font-size:7px}.nav{margin-left:auto}.nav button{padding:8px 10px;font-size:11px}.headerActions{display:none}.app{height:calc(100dvh - 68px)}aside{width:152px}.sideHead{padding:20px 13px 15px}.sideHead h2{font-size:17px}.sideHead .small{font-size:10px}.switchTabs{padding:0 8px 10px}.switchTabs button{font-size:10px}.unitRow{padding:10px 5px;gap:6px}.unitRow .symbol{width:21px;height:23px}.unitRow strong{font-size:10px}.unitRow small{font-size:9px}.sideFoot{padding:12px;font-size:9px}.stageTitle{top:23px;left:17px}.stageTitle h1{font-size:21px}.stageTitle p{display:none}.layers{top:100px;right:10px}.layer{font-size:9px;padding:6px 8px}.viewbar{bottom:18px;flex-wrap:wrap;justify-content:center;width:90%;border-radius:12px}.viewbar button{padding:8px;font-size:10px}.canvasFoot{display:none}.explodePanel{bottom:114px;width:90%;padding:12px}.report{padding:20px 15px}.report h1{font-size:23px}.reportTop{display:block}.reportTabs{gap:0;overflow:auto}.reportTabs button{font-size:10px;padding:10px;white-space:nowrap}.reportBody{padding:15px}.statCard{padding:15px}.statsGrid{gap:8px}.inspector{top:68px}.present .stageTitle h1{font-size:28px}.present .stageTitle{left:25px}.present .nav button{padding:8px 9px}.present .brand{font-size:11px}}
@@ -186,7 +186,7 @@ body.formResizing,body.formResizing *{cursor:inherit!important;user-select:none!
 </style>
 </head><body>
 <div class="loader" id="loader"><div class="mark">FORM / ASSEMBLY</div><div class="progress"></div><p id="loadText">正在读取真实 Rhino 几何…</p></div>
-<header><button class="round" id="libraryToggle" aria-label="收起结构单元库" title="收起 / 展开结构单元库" aria-controls="partsSidebar" aria-expanded="true">☰</button><div><div class="brand">FORM <span>/</span> ASSEMBLY</div><div class="edition">LONDON 2100 · STRUCTURE ATLAS</div></div><nav class="nav" aria-label="工作模式"><button class="active" data-mode="overview">总览</button><button data-mode="explode">拆解</button><button data-mode="assembly">装配</button><button data-mode="report">报表</button></nav><div class="headerActions"><button class="round" id="helpBtn" title="操作说明">?</button><button class="pill" id="presentBtn">演示模式 ↗</button></div></header>
+<header><button class="round" id="libraryToggle" aria-label="收起结构单元库" title="收起 / 展开结构单元库" aria-controls="partsSidebar" aria-expanded="true">☰</button><div><div class="brand">FORM <span>/</span> ASSEMBLY</div><div class="edition">LONDON 2100 · STRUCTURE ATLAS</div></div><nav class="nav" aria-label="工作模式"><button class="active" data-mode="overview">总览</button><button data-mode="explode">拆解</button><button data-mode="assembly">装配</button><button data-mode="plots">用地</button><button data-mode="report">报表</button></nav><div class="headerActions"><button class="round" id="helpBtn" title="操作说明">?</button><button class="pill" id="presentBtn">演示模式 ↗</button></div></header>
 <div class="app"><aside id="partsSidebar" aria-label="结构单元库"><div class="resizeGrip leftGrip" role="separator" tabindex="0" aria-label="调整对象库宽度" aria-orientation="vertical"></div><div class="sideHead"><div class="eyebrow">PARTS LIBRARY</div><div class="sidebarTitleRow"><h2>结构单元库</h2><button type="button" class="libraryClose" id="collapseLibrary" aria-label="收起结构单元库" title="收起左侧面板">〈 收起</button></div><div class="small" id="librarySummary">按道路分割的地块组织</div><input class="search" id="search" placeholder="搜索编号，如 P-15" aria-label="搜索单元"></div><div class="switchTabs"><button class="active" data-filter="parcel">地块</button><button data-filter="connection">连接</button><button data-filter="all">全部</button></div><div class="unitList" id="unitList"></div><div class="sideFoot"><b>2(1).3dm</b> · 原始模型<br>米制 / Rhino 来源网格 · v4.0<br><span id="sideCount"></span></div></aside>
 <main class="stage"><div id="viewport"></div><button type="button" id="restoreLibrary" class="libraryRestore" title="展开结构单元库" aria-label="展开结构单元库" aria-controls="partsSidebar">☰　展开单元库</button><div class="stageTitle"><div class="eyebrow" id="stageEyebrow">01 / THE WHOLE</div><h1 id="stageHeading">从整体，到每一部分。</h1><p id="stageDescription">一件连续结构，沿道路划分，重新认识每个单元。</p><div class="counter"><div><b id="countParcel">24</b><small>道路 / 场地组件</small></div><div><b id="countUnits">20</b><small>地块结构单元</small></div><div><b id="countConnections">30</b><small>跨路连接组</small></div></div></div>
 <div class="layers"><button class="layer" data-layer="structure"><i class="swatch" style="background:#999"></i>灰色结构</button><button class="layer" data-layer="roads"><i class="swatch" style="background:#d3b986"></i>道路</button><button class="layer" data-layer="site"><i class="swatch" style="background:#383a3d"></i>场地</button><button class="layer off" data-layer="labels"><i class="swatch" style="background:#222"></i>编号</button><button class="layer off" data-layer="mono"><i class="swatch" style="background:#bbb"></i>纯白模型</button><button class="layer off" data-layer="edges"><i class="swatch" style="background:#666"></i>曲面线框</button><button class="layer mobileSide" id="infoBtn">单元详情 ↗</button></div>
@@ -1688,7 +1688,7 @@ class SoftwareRenderer{
  setPixelRatio(r){this.ratio=Math.min(r,1.5)}
  setSize(w,h){this.w=w;this.h=h;this.domElement.width=w*this.ratio;this.domElement.height=h*this.ratio;this.domElement.style.width=w+'px';this.domElement.style.height=h+'px';this.lastSignature=''}
  render(scene,camera){if(!model||!siteMesh)return;scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);
- const signature=camera.matrixWorld.elements.map(x=>x.toFixed(3)).join(',')+camera.zoom.toFixed(4)+state.explode.toFixed(3)+reportGrowth.toFixed(4)+state.mode+reportParcel+reportFormId+state.assembled.size+state.selected+hoverId+JSON.stringify(state.layers)+state.isolated+landscapeConfig.enabled+waterConfig.enabled+roadDesignConfig.enabled+vehicleConfig.enabled+vehicleConfig.density+String(waterGroup?.visible)+String(roadDesignGroup?.visible)+String(vehicleGroup?.visible)+relatedReportParcelIds().join(',')+meshes.map(m=>m.userData.scale.toFixed(2)).join();if(signature===this.lastSignature)return;if(performance.now()-this.lastDraw<40)return;this.lastDraw=performance.now();this.lastSignature=signature;
+ const signature=camera.matrixWorld.elements.map(x=>x.toFixed(3)).join(',')+camera.zoom.toFixed(4)+state.explode.toFixed(3)+reportGrowth.toFixed(4)+state.mode+reportParcel+reportFormId+state.assembled.size+state.selected+hoverId+JSON.stringify(state.layers)+state.isolated+landscapeConfig.enabled+waterConfig.enabled+roadDesignConfig.enabled+vehicleConfig.enabled+vehicleConfig.density+String(waterGroup?.visible)+String(roadDesignGroup?.visible)+String(vehicleGroup?.visible)+relatedReportParcelIds().join(',')+[...plotSelection].join(',')+plotHover+meshes.map(m=>m.userData.scale.toFixed(2)).join();if(signature===this.lastSignature)return;if(performance.now()-this.lastDraw<40)return;this.lastDraw=performance.now();this.lastSignature=signature;
  const ctx=this.ctx,w=this.w,h=this.h;ctx.setTransform(this.ratio,0,0,this.ratio,0,0);ctx.fillStyle='#101114';ctx.fillRect(0,0,w,h);let triangles=[];const view=new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);
  const landscapeMeshes=decorationGroup?decorationGroup.children.filter(g=>g.visible).flatMap(g=>g.children.filter(m=>m.isMesh)):[];const waterMeshes=waterGroup?.visible?waterGroup.children.filter(m=>m.isMesh):[];const roadDesignMeshes=roadDesignGroup?.visible?roadDesignGroup.children.filter(m=>m.isMesh):[];const carMeshes=vehicleGroup?.visible?vehicleTierGroups.filter(g=>g.visible).flatMap(g=>g.children.filter(m=>m.isMesh)):[];const objects=[siteMesh,roadsMesh,...roadDesignMeshes,...carMeshes,...(state.mode==='report'&&reportParcel!=='all'&&!reportFormId?parcelMeshes.filter(m=>m.visible):[]),...waterMeshes,...landscapeMeshes,...meshes];for(const obj of objects){if(!obj.visible)continue;const id=obj===siteMesh?'site':obj===roadsMesh?'roads':obj.userData.parcel?'parcel-'+obj.userData.id:obj.userData.landscape?'landscape-'+obj.uuid:obj.userData.water?'water-'+obj.uuid:obj.userData.id;let cached=this.cache.get(id);if(!cached){const low=obj.userData.unit?.parent?null:lowModel?.units.find(u=>u.id===id);const g=low?bufferGeom(low.mesh):obj.geometry;cached={g,index:g.index?g.index.array:Uint32Array.from({length:g.attributes.position.count},(_,i)=>i)};this.cache.set(id,cached)}const g=cached.g,pos=g.attributes.position.array,norm=g.attributes.normal.array,index=cached.index;const mat=new THREE.Matrix4().multiplyMatrices(view,obj.matrixWorld).elements;const count=pos.length/3;const screen=new Float32Array(pos.length);for(let i=0;i<count;i++){const a=i*3,x=pos[a],y=pos[a+1],z=pos[a+2];screen[a]=(mat[0]*x+mat[4]*y+mat[8]*z+mat[12]+1)*w/2;screen[a+1]=(1-mat[1]*x-mat[5]*y-mat[9]*z-mat[13])*h/2;screen[a+2]=mat[2]*x+mat[6]*y+mat[10]*z+mat[14]}
  const rgb=obj.material.color.clone().convertLinearToSRGB();const base=[rgb.r*255,rgb.g*255,rgb.b*255];const palettes=Array.from({length:50},(_,k)=>{const shade=.57+k/49*.46;return 'rgb('+base.map(c=>Math.min(255,Math.round(c*shade))).join(',')+')'});
@@ -2574,7 +2574,8 @@ function updateContextDecorations(){
  // Planting stands on site levels, not on the parcel plate, so with the site mesh
  // hidden it floats beside the plot. Same all-site rule as the water above.
  const allView=state.mode!=='report'||(!reportFormId&&reportParcel==='all');
- for(const [id,g] of detailByParcel){g.visible=landscapeConfig.enabled&&allView&&(showAll||ids.includes(id));}
+ const plots=state.mode==='plots';
+ for(const [id,g] of detailByParcel){g.visible=landscapeConfig.enabled&&allView&&!plots&&(showAll||ids.includes(id));}
 }
 
 // ROAD VEHICLES v17 — the positions below were solved against the untouched Rhino road mesh.
@@ -3257,6 +3258,253 @@ function completeCrossings(){
    junctionBoxes:boxes.length},
   zones,boxes};
 }
+// LAND PLOTS v38 — the cells the roads and the structures cut the site into.
+// The site mesh is far too coarse to answer this face by face: its top surface
+// is a few hundred big triangles, and one of them can span a whole street, so
+// a centroid test keeps the triangle and the road vanishes. Measured: that
+// route found 32 road crossings out of 1,013 land faces and left the plots
+// shapeless. So the plan is rasterised instead, at 0.5 m: the ground above the
+// waterline is painted in, then the water, the carriageways and the plan
+// projection of every structure are painted out, and what is still connected
+// is a plot. Boundaries are traced off the raster and simplified, so the same
+// outline serves the view, the area figure and the DXF.
+const PLOT_G=.5,PLOT_MIN=60,PLOT_SIMPLIFY=.45;
+let plotGroup=null,landPlots=[],plotMeshes=[],plotSelection=new Set(),plotHover=null;
+function solveLandPlots(){
+ const site=siteDisplayOverride||model?.site,roads=model?.roads;
+ if(!site?.v?.length||!roads?.v?.length)return [];
+ const G=PLOT_G,X0=-314,Y0=-189,W=Math.ceil(628/G),H=Math.ceil(378/G);
+ const cell=new Uint8Array(W*H);
+ const sgn=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]);
+ const paint=(p,val,only)=>{
+  const i0=Math.max(0,Math.floor((Math.min(p[0][0],p[1][0],p[2][0])-X0)/G));
+  const i1=Math.min(W-1,Math.ceil((Math.max(p[0][0],p[1][0],p[2][0])-X0)/G));
+  const j0=Math.max(0,Math.floor((Math.min(p[0][1],p[1][1],p[2][1])-Y0)/G));
+  const j1=Math.min(H-1,Math.ceil((Math.max(p[0][1],p[1][1],p[2][1])-Y0)/G));
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
+   const id=j*W+i;
+   if(only!==undefined&&cell[id]!==only)continue;
+   if(cell[id]===val)continue;
+   if(pointInTriangle2D(X0+(i+.5)*G,Y0+(j+.5)*G,p[0],p[1],p[2]))cell[id]=val;
+  }
+ };
+ const water=nativeRecessedChannel(),waterline=water.waterline;
+ const sv=site.v,sf=site.t;
+ for(let k=0;k<sf.length;k+=3){
+  const p=[0,1,2].map(j=>{const i=sf[k+j]*3;return[sv[i],sv[i+1],sv[i+2]]});
+  if(Math.abs(sgn(p[0],p[1],p[2]))<=.08)continue;      // a wall holds no plan area
+  if(Math.min(p[0][2],p[1][2],p[2][2])<waterline)continue;
+  paint(p.map(q=>[q[0],q[1]]),1);
+ }
+ for(const tri of water.triangles)paint(tri,2,1);
+ {const v=roads.v,t=roads.t;
+  for(let k=0;k<t.length;k+=3)paint([0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1]]}),2,1);}
+ for(const u of model.units){
+  const v=u.mesh.v,t=u.mesh.t;
+  for(let k=0;k<t.length;k+=3){
+   const p=[0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1]]});
+   if(Math.abs(sgn(p[0],p[1],p[2]))<.02)continue;      // seen edge on, no footprint
+   paint(p,2,1);
+  }
+ }
+ // connected open ground
+ const comp=new Int32Array(W*H).fill(-1),stack=new Int32Array(W*H),found=[];
+ for(let s=0;s<W*H;s++){
+  if(cell[s]!==1||comp[s]>=0)continue;
+  const id=found.length;let n=0,sp=0,sx=0,sy=0;stack[sp++]=s;comp[s]=id;
+  while(sp){
+   const c=stack[--sp];n++;const i=c%W,j=(c-i)/W;sx+=i;sy+=j;
+   if(i>0&&cell[c-1]===1&&comp[c-1]<0){comp[c-1]=id;stack[sp++]=c-1}
+   if(i<W-1&&cell[c+1]===1&&comp[c+1]<0){comp[c+1]=id;stack[sp++]=c+1}
+   if(j>0&&cell[c-W]===1&&comp[c-W]<0){comp[c-W]=id;stack[sp++]=c-W}
+   if(j<H-1&&cell[c+W]===1&&comp[c+W]<0){comp[c+W]=id;stack[sp++]=c+W}
+  }
+  found.push({id,n,cx:X0+(sx/n+.5)*G,cy:Y0+(sy/n+.5)*G});
+ }
+ // boundary, traced off the raster as cell edges and chained into rings
+ const ringsOf=id=>{
+  const out=new Map();
+  const add=(ax,ay,bx,by)=>{const k=ax+','+ay;if(!out.has(k))out.set(k,[]);out.get(k).push([bx,by])};
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++){
+   if(comp[j*W+i]!==id)continue;
+   if(!(j>0&&comp[(j-1)*W+i]===id))add(i,j,i+1,j);
+   if(!(i<W-1&&comp[j*W+i+1]===id))add(i+1,j,i+1,j+1);
+   if(!(j<H-1&&comp[(j+1)*W+i]===id))add(i+1,j+1,i,j+1);
+   if(!(i>0&&comp[j*W+i-1]===id))add(i,j+1,i,j);
+  }
+  const rings=[];
+  while(out.size){
+   const first=out.keys().next().value;
+   const ring=[];let cur=first,guard=0;
+   while(guard++<400000){
+    const list=out.get(cur);
+    if(!list||!list.length){out.delete(cur);break}
+    const [nx,ny]=list.pop();
+    if(!list.length)out.delete(cur);
+    ring.push([nx,ny]);
+    cur=nx+','+ny;
+    if(cur===first)break;
+   }
+   if(ring.length>=4)rings.push(ring.map(([i,j])=>[X0+i*G,Y0+j*G]));
+  }
+  return rings;
+ };
+ // staircase out, then Douglas-Peucker: the same line is drawn, measured and
+ // exported, so it is simplified once here and never again.
+ const collinear=r=>{
+  const o=[];
+  for(let i=0;i<r.length;i++){
+   const a=r[(i-1+r.length)%r.length],b=r[i],c=r[(i+1)%r.length];
+   if(Math.abs((b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]))>1e-9)o.push(b);
+  }
+  return o.length>=3?o:r;
+ };
+ const rdp=(pts,eps)=>{
+  if(pts.length<3)return pts;
+  const d=(p,a,b)=>{
+   const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy);
+   if(L<1e-9)return Math.hypot(p[0]-a[0],p[1]-a[1]);
+   return Math.abs((p[0]-a[0])*dy-(p[1]-a[1])*dx)/L;
+  };
+  const keep=new Uint8Array(pts.length);keep[0]=keep[pts.length-1]=1;
+  const work=[[0,pts.length-1]];
+  while(work.length){
+   const [a,b]=work.pop();if(b-a<2)continue;
+   let best=-1,bi=-1;
+   for(let i=a+1;i<b;i++){const dd=d(pts[i],pts[a],pts[b]);if(dd>best){best=dd;bi=i}}
+   if(best>eps){keep[bi]=1;work.push([a,bi],[bi,b])}
+  }
+  return pts.filter((_,i)=>keep[i]);
+ };
+ const shoelace=r=>{let s=0;for(let i=0;i<r.length;i++){const a=r[i],b=r[(i+1)%r.length];s+=a[0]*b[1]-b[0]*a[1]}return s/2};
+ const plots=[];
+ for(const f of found){
+  const area=f.n*G*G;
+  if(area<PLOT_MIN)continue;
+  let rings=ringsOf(f.id).map(r=>rdp(collinear(r),PLOT_SIMPLIFY)).filter(r=>r.length>=3);
+  if(!rings.length)continue;
+  rings.sort((a,b)=>Math.abs(shoelace(b))-Math.abs(shoelace(a)));
+  const outer=rings[0],holes=rings.slice(1).filter(r=>Math.abs(shoelace(r))>4);
+  plots.push({id:'L-'+String(plots.length+1).padStart(2,'0'),area,
+   center:[f.cx,f.cy],outer,holes,
+   perimeter:outer.reduce((s,q,i)=>s+Math.hypot(q[0]-outer[(i+1)%outer.length][0],q[1]-outer[(i+1)%outer.length][1]),0)});
+ }
+ plots.sort((a,b)=>b.area-a.area);
+ plots.forEach((p,i)=>{p.id='L-'+String(i+1).padStart(2,'0')});
+ return plots;
+}
+function buildLandPlots(){
+ plotGroup=new THREE.Group();plotGroup.name='用地划分 · 道路与结构切分';plotGroup.visible=false;
+ scene.add(plotGroup);
+ landPlots=solveLandPlots();plotMeshes=[];
+ for(const p of landPlots){
+  const sh=new THREE.Shape(p.outer.map(([x,y])=>new THREE.Vector2(x,y)));
+  for(const h of p.holes)sh.holes.push(new THREE.Path(h.map(([x,y])=>new THREE.Vector2(x,y))));
+  const mesh=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshStandardMaterial({
+   color:'#c3a05c',roughness:.95,metalness:0,side:THREE.DoubleSide,
+   transparent:true,opacity:.58,depthWrite:false,
+   polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}));
+  mesh.rotation.x=-Math.PI/2;mesh.position.y=.34;mesh.userData={plot:p};
+  const pts=p.outer.map(([x,y])=>new THREE.Vector3(x,.37,-y));pts.push(pts[0].clone());
+  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+   new THREE.LineBasicMaterial({color:0xf6ead0,transparent:true,opacity:.8,depthWrite:false}));
+  mesh.userData.line=line;
+  plotGroup.add(mesh);plotGroup.add(line);plotMeshes.push(mesh);
+ }
+ console.info('Land plots cut by the roads and the structures',{plots:landPlots.length,
+  areaM2:Math.round(landPlots.reduce((s,p)=>s+p.area,0)),grid:PLOT_G,minArea:PLOT_MIN});
+ return landPlots.length;
+}
+function updateLandPlots(){
+ if(!plotGroup)return;
+ plotGroup.visible=state.mode==='plots';
+ for(const m of plotMeshes){
+  const on=plotSelection.has(m.userData.plot.id),hot=plotHover===m.userData.plot.id;
+  m.material.color.set(on?'#ffd98a':hot?'#e0bd78':'#c3a05c');
+  m.material.opacity=on?.9:hot?.74:.58;
+  m.userData.line.material.opacity=on?1:.8;
+ }
+}
+function plotAt(e){
+ if(!plotMeshes.length)return null;
+ const rect=renderer.domElement.getBoundingClientRect();
+ mouse.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);
+ raycaster.setFromCamera(mouse,camera);
+ const hit=raycaster.intersectObjects(plotMeshes,false);
+ return hit.length?hit[0].object.userData.plot.id:null;
+}
+function togglePlot(id,additive){
+ if(!additive)  {const only=plotSelection.size===1&&plotSelection.has(id);plotSelection.clear();if(!only)plotSelection.add(id)}
+ else if(plotSelection.has(id))plotSelection.delete(id);
+ else plotSelection.add(id);
+ renderPlotPanel();updateLandPlots();
+ if(renderer?.isSoftware)renderer.lastSignature='';
+}
+function renderPlotPanel(){
+ const body=document.querySelector('#plotList');if(!body)return;
+ const sel=[...plotSelection];
+ const chosen=sel.length?landPlots.filter(p=>plotSelection.has(p.id)):landPlots;
+ document.querySelector('#plotSummary').textContent=
+  `${landPlots.length} 块 · ${fmt(Math.round(landPlots.reduce((s,p)=>s+p.area,0)))} m²`;
+ document.querySelector('#plotChosen').textContent=sel.length
+  ?`已选 ${sel.length} 块 · ${fmt(Math.round(chosen.reduce((s,p)=>s+p.area,0)))} m²`
+  :'未选择 · 导出全部';
+ body.innerHTML=landPlots.map(p=>
+  `<button type="button" class="plotRow${plotSelection.has(p.id)?' on':''}" data-plot="${p.id}">
+    <span>${p.id}</span><span>${fmt(Math.round(p.area))} m²</span></button>`).join('');
+ body.querySelectorAll('[data-plot]').forEach(b=>{
+  b.onclick=ev=>togglePlot(b.dataset.plot,ev.shiftKey||ev.metaKey||ev.ctrlKey);
+  b.onpointerenter=()=>{plotHover=b.dataset.plot;updateLandPlots()};
+  b.onpointerleave=()=>{plotHover=null;updateLandPlots()};
+ });
+}
+function plotsForExport(){
+ return plotSelection.size?landPlots.filter(p=>plotSelection.has(p.id)):landPlots;
+}
+// Rhino world coordinates, so a plot comes back into the source file where it
+// was cut from: world = local + meta.origin, the same shift the importer used.
+function exportPlotsDXF(){
+ const list=plotsForExport();if(!list.length)return;
+ const o=model.meta?.origin||[0,0,0];
+ const out=['0','SECTION','2','HEADER','9','$ACADVER','1','AC1015','0','ENDSEC',
+            '0','SECTION','2','ENTITIES'];
+ for(const p of list){
+  for(const ring of [p.outer,...p.holes]){
+   out.push('0','LWPOLYLINE','8','用地_'+p.id,'100','AcDbEntity','100','AcDbPolyline',
+            '90',String(ring.length),'70','1');
+   for(const [x,y] of ring)out.push('10',(x+o[0]).toFixed(3),'20',(y+o[1]).toFixed(3));
+  }
+ }
+ out.push('0','ENDSEC','0','EOF');
+ download(new Blob([out.join('\r\n')],{type:'application/dxf'}),'LONDON2100_用地.dxf');
+ toast(`已导出 ${list.length} 块用地 · Rhino 世界坐标`);
+}
+function exportPlotsCSV(){
+ const list=plotsForExport();if(!list.length)return;
+ const o=model.meta?.origin||[0,0,0];
+ const esc=x=>'"'+String(x).replace(/"/g,'""')+'"';
+ const rows=[['编号','面积 m²','周长 m','中心 X (Rhino)','中心 Y (Rhino)','外轮廓点数','内孔数']]
+  .concat(list.map(p=>[p.id,p.area.toFixed(1),p.perimeter.toFixed(1),
+   (p.center[0]+o[0]).toFixed(2),(p.center[1]+o[1]).toFixed(2),p.outer.length,p.holes.length]));
+ download(new Blob(['﻿'+rows.map(r=>r.map(esc).join(',')).join('\r\n')],
+  {type:'text/csv;charset=utf-8'}),'LONDON2100_用地.csv');
+ toast(`已导出 ${list.length} 块用地的面积表`);
+}
+function initPlotsUI(){
+ const stage=document.querySelector('.stage');if(!stage||document.querySelector('#plotsPanel'))return;
+ const el=document.createElement('div');el.id='plotsPanel';el.className='plotsPanel';
+ el.innerHTML=`<div class="plotsHead"><div><strong>用地划分</strong><small id="plotSummary">—</small></div>
+   <button type="button" id="plotClear">清除选择</button></div>
+  <div class="plotsChosen" id="plotChosen">未选择 · 导出全部</div>
+  <div class="plotList" id="plotList"></div>
+  <div class="plotsFoot"><button type="button" id="plotDxf">导出 DXF ↓</button>
+   <button type="button" id="plotCsv">导出 CSV ↓</button></div>`;
+ stage.appendChild(el);
+ el.querySelector('#plotClear').onclick=()=>{plotSelection.clear();renderPlotPanel();updateLandPlots()};
+ el.querySelector('#plotDxf').onclick=exportPlotsDXF;
+ el.querySelector('#plotCsv').onclick=exportPlotsCSV;
+ renderPlotPanel();
+}
 // ROAD FURNITURE v34 — signals and street lighting, both positioned from the
 // source rather than scattered. Signals go where the drawing already puts a
 // crossing: a zebra's rungs span the carriageway, so the ENDS of a rung
@@ -3646,7 +3894,7 @@ function buildRoadVehicles(){
 function updateRoadVehicleVisibility(){
  if(!vehicleGroup)return;
  const allView=state.mode!=='report'||(!reportFormId&&reportParcel==='all');
- vehicleGroup.visible=vehicleConfig.enabled&&state.layers.roads&&!state.isolated&&allView;
+ vehicleGroup.visible=vehicleConfig.enabled&&state.layers.roads&&!state.isolated&&allView&&state.mode!=='plots';
  vehicleTierGroups.forEach((g,i)=>{g.visible=i<vehicleConfig.density});
 }
 function initRoadVehicleUI(){
@@ -3795,7 +4043,7 @@ function buildScene(){
   waterGroup=new THREE.Group();waterGroup.name='Latest water pending validation';
   scene.add(decorationGroup);scene.add(waterGroup);
  }else{buildContextDecorations();buildWaterLayer();}
- new ResizeObserver(resize).observe(wrap);renderer.domElement.addEventListener('pointerdown',e=>lastPointer={x:e.clientX,y:e.clientY});renderer.domElement.addEventListener('pointerup',e=>{if(lastPointer&&Math.hypot(e.clientX-lastPointer.x,e.clientY-lastPointer.y)<5){const hit=pick(e);if(hit)select(hit);else if(!state.isolated)select(null)}});renderer.domElement.addEventListener('pointermove',pointerMove);renderer.domElement.addEventListener('pointerleave',()=>{$('#tooltip').style.display='none';hoverId=null;applyColors()});renderer.domElement.addEventListener('dblclick',e=>{if(state.mode==='report')return;const id=pick(e);if(id){select(id);isolate()}});controls.addEventListener('start',()=>transition=null);fitWhole(false);animate(0);
+ new ResizeObserver(resize).observe(wrap);renderer.domElement.addEventListener('pointerdown',e=>lastPointer={x:e.clientX,y:e.clientY});renderer.domElement.addEventListener('pointerup',e=>{if(lastPointer&&Math.hypot(e.clientX-lastPointer.x,e.clientY-lastPointer.y)<5){if(state.mode==='plots'){const lp=plotAt(e);if(lp)togglePlot(lp,e.shiftKey||e.metaKey||e.ctrlKey);else{plotSelection.clear();renderPlotPanel();updateLandPlots()}return}const hit=pick(e);if(hit)select(hit);else if(!state.isolated)select(null)}});renderer.domElement.addEventListener('pointermove',e=>{if(state.mode==='plots'){const id=plotAt(e);if(id!==plotHover){plotHover=id;updateLandPlots()}return}pointerMove(e)});renderer.domElement.addEventListener('pointerleave',()=>{$('#tooltip').style.display='none';hoverId=null;applyColors()});renderer.domElement.addEventListener('dblclick',e=>{if(state.mode==='report')return;const id=pick(e);if(id){select(id);isolate()}});controls.addEventListener('start',()=>transition=null);fitWhole(false);animate(0);
 }
 function resize(){if(!renderer)return;const el=$('#viewport'),w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;const half=420;camera.left=-half*w/h;camera.right=half*w/h;camera.top=half;camera.bottom=-half;camera.updateProjectionMatrix();renderer.setSize(w,h)}
 function pick(e){const rect=renderer.domElement.getBoundingClientRect();mouse.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);const visible=meshes.filter(m=>m.visible&&state.layers.structure);const hits=raycaster.intersectObjects(visible,false);if(hits.length)return hits[0].object.userData.id;if(state.layers.site&&!state.isolated){const p=raycaster.intersectObjects(parcelMeshes,false);if(p.length)return p[0].object.userData.id}return null}
@@ -3819,7 +4067,7 @@ function animate(time){requestAnimationFrame(animate);if(!renderer)return;const 
  if(state.playing&&['assembly','report'].includes(state.mode)){playAccum+=dt;if(playAccum>0.33){playAccum=0;const next=assemblyOrder.find(u=>!state.assembled.has(u.id));if(next){state.assembled.add(next.id);updateAssemblyUI();renderInspector()}else{state.playing=false;$('#playAssembly').textContent='▶ 自动装配';syncReportControls();toast('完整结构已回装')}}}
  if(state.mode==='report'&&reportFormId){siteMesh.visible=false;roadsMesh.visible=false;ground.visible=false;parcelGroup.visible=false;for(const pm of parcelMeshes){pm.visible=false;pm.userData.line.visible=false}}else if(state.mode==='report'&&reportParcel!=='all'){siteMesh.visible=false;roadsMesh.visible=false;ground.visible=false;parcelGroup.visible=true;for(const pm of parcelMeshes){pm.visible=pm.userData.id===reportParcel;pm.material.opacity=1;pm.material.color.set('#383a3d');pm.userData.line.visible=pm.visible}}else{for(const pm of parcelMeshes){pm.visible=true;pm.material.color.set('#ffffff');pm.material.opacity=pm.userData.id===state.selected?.18:0}}
  if(state.mode==='report'&&reportGrowing){applyReportGrowth(Math.min(1,reportGrowth+dt/8));if(reportGrowth>=1){reportGrowing=false;syncReportControls()}}
- updateContextDecorations();updateWaterVisibility();updateRoadVehicleVisibility();updateRoadDesignVisibility();
+ updateContextDecorations();updateWaterVisibility();updateRoadVehicleVisibility();updateRoadDesignVisibility();updateLandPlots();
  controls.update();updateWaterAnimation(time);renderer.render(scene,camera);updateLabels();
 }
 function updateLabels(){const w=$('#viewport').clientWidth,h=$('#viewport').clientHeight;for(const l of labelItems){l.element.style.display=state.layers.labels&&!state.isolated?'block':'none';if(!state.layers.labels)continue;const u=unitById.get(l.parcel.id),m=meshById.get(l.parcel.id);const v=u?new THREE.Vector3(u.center[0],u.center[2]+8,-u.center[1]).add(m.position):new THREE.Vector3(l.parcel.center[0],3,-l.parcel.center[1]);v.project(camera);l.element.style.left=((v.x+1)*w/2)+'px';l.element.style.top=((-v.y+1)*h/2)+'px';if(v.z>1||Math.abs(v.x)>1||Math.abs(v.y)>1)l.element.style.display='none'}}
@@ -3850,8 +4098,15 @@ function renderInspector(){const u=unitById.get(state.selected),p=parcelById.get
  $('#inspectContent').innerHTML=html;$('#startExplode')?.addEventListener('click',()=>setMode('explode'));$('#isolateBtn')?.addEventListener('click',isolate);$('#focusBtn')?.addEventListener('click',focusSelected);$('#assembleUnit')?.addEventListener('click',()=>{if(state.mode!=='assembly')setMode('assembly',true);state.assembled.has(u.id)?state.assembled.delete(u.id):state.assembled.add(u.id);state.playing=false;$('#playAssembly').textContent='▶ 自动装配';updateAssemblyUI();renderInspector()});$('#exportObj')?.addEventListener('click',exportOBJ);$$('[data-related]').forEach(b=>b.onclick=()=>select(b.dataset.related));}
 function select(id){state.selected=id;if(state.isolated&&!unitById.has(id))state.isolated=false;renderList();renderInspector();$('#inspectContent').scrollTop=0;applyColors();if(state.isolated)focusSelected();$('#statusBadge').textContent=state.isolated?'单元独看 · '+id:id?'已选中 · '+id:'原始几何 · 全部显示';$('#inspector').classList.toggle('open',!!id)}
 function isolate(){if(!unitById.has(state.selected))return;state.isolated=!state.isolated;state.playing=false;if(state.isolated){focusSelected();if(state.mode==='assembly')state.assembled.add(state.selected)}else fitWhole();renderInspector();$('#statusBadge').textContent=state.isolated?'单元独看 · '+state.selected:'原始几何 · 全部显示'}
-const titles={overview:['01 / THE WHOLE','从整体，到每一部分。','一件连续结构，沿道路划分，重新认识每个单元。'],explode:['02 / THE PARTS','拆开，理解它的关系。','地块单元与跨路连接，组成一件完整的结构。'],assembly:['03 / THE ASSEMBLY','一块一块，回到整体。','逐步回装原始单元，探索未来继续装配的组织方式。']};
-function setMode(mode,keepAssembly=false){reportGrowing=false;state.mode=mode;document.querySelector(mode==='report'?'#reportViewport':'.stage').prepend($('#viewport'));document.body.classList.toggle('reportMode',mode==='report');state.isolated=false;state.playing=false;$('#playAssembly').textContent='▶ 自动装配';$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));$('#report').style.display=mode==='report'?'block':'none';$('#explodePanel').style.display=['explode','assembly'].includes(mode)?'block':'none';$('#assemblyActions').style.display=mode==='assembly'?'flex':'none';state.targetExplode=mode==='explode'?.45:0;if(titles[mode]){$('#stageEyebrow').textContent=titles[mode][0];$('#stageHeading').textContent=titles[mode][1];$('#stageDescription').textContent=titles[mode][2]}
+const titles={plots:['04 / THE LAND','道路与结构切分出的用地。','顶视图中由道路、水域与结构围合出的每一块地，可单独选择并导出。'],overview:['01 / THE WHOLE','从整体，到每一部分。','一件连续结构，沿道路划分，重新认识每个单元。'],explode:['02 / THE PARTS','拆开，理解它的关系。','地块单元与跨路连接，组成一件完整的结构。'],assembly:['03 / THE ASSEMBLY','一块一块，回到整体。','逐步回装原始单元，探索未来继续装配的组织方式。']};
+function setMode(mode,keepAssembly=false){reportGrowing=false;state.mode=mode;document.querySelector(mode==='report'?'#reportViewport':'.stage').prepend($('#viewport'));document.body.classList.toggle('reportMode',mode==='report');document.body.classList.toggle('plotsMode',mode==='plots');plotHover=null;state.isolated=false;state.playing=false;$('#playAssembly').textContent='▶ 自动装配';$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));$('#report').style.display=mode==='report'?'block':'none';$('#explodePanel').style.display=['explode','assembly'].includes(mode)?'block':'none';$('#assemblyActions').style.display=mode==='assembly'?'flex':'none';state.targetExplode=mode==='explode'?.45:0;if(titles[mode]){$('#stageEyebrow').textContent=titles[mode][0];$('#stageHeading').textContent=titles[mode][1];$('#stageDescription').textContent=titles[mode][2]}
+ if(mode==='plots'){// The cut is read in plan, so the view starts in plan; planting and traffic
+  // would sit on top of the plots and are stood down while the mode is open.
+  state.explode=0;state.targetExplode=0;transition=null;controls.autoRotate=false;
+  state.view='top';$$('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view==='top'));
+  if(!landPlots.length)buildLandPlots();
+  renderPlotPanel();fitWhole();$('#statusBadge').textContent=`用地划分 · ${landPlots.length} 块`;
+ }
  if(mode==='explode'){$('#sliderLabel').textContent='拆解距离';$('#mainSlider').value=45;$('#sliderValue').textContent='45%'}if(mode==='assembly'){$('#sliderLabel').textContent='装配进度';updateAssemblyUI()}if(mode==='report'){state.explode=0;state.targetExplode=0;transition=null;controls.autoRotate=false;renderReport();resize();fitReport();}else {$('#statusBadge').textContent=mode==='assembly'?`装配进度 · ${state.assembled.size} / ${model.units.length}`:'原始几何 · 全部显示';resize();fitWhole();}renderInspector();}
 function updateAssemblyUI(){syncReportControls();$('#mainSlider').value=state.assembled.size/model.units.length*100;$('#sliderValue').textContent=`${state.assembled.size} / ${model.units.length} 组`;$('#statusBadge').textContent=`装配进度 · ${state.assembled.size} / ${model.units.length}`;}
 function applyAssemblyCount(n){state.assembled=new Set(assemblyOrder.slice(0,n).map(u=>u.id));updateAssemblyUI();renderInspector();}
@@ -3924,7 +4179,7 @@ async function init(){try{
  }
  if(siteDisplayOverride&&rebuildParcelsFromRoads())WATER_PARCELS=new Set();
  for(const u of model.units)unitById.set(u.id,u);for(const p of model.parcels)parcelById.set(p.id,p);parcelUnits=model.units.filter(u=>u.kind==='parcel');connectionUnits=model.units.filter(u=>u.kind==='connection');edgeUnits=model.units.filter(u=>u.kind==='edge');assemblyOrder=[...parcelUnits,...connectionUnits,...edgeUnits];maxHeight=Math.max(0,...model.units.map(u=>u.maxZ));state.assembled=new Set(model.units.map(u=>u.id));try{const saved=JSON.parse(localStorage.getItem('formAssemblyV2'));if(Array.isArray(saved))state.assembled=new Set(saved.filter(id=>unitById.has(id)))}catch(e){}
- $('#countParcel').textContent=model.parcels.length;$('#countUnits').textContent=parcelUnits.length;$('#countConnections').textContent=connectionUnits.length;$('#librarySummary').textContent=`${model.parcels.length} 个地块 · ${model.units.length} 个结构分组`;buildScene(); initLandscapeUI();initWaterUI();initRoadDesignUI();initRoadVehicleUI();renderList();renderInspector();applyColors();
+ $('#countParcel').textContent=model.parcels.length;$('#countUnits').textContent=parcelUnits.length;$('#countConnections').textContent=connectionUnits.length;$('#librarySummary').textContent=`${model.parcels.length} 个地块 · ${model.units.length} 个结构分组`;buildScene(); initLandscapeUI();initWaterUI();initRoadDesignUI();initRoadVehicleUI();initPlotsUI();renderList();renderInspector();applyColors();
  $$('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$$('[data-filter]').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;$$('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));renderList()});$('#search').oninput=renderList;
  $$('[data-layer]').forEach(b=>b.onclick=()=>{const key=b.dataset.layer;state.layers[key]=!state.layers[key];b.classList.toggle('off',!state.layers[key]);applyColors()});$$('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;$$('[data-view]').forEach(x=>x.classList.toggle('active',x===b));state.isolated?focusSelected():fitWhole()});$$('[data-report]').forEach(b=>b.onclick=()=>{state.report=b.dataset.report;renderReport()});
  $('#mainSlider').oninput=e=>{if(state.mode==='explode'){state.targetExplode=e.target.value/100;$('#sliderValue').textContent=e.target.value+'%';fitWhole()}else{state.playing=false;$('#playAssembly').textContent='▶ 自动装配';applyAssemblyCount(Math.round(e.target.value/100*model.units.length))}};
