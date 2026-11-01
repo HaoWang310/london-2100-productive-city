@@ -141,6 +141,8 @@ const must=[
  ['Math.min(14,3+spd*1.4)',    'the cap that stops a gale reading as rain'],
  ['edgePoint=',                'upwind release of the particles'],
  ['LAWSON[w.cat].k',           'the Lawson grade in the CSV'],
+ ['out.lo=vs[0]||0',           'the comfort range the plan shades against'],
+ ["shadowPlane.material.opacity=climate.analysis==='none'?1:.5", 'the shadow stepping back for an analysis layer'],
 ];
 for(const [needle,why] of must)
  assert.ok(html.includes(needle),'index.html has lost '+why+' ('+needle+')');

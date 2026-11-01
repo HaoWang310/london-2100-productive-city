@@ -4208,6 +4208,8 @@ function solveWindComfort(monthIdx){
   let cat=0;while(cat<LAWSON.length-1&&v5>LAWSON[cat].v)cat++;
   out.set(lot.id,{v5,cat,exposure:fac.reduce((a,b)=>a+b,0)/16});
  }
+ const vs=[...out.values()].map(x=>x.v5).sort((a,b)=>a-b);
+ out.lo=vs[0]||0;out.hi=vs[vs.length-1]||1;
  return out;
 }
 // --- the scene ---------------------------------------------------------
@@ -4404,7 +4406,14 @@ function updateClimateOverlay(){
   const id=m.userData.lot.id;
   if(climate.analysis==='wind'){
    const w=windShelter&&windShelter.get(id);
-   m.material.color.set(w?LAWSON[w.cat].c:'#2a2e34');
+   if(!w){m.material.color.set('#2a2e34');continue}
+   // Hue carries the Lawson grade, which is the planning answer. Lightness
+   // carries the speed itself, because this site comes out in only two
+   // grades and a two-colour plan throws away a real 2.0-to-5.0 m/s spread.
+   const c=new THREE.Color(LAWSON[w.cat].c);
+   const k=(w.v5-windShelter.lo)/Math.max(.5,windShelter.hi-windShelter.lo);
+   c.multiplyScalar(.5+.8*Math.min(1,Math.max(0,k)));
+   m.material.color.copy(c);
    continue;
   }
   // The ramp is stretched over the data's own p02-p98, not over zero-to-max.
@@ -4641,6 +4650,9 @@ function updateShadowMask(force){
  shadowKey=key;
  if(s.altitude<=1.5||A<5){shadowPlane.visible=false;return}
  shadowPlane.visible=true;
+ // An analysis layer is the year; the cast shadow is this hour. Both are
+ // worth seeing together, but at full strength the hour buries the year.
+ shadowPlane.material.opacity=climate.analysis==='none'?1:.5;
  const rad=Math.PI/180,sx=Math.sin(s.azimuth*rad),sy=Math.cos(s.azimuth*rad),
   ta=Math.tan(s.altitude*rad);
  // Both halves are painted, not just the dark one: the plan underneath runs
