@@ -3704,14 +3704,28 @@ function planLandUse(){
    // 10 m floor overbuilt every small plot and the site came out at 2.43
    // against a target of 1.80.
    const order=[...bucket.entries()].sort((a,c)=>a[0]-c[0]);
-   const bandArea=order.reduce((s2,[,e])=>s2+e.n*G*G,0);
-   const keepRatio=bandArea>0?Math.min(1,footprintTarget/bandArea):1;
+   // Only buckets that are a building in their own right can be kept; the
+   // rest go back to the green. Choosing the ratio against the ELIGIBLE area
+   // rather than the whole band is what makes the result track the target:
+   // measured against the whole band, the undersized ends were dropped twice
+   // over and the site stalled at 1.43 whatever the ratio asked for.
+   const able=order.filter(([,e])=>e.n*G*G>=landUse.minParcel);
+   const ableArea=able.reduce((s2,[,e])=>s2+e.n*G*G,0);
+   const keepRatio=ableArea>0?Math.min(1,footprintTarget/ableArea):1;
    const keep=new Set();
-   if(keepRatio>=.95)order.forEach(([b])=>keep.add(b));
-   else order.forEach(([b],k2)=>{
+   if(keepRatio>=.95)able.forEach(([b])=>keep.add(b));
+   else able.forEach(([b],k2)=>{
     if(Math.floor((k2+1)*keepRatio)>Math.floor(k2*keepRatio))keep.add(b);
    });
-   if(!keep.size&&order.length)keep.add(order[0][0]);
+   if(!keep.size&&able.length)keep.add(able[0][0]);
+   // Rounding one parcel at a time leaves the plot short; top up with the
+   // largest parcels still free until it is within 5% of what was asked.
+   let kept=able.filter(([b])=>keep.has(b)).reduce((s2,[,e])=>s2+e.n*G*G,0);
+   const spare=able.filter(([b])=>!keep.has(b)).sort((a,c)=>c[1].n-a[1].n);
+   for(const [b,e] of spare){
+    if(kept>=footprintTarget*.95)break;
+    keep.add(b);kept+=e.n*G*G;
+   }
    for(const [b,e] of order){
     const a2=e.n*G*G;
     // A kept sliver below the minimum parcel is not a building either, and it
