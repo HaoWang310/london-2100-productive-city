@@ -121,7 +121,11 @@ assert(html.includes('&&clearsCarriageway(x,y,r*.8)&&freeFromStructure(x,y,r)}')
 assert(html.includes('const tint=Math.floor(rand()*3),spin=rand()*6.28'), 'Per-tree crown variation is missing');
 // Clipping rebuilds vertices, so unpaired edges are no longer proof of a shore;
 // an edge is drawn only where exactly one side of it is wet.
-assert(html.includes('if(isWet(mx+nx,my+ny)===isWet(mx-nx,my-ny))continue;'), 'Shoreline must reject interior seams');
+// The midpoint test alone passed a 30 m chord across a bay, because its
+// middle really is dry outside and wet inside. Every edge is now walked.
+assert(html.includes('const ok=isWet(mx+nx,my+ny)!==isWet(mx-nx,my-ny);'), 'Shoreline must reject interior seams');
+assert(html.includes('const SHORE_STEP=2;'), 'Shoreline edges must be tested in pieces, not at one midpoint');
+assert(html.includes('const n=Math.max(1,Math.round(len/SHORE_STEP));'), 'Long shoreline edges must be subdivided before testing');
 // ROAD LINES v31 — the source carries its own division lines on the Default layer.
 assert(importer.includes('if(name===\"default\"&&geom&&typeof geom.pointAt===\"function\"&&geom.domain){'), 'Default-layer curves are not sampled');
 assert(importer.includes('roadLineSegments:lines.v.length/6,'), 'Road line count is not reported');
