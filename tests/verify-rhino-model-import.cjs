@@ -297,6 +297,16 @@ assert(html.includes("m.material.color.set(on?'#0a84ff':hot?'#1d2026':'#07080a')
 // Clamped against .05 and .9 the typed 45 became 0.9, then /100 gave a 0.9%
 // cap that bound before every other setting and froze the whole plan.
 assert(html.includes("landUse.coverage=num('#luCoverage',5,90,landUse.coverage*100)/100;"), 'Coverage must be clamped in percent');
+// SMOOTHING v41 — a traced ring is a staircase of 0.5 m steps, and a 0.45 m
+// tolerance could not clear it because a step deviates less than that from the
+// line it draws. Simplify above the grid, then round only the gentle turns.
+assert(html.includes('function smoothRing(r){'), 'Ring smoothing is missing');
+assert(html.includes('const PLOT_G=.5,PLOT_MIN=60,PLOT_SIMPLIFY=1,PLOT_CORNER=.52,PLOT_ROUNDS=2;'), 'The tolerance must sit above what the grid can produce');
+assert(html.includes('if(turn>=PLOT_CORNER||la<.8||lc<.8){out.push(b);continue}'), 'A real corner must survive the rounding');
+assert(html.includes('rings=traceRings(inside,box,R).map(smoothRing)'), 'Every traced ring must be smoothed');
+// One shape, one area: the table, the ratio and the DXF must agree.
+assert(html.includes('area:sh.area,outer:sh.outer,holes:sh.holes});'), 'Parcel areas must come off the drawn polygon');
+assert(html.includes('plots.push({raster:f.id,area:shape.area,'), 'Plot areas must come off the drawn polygon');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

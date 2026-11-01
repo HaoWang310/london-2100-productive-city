@@ -3420,7 +3420,7 @@ function completeCrossings(){
 // stops the green ending up as the offcuts: what is left is the net
 // developable ground, the footprint the floor area ratio asks for is laid
 // against the street frontage, and the remainder stays whole at the back.
-const PLOT_G=.5,PLOT_MIN=60,PLOT_SIMPLIFY=.45;
+const PLOT_G=.5,PLOT_MIN=60,PLOT_SIMPLIFY=1,PLOT_CORNER=.52,PLOT_ROUNDS=2;
 const landUse={far:1.8,storeys:6,coverage:.45,waterBuffer:10,streetBand:4,
  structClear:3,parcelWidth:18,minDepth:10,maxDepth:30,minParcel:120};
 let plotGroup=null,landPlots=[],plotMeshes=[],plotSelection=new Set(),plotHover=null;
@@ -3479,11 +3479,46 @@ function simplifyRing(pts,eps){
  return pts.filter((_,i)=>keep[i]);
 }
 function shoelace(r){let s=0;for(let i=0;i<r.length;i++){const a=r[i],b=r[(i+1)%r.length];s+=a[0]*b[1]-b[0]*a[1]}return s/2}
+// A traced ring is a staircase: it runs along cell edges, so a straight run is
+// a flight of 0.5 m steps and a curve is a flight of them turning. Simplifying
+// at 0.45 m could not clear that, because a step's own deviation from the line
+// it approximates is under 0.35 m — inside the tolerance, so the sawtooth
+// survived every pass. Two stages fix it. Simplify at 1 m first, which is
+// above anything a half-metre grid can produce, so a stepped straight run and
+// a flood-fill depth contour both collapse to the line they were drawing. Then
+// round what is left by corner-cutting, but ONLY where the ring turns gently:
+// a parcel boundary meeting the street turns hard and is kept exactly, while
+// the edge that follows a kerb turns a few degrees at a time and comes out as
+// a curve. Chaikin converges inside its control polygon, so this never bulges
+// a parcel outward over a road.
+function smoothRing(r){
+ let p=simplifyRing(dropCollinear(r),PLOT_SIMPLIFY);
+ if(p.length<4)return p;
+ for(let pass=0;pass<PLOT_ROUNDS;pass++){
+  const out=[];
+  for(let i=0;i<p.length;i++){
+   const a=p[(i-1+p.length)%p.length],b=p[i],c=p[(i+1)%p.length];
+   const ax=b[0]-a[0],ay=b[1]-a[1],cx=c[0]-b[0],cy=c[1]-b[1];
+   const la=Math.hypot(ax,ay),lc=Math.hypot(cx,cy);
+   if(la<1e-9||lc<1e-9)continue;
+   const turn=Math.abs(Math.atan2(ax*cy-ay*cx,ax*cx+ay*cy));
+   if(turn>=PLOT_CORNER||la<.8||lc<.8){out.push(b);continue}
+   out.push([b[0]-ax*.25,b[1]-ay*.25],[b[0]+cx*.25,b[1]+cy*.25]);
+  }
+  if(out.length>=4)p=out;else break;
+ }
+ return simplifyRing(p,.12);
+}
 function regionShape(inside,box,R,minRing){
- let rings=traceRings(inside,box,R).map(r=>simplifyRing(dropCollinear(r),PLOT_SIMPLIFY)).filter(r=>r.length>=3);
+ let rings=traceRings(inside,box,R).map(smoothRing).filter(r=>r.length>=3);
  if(!rings.length)return null;
  rings.sort((a,b)=>Math.abs(shoelace(b))-Math.abs(shoelace(a)));
- return {outer:rings[0],holes:rings.slice(1).filter(r=>Math.abs(shoelace(r))>(minRing||4))};
+ const holes=rings.slice(1).filter(r=>Math.abs(shoelace(r))>(minRing||4));
+ // The drawn outline is the one that gets exported and the one the areas are
+ // quoted from, so the figure comes off the polygon, not off the cell count
+ // that produced it — otherwise the table and the DXF disagree.
+ const area=Math.abs(shoelace(rings[0]))-holes.reduce((s2,h)=>s2+Math.abs(shoelace(h)),0);
+ return {outer:rings[0],holes,area:Math.max(0,area)};
 }
 // --- 1. the plots -----------------------------------------------------------
 // klass: 0 off site, 1 open ground, 3 water, 4 carriageway, 5 structure
@@ -3581,7 +3616,9 @@ function solveLandPlots(){
   const zones=roadCrossingOverride?.zones||[];
   let toCrossing=null;
   for(const z of zones){const d=Math.hypot(z.cx-f.cx,z.cy-f.cy);if(toCrossing===null||d<toCrossing)toCrossing=d}
-  plots.push({raster:f.id,area,center:[f.cx,f.cy],box:f.box,
+  // Same rule as the parcels: the quoted area is the drawn outline's, so the
+  // table, the ratio it is divided by and the DXF all describe one shape.
+  plots.push({raster:f.id,area:shape.area,center:[f.cx,f.cy],box:f.box,
    outer:shape.outer,holes:shape.holes,
    perimeter:shape.outer.reduce((s,q,i)=>s+Math.hypot(q[0]-shape.outer[(i+1)%shape.outer.length][0],q[1]-shape.outer[(i+1)%shape.outer.length][1]),0),
    front,freeboard:f.minZ-plotRaster.waterline,
@@ -3740,7 +3777,7 @@ function planLandUse(){
     const sh=regionShape((i,j)=>i>=0&&j>=0&&i<W&&j<H&&comp[j*W+i]===id&&use[j*W+i]===2+b,bx,plotRaster);
     if(!sh)continue;
     p.parcels.push({id:p.id+'-B'+String(p.parcels.length+1).padStart(2,'0'),
-     area:a2,outer:sh.outer,holes:sh.holes});
+     area:sh.area,outer:sh.outer,holes:sh.holes});
    }
   }
   // Everything else in the plot is green, kept as whole pieces.
@@ -3768,7 +3805,7 @@ function planLandUse(){
    const a2=n2*G*G;if(a2<40)continue;
    const bx=[Math.max(0,i0-1),Math.max(0,j0-1),Math.min(W-1,i1+1),Math.min(H-1,j1+1)];
    const sh=regionShape((i,j)=>i>=0&&j>=0&&i<W&&j<H&&comp[j*W+i]===id&&use[j*W+i]===tag,bx,plotRaster);
-   if(sh)p.green.push({id:p.id+'-G'+String(p.green.length+1).padStart(2,'0'),area:a2,outer:sh.outer,holes:sh.holes});
+   if(sh)p.green.push({id:p.id+'-G'+String(p.green.length+1).padStart(2,'0'),area:sh.area,outer:sh.outer,holes:sh.holes});
   }
   const footprint=p.parcels.reduce((s,x)=>s+x.area,0);
   const greenArea=p.green.reduce((s,x)=>s+x.area,0);
