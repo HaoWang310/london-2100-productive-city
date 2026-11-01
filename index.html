@@ -3514,17 +3514,25 @@ function solveLandPlots(){
   if(Math.min(p[0][2],p[1][2],p[2][2])<waterline)continue;
   paint(p.map(q=>[q[0],q[1]]),1,undefined,(p[0][2]+p[1][2]+p[2][2])/3);
  }
- for(const tri of water.triangles)paint(tri,3,1);
- {const v=roads.v,t=roads.t;
-  for(let k=0;k<t.length;k+=3)paint([0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1]]}),4,1);}
+ // Measured trap: painted with only=1 these three classes came out almost
+ // empty — 65 m² of carriageway for a 42,007 m² network. The ground under a
+ // road sits in the 1 m trench, below the waterline, so it was never painted
+ // as ground in the first place and there was nothing for the road to
+ // overwrite. The plots still came out right, because ground is simply absent
+ // there, but every later question — frontage, setback, depth from the street
+ // — needs the classes themselves, so they are painted over anything, latest
+ // wins: structure, then water, then the carriageway on top.
  for(const u of model.units){
   const v=u.mesh.v,t=u.mesh.t;
   for(let k=0;k<t.length;k+=3){
    const p=[0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1]]});
    if(Math.abs(sgn(p[0],p[1],p[2]))<.02)continue;      // seen edge on, no footprint
-   paint(p,5,1);
+   paint(p,5);
   }
  }
+ for(const tri of water.triangles)paint(tri,3);
+ {const v=roads.v,t=roads.t;
+  for(let k=0;k<t.length;k+=3)paint([0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1]]}),4);}
  const comp=new Int32Array(W*H).fill(-1),stack=new Int32Array(W*H),found=[];
  for(let s=0;s<W*H;s++){
   if(klass[s]!==1||comp[s]>=0)continue;
@@ -3593,20 +3601,25 @@ function planLandUse(){
  if(!plotRaster||!landPlots.length)return null;
  const {W,H,G,klass,comp}=plotRaster;
  const N=W*H,INF=1e9;
- const bfs=from=>{
+ const bfs=(from,through)=>{
   const d=new Int32Array(N).fill(INF);
   const q=new Int32Array(N);let head=0,tail=0;
   for(let c=0;c<N;c++)if(from(klass[c])){d[c]=0;q[tail++]=c}
   while(head<tail){
    const c=q[head++],nd=d[c]+1,i=c%W,j=(c-i)/W;
-   if(i>0&&klass[c-1]===1&&d[c-1]>nd){d[c-1]=nd;q[tail++]=c-1}
-   if(i<W-1&&klass[c+1]===1&&d[c+1]>nd){d[c+1]=nd;q[tail++]=c+1}
-   if(j>0&&klass[c-W]===1&&d[c-W]>nd){d[c-W]=nd;q[tail++]=c-W}
-   if(j<H-1&&klass[c+W]===1&&d[c+W]>nd){d[c+W]=nd;q[tail++]=c+W}
+   if(i>0&&through(klass[c-1])&&d[c-1]>nd){d[c-1]=nd;q[tail++]=c-1}
+   if(i<W-1&&through(klass[c+1])&&d[c+1]>nd){d[c+1]=nd;q[tail++]=c+1}
+   if(j>0&&through(klass[c-W])&&d[c-W]>nd){d[c-W]=nd;q[tail++]=c-W}
+   if(j<H-1&&through(klass[c+W])&&d[c+W]>nd){d[c+W]=nd;q[tail++]=c+W}
   }
   return d;
  };
- const dWater=bfs(k=>k===3),dRoad=bfs(k=>k===4),dStruct=bfs(k=>k===5);
+ const ground=k=>k===1;
+ // The structures are elevated, so the ground under them is still a way to
+ // the street: the walk to the road passes under them, even though nothing
+ // may be built there. Otherwise 39 of the 65 plots came out landlocked.
+ const walkable=k=>k===1||k===5;
+ const dWater=bfs(k=>k===3,ground),dRoad=bfs(k=>k===4,walkable),dStruct=bfs(k=>k===5,ground);
  const bw=landUse.waterBuffer/G,br=landUse.streetBand/G,bs=landUse.structClear/G;
  const free=new Uint8Array(N);                       // net developable ground
  for(let c=0;c<N;c++)
@@ -3629,16 +3642,22 @@ function planLandUse(){
   // Depth from the street. The frontage is where the plot meets a carriageway;
   // the band grows inward until it holds the footprint the ratio asks for.
   let head=0,tail=0;const d=new Int32Array(N).fill(INF);
+  // The frontage is the part of the plot closest to a carriageway. Seeding
+  // only from cells that touch one left every plot behind a structure with no
+  // frontage at all, so the seed is the near band: everything within 8 m of
+  // the plot's own closest approach to the street.
+  let best=INF;
   for(let j=box[1];j<=box[3];j++)for(let i=box[0];i<=box[2];i++){
    const c=j*W+i;if(comp[c]!==id||!free[c])continue;
-   let onStreet=false;
-   for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){
-    const ii=i+di,jj=j+dj;if(ii<0||jj<0||ii>=W||jj>=H)continue;
-    if(dRoad[jj*W+ii]<=br+1||klass[jj*W+ii]===4)onStreet=true;
-   }
-   if(onStreet){d[c]=0;q[tail++]=c}
+   if(dRoad[c]<best)best=dRoad[c];
+  }
+  const nearBand=best+8/G;
+  if(best<INF)for(let j=box[1];j<=box[3];j++)for(let i=box[0];i<=box[2];i++){
+   const c=j*W+i;if(comp[c]!==id||!free[c])continue;
+   if(dRoad[c]<=nearBand){d[c]=0;q[tail++]=c}
   }
   const hasFrontage=tail>0;
+  p.toStreet=best<INF?best*G:null;
   while(head<tail){
    const c=q[head++],nd=d[c]+1,i=c%W,j=(c-i)/W;
    for(const o of [c-1,c+1,c-W,c+W]){

@@ -246,7 +246,15 @@ assert(html.includes('<button data-mode="plots">用地</button>'), 'The land mod
 assert(html.includes("document.body.classList.toggle('plotsMode',mode==='plots');"), 'The land panel is not shown with the mode');
 assert(html.includes("if(!landPlots.length)buildLandPlots();"), 'Plots must be solved on entering the mode');
 // Roads, water and the plan projection of every structure are painted out.
-assert(html.includes('for(const tri of water.triangles)paint(tri,3,1);'), 'Water must be cut out of the land');
+assert(html.includes('for(const tri of water.triangles)paint(tri,3);'), 'Water must be cut out of the land');
+// Painted with only=1 these classes came out almost empty — 65 m² of
+// carriageway for a 42,007 m² network — because the ground under a road is in
+// the trench, below the waterline, and was never painted as ground to begin
+// with. They are painted over anything now, latest wins.
+assert(html.includes('{const v=roads.v,t=roads.t;\n  for(let k=0;k<t.length;k+=3)paint([0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1]]}),4);}'),
+ 'The carriageway class must be painted over anything');
+assert(html.includes('const walkable=k=>k===1||k===5;'), 'The walk to the street passes under the elevated structures');
+assert(html.includes('const nearBand=best+8/G;'), 'The frontage is the plot\'s own closest approach to a street');
 assert(html.includes("if(Math.abs(sgn(p[0],p[1],p[2]))<.02)continue;      // seen edge on, no footprint"), 'Structure footprints must be cut out of the land');
 // The same simplified outline serves the view, the area and the DXF.
 assert(html.includes('function simplifyRing(pts,eps){'), 'Plot outlines must be simplified once');
@@ -256,12 +264,12 @@ assert(html.includes('function exportPlotsCSV(){'), 'Plot schedule export is mis
 assert(html.includes("if(state.mode==='plots'){const lp=plotAt(e);"), 'Plots must be selectable in the view');
 // LAND USE v40 — green frame first, buildings second, capacity from the ratio.
 assert(html.includes('function planLandUse(){'), 'Land use planning is missing');
-assert(html.includes('const dWater=bfs(k=>k===3),dRoad=bfs(k=>k===4),dStruct=bfs(k=>k===5);'), 'The three setback bands must be distance transforms');
+assert(html.includes('const dWater=bfs(k=>k===3,ground),dRoad=bfs(k=>k===4,walkable),dStruct=bfs(k=>k===5,ground);'), 'The three setback bands must be distance transforms');
 assert(html.includes('if(klass[c]===1&&dWater[c]>bw&&dRoad[c]>br&&dStruct[c]>bs)free[c]=1;'), 'Net developable ground must exclude all three bands');
 assert(html.includes('const gfaTarget=p.area*landUse.far;'), 'Capacity must come from the floor area ratio');
 assert(html.includes('short:Math.max(0,gfaTarget-footprint*landUse.storeys)'), 'A plot that cannot meet the ratio must report the shortfall, not force it');
 // The building band grows inward FROM the street, so the green stays whole at the back.
-assert(html.includes('if(onStreet){d[c]=0;q[tail++]=c}'), 'Depth must be measured from the frontage');
+assert(html.includes('if(dRoad[c]<=nearBand){d[c]=0;q[tail++]=c}'), 'Depth must be measured from the frontage');
 assert(html.includes("const tag=-(20+gidx);for(const c of list)use[c]=tag;"), 'Each green piece needs its own tag or tracing picks up its neighbour');
 assert(html.includes("poly(ring,'BUILD_'+p.id)")&&html.includes("poly(ring,'GREEN_'+p.id)"), 'Buildings and green must export on their own layers');
 // THEME v39 — the interface was only half converted to dark: chips, view bar,
