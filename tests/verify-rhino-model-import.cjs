@@ -370,12 +370,24 @@ assert(html.includes('function windRoseSVG(monthIdx){'), 'The wind rose is missi
 assert(html.includes('function updateShadowMask(force){'), 'The drawn cast shadow is missing');
 assert(html.includes("if(sunBlocked(R,R.X0+(i+.5)*R.G,R.Y0+(j+.5)*R.G,SHADOW_EYE,sx,sy,ta)){"), 'The shadow must be marched with the same test that counts the hours');
 assert(html.includes('const AS=Math.round(A*.92),AL=Math.round(A*.38);'), 'Sun and shade are both painted, so the contrast reads on a dark plan');
-assert(html.includes('function shadowStrength(h){'), 'Shadow density must follow the hour\'s beam fraction');
-assert(html.includes('return Math.max(0,Math.min(.5,h.dni/(h.dni+h.dhi*2.2+40)*.74));'), 'An overcast hour must cast almost no shadow');
+// shadowStrength now takes the beam itself rather than an EPW row, because
+// 晴空 mode substitutes a clear-sky beam for the hour's own.
+assert(html.includes('function shadowStrength(dni,dhi){'), 'Shadow density must follow the beam fraction');
+assert(html.includes('function climateBeam(){'), 'The clear-sky / EPW beam switch is missing');
+assert(html.includes('shadowStrength(B.dni,B.dhi)'), 'The shadow must be painted from the same beam that lights the scene');
+// The behaviour of this curve is now asserted numerically, against the real
+// file, in tests/verify-climate-epw.cjs; here we only hold the shape.
+assert(html.includes('return Math.max(0,Math.min(.5,dni/(dni+dhi*2.2+40)*.74));'), 'An overcast hour must cast almost no shadow');
 assert(html.includes('shadowPlane.position.set(R.X0+R.W*R.G/2,1.5,-(R.Y0+R.H*R.G/2));'), 'The shadow sheet must sit over the plan graphics and under the decks');
 // The wind reads as flow only if it is drawn as flow.
 assert(html.includes('windPoints=new THREE.LineSegments(g,new THREE.LineBasicMaterial({vertexColors:true,'), 'Wind is drawn as streaks, not dots');
-assert(html.includes('const tail=Math.min(9,1.2*spd),o=i*6;'), 'A streak must be as long as the hour is fast');
+assert(html.includes('const tail=2.5+spd*2.6,o=i*6;'), 'A streak must be as long as the hour is fast');
+// The old field measured out at 0.7 of 765 luminance units per pixel on the
+// published site: present in the buffer, invisible on the screen.
+assert(html.includes('const WIND_N=3000'), 'The particle field was thinned back below what is visible');
+assert(html.includes('opacity:.95,depthWrite:false,blending:THREE.AdditiveBlending'), 'The streaks were faded back below what is visible');
+assert(html.includes('const edgePoint=()=>{'), 'Particles must be released from the upwind edge, or the field has no direction');
+assert(html.includes('const ped=Math.max(.35,windAtHeight(met,PED_Z));'), 'Particles must travel at the pedestrian speed, not the airport reading');
 assert(html.includes('<button data-mode="climate">环境</button>'), 'The climate mode is not in the nav');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');

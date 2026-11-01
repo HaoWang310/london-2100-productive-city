@@ -197,3 +197,71 @@ goes wrong.
 Open: the plots carry no land use yet. Tagging each as 建筑 or 农业 and
 colouring by that is the natural next step, and the tag would travel in the CSV
 and in the DXF layer name.
+
+## 环境 mode — the real London sun and wind (v44)
+
+A sixth mode, between 用地 and 报表, driven by `london.epw` (London-Stansted
+TMYx, 51.885N 0.235E, UTC, 8,760 hours) fetched at runtime and parsed in the
+page. Two sliders — date and hour — move one real hour of that year, and
+everything on screen follows it.
+
+### What is measured rather than styled
+
+`sunPosition()` is NOAA, and the test holds it to the geometry: 61.6 degrees
+at solstice noon, 14.7 at midwinter noon, sunrise in the north-east and
+sunset in the north-west in June, below the horizon at midnight on every day
+of the year.
+
+Annual sunlight per lot is counted twice — the clear-sky geometric figure and
+the same hours weighted by how often this file records a usable beam. The
+weighting integrates, for an unobstructed lot, to exactly the file's own count
+of hours with DNI above 120 W/m2: 2,714. That identity is asserted, because it
+is the one check that catches a half-hour step or a month index going wrong.
+
+The structures are genuinely elevated — soffit at a flat 7.2 m, top at 14.9 m
+median and 22.1 m at most, covering 19.8% of the site in plan. So most of a
+summer shadow falls under the deck that casts it, and only a band about 11 m
+wide escapes. That is not a bug and was measured before it was believed; at a
+January 13:00 sun of 14 degrees the same code lays long shadows across the
+whole site. 晴空 exists for the summer case: it swaps the hour's own cloud for
+an ASHRAE clear-sky beam, which is what a shadow study wants.
+
+### Wind, and the mistake worth recording
+
+EPW wind is an AIRPORT reading: 10 m over open grass, z0 0.03. It is carried to
+the 60 m blending height on that profile and brought down on the site's, which
+is the standard two-step correction. The panel shows both numbers, because the
+difference between them is the whole point.
+
+SITE_Z0 is 0.1 m (Davenport class 4, open country with scattered obstacles),
+NOT the 0.5 m of a dense city. The first attempt used 0.5 and then applied a
+per-lot shelter factor on top, which counted the same shelter twice: every one
+of the 173 lots came out in a single Lawson category. An exposed lot now reads
+5.0 m/s at 5% exceedance, which the test asserts cannot fall in the gentlest
+grade — a map where everything is one colour is a map that cannot be read.
+
+风暴露 was a bare openness fraction and has been replaced by 风舒适: for each
+lot, sixteen sector shelter factors (with a squeeze term, because a lot can be
+out of the wind's way and still sit between two decks), then the whole year run
+through them, then the speed exceeded 5% of the time, graded on Lawson.
+
+### Presentation defects that were real
+
+Three things were correct in the buffer and invisible on the screen, and each
+was measured on the published site before it was changed:
+
+- The particle field contributed 0.7 of 765 luminance units per pixel. Now
+  3,000 streaks at 0.95 opacity, released from the UPWIND edge so the field
+  has a direction, moving at the pedestrian speed on an 8x time-lapse.
+- The sunlight ramp was anchored at zero while 64% of lots sat in the top
+  third of the range, so the plan read as one flat cream. It is now stretched
+  over the data's own p02-p98 and the legend carries the real hour values.
+- The shadow sheet renders (11.7% of the frame, proven by painting it red)
+  but at a hazy hour its alpha is 17%, which is honest and unreadable. 晴空
+  is the answer, not a gain.
+
+Open: the overlay colours the lots, so a plot with no lots carries no reading;
+the comfort model is shelter and channelling, not CFD, and the panel says so;
+and the sunlight count samples four points per lot, which is enough to rank
+lots and not enough to site a window.
+

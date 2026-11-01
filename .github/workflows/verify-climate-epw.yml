@@ -1,0 +1,22 @@
+name: Verify EPW climate physics
+on:
+  push:
+    paths:
+      - index.html
+      - london.epw
+      - tests/verify-climate-epw.cjs
+      - .github/workflows/verify-climate-epw.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  climate-physics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check solar geometry, wind profile and Lawson grading against london.epw
+        run: node tests/verify-climate-epw.cjs
