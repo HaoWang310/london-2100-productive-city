@@ -274,7 +274,18 @@ assert(html.includes('short:Math.max(0,gfaTarget-footprint*landUse.storeys)'), '
 assert(html.includes('const keepRatio=ableArea>0?Math.min(1,footprintTarget/ableArea):1;'), 'Surplus capacity must be taken off the frontage');
 // Measured against the whole band the undersized ends were dropped twice over
 // and the site stalled at 1.43 whatever the ratio asked for.
-assert(html.includes('const able=order.filter(([,e])=>e.n*G*G>=landUse.minParcel);'), 'The ratio must be taken against the parcels that can actually be kept');
+assert(html.includes('const able=order.filter(([b,e])=>e.n*G*G>=landUse.minParcel&&wideEnough(b,e));'), 'The ratio must be taken against the parcels that can actually be kept');
+// A plot has to hold a house, so area alone is not enough: a long thin shard
+// passes it. The largest inscribed circle has to span the minimum width.
+assert(html.includes('const wideEnough=(b,e)=>{'), 'Thin shards must be rejected on width, not only on area');
+assert(html.includes('return bestR*2*G>=landUse.minWidth;'), 'The width test must measure the inscribed circle');
+// And the band is opened before it is cut, so a taper or a tail never becomes
+// a parcel in the first place.
+assert(html.includes('if(use[c]===1&&grow[c]===INF){use[c]=-1;built-=G*G}'), 'The building band must be opened before it is split');
+// The cut runs across the street, not across one axis: a single axis fans the
+// cuts out where the frontage turns and the end parcels come to a point.
+assert(html.includes('const b=Math.max(0,Math.min(n-1,Math.floor(sAl[c]*G/step)));'), 'Parcels must be cut along the frontage');
+assert(html.includes('d[o]=nd;sAl[o]=sAl[c];q[tail++]=o;'), 'The band must carry its frontage position inward');
 assert(html.includes('if(kept>=footprintTarget*.95)break;'), 'A plot rounded down one parcel at a time must be topped back up');
 assert(html.includes('if(Math.floor((k2+1)*keepRatio)>Math.floor(k2*keepRatio))keep.add(b);'), 'Dropped parcels must be spread evenly along the street');
 // The building band grows inward FROM the street, so the green stays whole at the back.

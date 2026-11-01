@@ -3422,7 +3422,7 @@ function completeCrossings(){
 // against the street frontage, and the remainder stays whole at the back.
 const PLOT_G=.5,PLOT_MIN=60,PLOT_SIMPLIFY=1,PLOT_CORNER=.52,PLOT_ROUNDS=2;
 const landUse={far:1.8,storeys:6,coverage:.45,waterBuffer:10,streetBand:4,
- structClear:3,parcelWidth:18,minDepth:10,maxDepth:30,minParcel:120};
+ structClear:3,parcelWidth:18,minDepth:10,maxDepth:30,minParcel:150,minWidth:8};
 let plotGroup=null,landPlots=[],plotMeshes=[],plotSelection=new Set(),plotHover=null;
 let plotRaster=null,landUseTotals=null;
 // --- shared raster helpers --------------------------------------------------
@@ -3663,6 +3663,10 @@ function planLandUse(){
   if(klass[c]===1&&dWater[c]>bw&&dRoad[c]>br&&dStruct[c]>bs)free[c]=1;
  const use=new Int32Array(N).fill(-1);               // 0 green, >0 parcel index
  const q=new Int32Array(N),cells=new Int32Array(N);
+ // Scratch, allocated once: a fill(INF) per plot is 950k writes sixty-five
+ // times over, and only the plot's own cells are ever read back.
+ const d=new Int32Array(N).fill(INF),sAl=new Float32Array(N);
+ const edgeD=new Int32Array(N).fill(INF),grow=new Int32Array(N).fill(INF);
  let parcelNo=0;const totals={plots:0,net:0,footprint:0,gfa:0,green:0,short:0};
  for(const p of landPlots){
   p.parcels=[];p.green=[];
@@ -3678,7 +3682,7 @@ function planLandUse(){
   const footprintTarget=Math.min(want,cap);
   // Depth from the street. The frontage is where the plot meets a carriageway;
   // the band grows inward until it holds the footprint the ratio asks for.
-  let head=0,tail=0;const d=new Int32Array(N).fill(INF);
+  let head=0,tail=0;
   // The frontage is the part of the plot closest to a carriageway. Seeding
   // only from cells that touch one left every plot behind a structure with no
   // frontage at all, so the seed is the near band: everything within 8 m of
@@ -3693,14 +3697,40 @@ function planLandUse(){
    const c=j*W+i;if(comp[c]!==id||!free[c])continue;
    if(dRoad[c]<=nearBand){d[c]=0;q[tail++]=c}
   }
-  const hasFrontage=tail>0;
+  const hasFrontage=tail>0,seedN=tail;
+  // Distance ALONG the frontage, so the plots can be cut across the street
+  // rather than across a single straight axis. Taking one axis for the whole
+  // band is what produced the wedges: where the frontage turns a corner, a
+  // projection onto one direction fans the cuts out and the end parcels come
+  // to a point. Walk the frontage instead and every cut is square to it.
+  // Two passes: the first finds an end of the frontage, the second measures
+  // from it.
+  if(seedN){
+   const walk=(from)=>{
+    for(let m=0;m<seedN;m++)edgeD[q[m]]=INF;
+    let h2=0,t2=0;edgeD[from]=0;cells[t2++]=from;
+    let far2=from;
+    while(h2<t2){
+     const c=cells[h2++];if(edgeD[c]>edgeD[far2])far2=c;
+     const nd=edgeD[c]+1;
+     for(const o of [c-1,c+1,c-W,c+W,c-W-1,c-W+1,c+W-1,c+W+1]){
+      if(o<0||o>=N||d[o]!==0||edgeD[o]<=nd)continue;
+      edgeD[o]=nd;cells[t2++]=o;
+     }
+    }
+    return far2;
+   };
+   const end=walk(q[0]);walk(end);
+   for(let m=0;m<seedN;m++){const c=q[m];sAl[c]=edgeD[c]<INF?edgeD[c]:0}
+   for(let m=0;m<seedN;m++)edgeD[q[m]]=INF;
+  }
   p.toStreet=best<INF?best*G:null;
   while(head<tail){
-   const c=q[head++],nd=d[c]+1,i=c%W,j=(c-i)/W;
+   const c=q[head++],nd=d[c]+1;
    for(const o of [c-1,c+1,c-W,c+W]){
     if(o<0||o>=N)continue;
     if(comp[o]!==id||!free[o]||d[o]<=nd)continue;
-    d[o]=nd;q[tail++]=o;
+    d[o]=nd;sAl[o]=sAl[c];q[tail++]=o;      // inherit the frontage position
    }
   }
   let depth=0,built=0;
@@ -3712,22 +3742,39 @@ function planLandUse(){
    depth=Math.max(landUse.minDepth/G,Math.min(landUse.maxDepth/G,k2));
    for(let m=0;m<tail;m++){const c=q[m];if(d[c]<=depth){use[c]=1;built+=G*G}}
   }
-  // Split the band along the frontage into parcels of one width each.
+  // A band that tapers to a point, or trails a metre-wide tail along the side
+  // of a structure, is not a plot anyone can build a house on. Open it first:
+  // erode by half the minimum width and grow the survivors back by the same
+  // amount. The lobes come through unchanged and the spikes do not come back.
+  if(built>0){
+   const R=Math.max(1,Math.round(landUse.minWidth/2/G));
+   let h2=0,t2=0;
+   for(let m=0;m<tail;m++){const c=q[m];if(use[c]!==1)continue;
+    if([c-1,c+1,c-W,c+W].some(o=>o<0||o>=N||use[o]!==1)){edgeD[c]=0;cells[t2++]=c}}
+   while(h2<t2){const c=cells[h2++],nd=edgeD[c]+1;
+    for(const o of [c-1,c+1,c-W,c+W]){
+     if(o<0||o>=N||use[o]!==1||edgeD[o]<=nd)continue;edgeD[o]=nd;cells[t2++]=o}}
+   h2=0;t2=0;
+   for(let m=0;m<tail;m++){const c=q[m];if(use[c]===1&&edgeD[c]>=R){grow[c]=0;cells[t2++]=c}}
+   while(h2<t2){const c=cells[h2++],nd=grow[c]+1;if(nd>R)continue;
+    for(const o of [c-1,c+1,c-W,c+W]){
+     if(o<0||o>=N||use[o]!==1||grow[o]<=nd)continue;grow[o]=nd;cells[t2++]=o}}
+   for(let m=0;m<tail;m++){const c=q[m];
+    if(use[c]===1&&grow[c]===INF){use[c]=-1;built-=G*G}
+    edgeD[c]=INF;grow[c]=INF;}
+  }
+  // Split the band across the street: the cut runs at one parcel width along
+  // the frontage, so every plot keeps a face on the road.
   const strip=[];for(let m=0;m<tail;m++){const c=q[m];if(use[c]===1)strip.push(c)}
   if(strip.length){
-   let mx=0,my=0;for(const c of strip){const i=c%W;mx+=i;my+=(c-i)/W}
-   mx/=strip.length;my/=strip.length;
-   let sxx=0,syy=0,sxy=0;
-   for(const c of strip){const i=c%W,j=(c-i)/W,dx=i-mx,dy=j-my;sxx+=dx*dx;syy+=dy*dy;sxy+=dx*dy}
-   const ang=.5*Math.atan2(2*sxy,sxx-syy),ax=Math.cos(ang),ay=Math.sin(ang);
-   let lo=INF,hi=-INF;
-   for(const c of strip){const i=c%W,j=(c-i)/W,t=(i*ax+j*ay)*G;if(t<lo)lo=t;if(t>hi)hi=t}
-   const n=Math.max(1,Math.round((hi-lo)/landUse.parcelWidth));
-   const step=(hi-lo)/n;
+   let hi=0;for(const c of strip)if(sAl[c]>hi)hi=sAl[c];
+   const span=hi*G;
+   const n=Math.max(1,Math.round(span/landUse.parcelWidth));
+   const step=span/n;
    const bucket=new Map();
    for(const c of strip){
-    const i=c%W,j=(c-i)/W,t=(i*ax+j*ay)*G;
-    const b=Math.max(0,Math.min(n-1,Math.floor((t-lo)/step)));
+    const i=c%W,j=(c-i)/W;
+    const b=Math.max(0,Math.min(n-1,Math.floor(sAl[c]*G/step)));
     use[c]=2+b;
     if(!bucket.has(b))bucket.set(b,{n:0,box:[W,H,0,0]});
     const e=bucket.get(b);e.n++;
@@ -3746,7 +3793,23 @@ function planLandUse(){
    // rather than the whole band is what makes the result track the target:
    // measured against the whole band, the undersized ends were dropped twice
    // over and the site stalled at 1.43 whatever the ratio asked for.
-   const able=order.filter(([,e])=>e.n*G*G>=landUse.minParcel);
+   // Area alone lets a long thin shard through. A plot has to hold a house, so
+   // it also has to hold a circle of the minimum width: take the largest
+   // inscribed circle and require it to span minWidth.
+   const wideEnough=(b,e)=>{
+    let h3=0,t3=0,bestR=0;
+    const inB=c=>{const i=c%W,j=(c-i)/W;
+     return i>=e.box[0]&&i<=e.box[2]&&j>=e.box[1]&&j<=e.box[3]&&comp[c]===id&&use[c]===2+b};
+    for(let j=e.box[1];j<=e.box[3];j++)for(let i=e.box[0];i<=e.box[2];i++){
+     const c=j*W+i;if(!inB(c))continue;
+     if([c-1,c+1,c-W,c+W].some(o=>o<0||o>=N||!inB(o))){edgeD[c]=1;cells[t3++]=c}}
+    while(h3<t3){const c=cells[h3++],nd=edgeD[c]+1;if(edgeD[c]>bestR)bestR=edgeD[c];
+     for(const o of [c-1,c+1,c-W,c+W]){
+      if(o<0||o>=N||!inB(o)||edgeD[o]<=nd)continue;edgeD[o]=nd;cells[t3++]=o}}
+    for(let k3=0;k3<t3;k3++)edgeD[cells[k3]]=INF;
+    return bestR*2*G>=landUse.minWidth;
+   };
+   const able=order.filter(([b,e])=>e.n*G*G>=landUse.minParcel&&wideEnough(b,e));
    const ableArea=able.reduce((s2,[,e])=>s2+e.n*G*G,0);
    const keepRatio=ableArea>0?Math.min(1,footprintTarget/ableArea):1;
    const keep=new Set();
@@ -3816,6 +3879,7 @@ function planLandUse(){
    greenRatio:p.area?greenArea/p.area:0,
    target:gfaTarget,hasFrontage,
    short:Math.max(0,gfaTarget-footprint*landUse.storeys)};
+  for(let m=0;m<tail;m++){d[q[m]]=INF;sAl[q[m]]=0}   // hand the scratch back
   totals.plots++;totals.net+=netArea;totals.footprint+=footprint;
   totals.gfa+=p.capacity.gfa;totals.green+=greenArea;totals.short+=p.capacity.short;
   parcelNo+=p.parcels.length;
