@@ -365,6 +365,16 @@ assert(html.includes('real+=f*epw.sunFreq[m+1][Math.min(23,Math.floor(h))];'), '
 // The rose is counted off the file's own 8,760 readings, calms excluded.
 assert(html.includes('if(x.ws<.5){calm++;continue}'), 'A wind rose excludes calms from the directional tally');
 assert(html.includes('function windRoseSVG(monthIdx){'), 'The wind rose is missing');
+// The plan is a flat drawing of unlit sheets, so a shadow map has nothing to
+// darken: the cast shadow is painted from the same marching the hours use.
+assert(html.includes('function updateShadowMask(force){'), 'The drawn cast shadow is missing');
+assert(html.includes("if(!sunBlocked(R,R.X0+(i+.5)*R.G,R.Y0+(j+.5)*R.G,SHADOW_EYE,sx,sy,ta))continue;"), 'The shadow must be marched with the same test that counts the hours');
+assert(html.includes('function shadowStrength(h){'), 'Shadow density must follow the hour\'s beam fraction');
+assert(html.includes('return Math.max(0,Math.min(.5,h.dni/(h.dni+h.dhi*2.2+40)*.74));'), 'An overcast hour must cast almost no shadow');
+assert(html.includes('shadowPlane.position.set(R.X0+R.W*R.G/2,1.5,-(R.Y0+R.H*R.G/2));'), 'The shadow sheet must sit over the plan graphics and under the decks');
+// The wind reads as flow only if it is drawn as flow.
+assert(html.includes('windPoints=new THREE.LineSegments(g,new THREE.LineBasicMaterial({vertexColors:true,'), 'Wind is drawn as streaks, not dots');
+assert(html.includes('const tail=Math.min(16,2.3*spd),o=i*6;'), 'A streak must be as long as the hour is fast');
 assert(html.includes('<button data-mode="climate">环境</button>'), 'The climate mode is not in the nav');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');

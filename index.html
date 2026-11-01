@@ -4179,6 +4179,7 @@ function epwHour(day,hour){
 function applyClimateLight(){
  if(!sunLight||!skyLight)return;
  if(state.mode!=='climate'){
+  if(shadowPlane)shadowPlane.visible=false;
   sunLight.position.copy(sunLightHome.pos);sunLight.intensity=sunLightHome.key;
   sunLight.color.set(0xffffff);skyLight.intensity=sunLightHome.sky;
   if(fillLight)fillLight.intensity=sunLightHome.fill;
@@ -4198,11 +4199,12 @@ function applyClimateLight(){
  sunLight.color.setRGB(1,1-warm*.17,1-warm*.34);
  skyLight.intensity=.55+Math.min(2.1,dhi/190)*(s.altitude>0?1:.25);
  if(fillLight)fillLight.intensity=.25+Math.min(.9,dhi/320);
+ updateShadowMask();
  return {s,h};
 }
 function buildWindParticles(){
  if(windPoints){climateGroup.remove(windPoints);windPoints.geometry.dispose();windPoints=null}
- const N=1500,pos=new Float32Array(N*3),col=new Float32Array(N*3);
+ const N=1200,pos=new Float32Array(N*6),col=new Float32Array(N*6);
  windState=new Float32Array(N*3);                    // x, y, life
  for(let i=0;i<N;i++){
   windState[i*3]=-313+Math.random()*626;
@@ -4212,9 +4214,10 @@ function buildWindParticles(){
  const g=new THREE.BufferGeometry();
  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
  g.setAttribute('color',new THREE.BufferAttribute(col,3));
- windPoints=new THREE.Points(g,new THREE.PointsMaterial({size:1.9,vertexColors:true,
-  transparent:true,opacity:.85,depthWrite:false,blending:THREE.AdditiveBlending,
-  sizeAttenuation:true}));
+ // streaks, not dots: a segment drawn along the hour's own direction reads as
+ // flow, and fading it from head to tail says which way the air is going.
+ windPoints=new THREE.LineSegments(g,new THREE.LineBasicMaterial({vertexColors:true,
+  transparent:true,opacity:.8,depthWrite:false,blending:THREE.AdditiveBlending}));
  windPoints.frustumCulled=false;windPoints.name='风环境粒子';
  climateGroup.add(windPoints);
 }
@@ -4254,9 +4257,13 @@ function stepWind(dt){
    x=-313+Math.random()*626;y=-187+Math.random()*374;life=.6+Math.random()*.8;
   }
   windState[i*3]=x;windState[i*3+1]=y;windState[i*3+2]=life;
-  pos[i*3]=x;pos[i*3+1]=2.2;pos[i*3+2]=-y;
+  const tail=Math.min(16,2.3*spd),o=i*6;
+  pos[o]=x;pos[o+1]=2.2;pos[o+2]=-y;
+  pos[o+3]=x-vx*tail;pos[o+4]=2.2;pos[o+5]=-(y-vy*tail);
   const f=Math.min(1,spd/11),t=Math.min(1,life*1.4);
-  col[i*3]=(.35+.65*f)*t;col[i*3+1]=(.75-.2*f)*t;col[i*3+2]=t;
+  const r=(.35+.65*f)*t,g2=(.75-.2*f)*t,b=t;
+  col[o]=r;col[o+1]=g2;col[o+2]=b;
+  col[o+3]=r*.15;col[o+4]=g2*.15;col[o+5]=b*.15;
  }
  windPoints.geometry.attributes.position.needsUpdate=true;
  windPoints.geometry.attributes.color.needsUpdate=true;
@@ -4443,6 +4450,66 @@ function enterClimateMode(){
   const el=document.querySelector('#climatePanel');
   if(el)el.querySelector('#clSite').textContent='EPW 读取失败：'+e.message;
  });
+}
+// --- the cast shadow, drawn instead of mapped --------------------------
+// The plan is a flat drawing: roads, markings and planting are unlit sheets,
+// so a shadow map has nothing to darken. The shadow is therefore computed on
+// the same height field the sunlight hours are counted on — one function
+// draws the picture and counts the hours, so the two always agree — and
+// painted into a canvas laid over the plan.
+let shadowCanvas=null,shadowRaw=null,shadowTex=null,shadowPlane=null,shadowKey='';
+const SHADOW_EYE=.4;
+function buildShadowPlane(){
+ if(shadowPlane)return shadowPlane;
+ const R=buildClimateRaster();
+ shadowCanvas=document.createElement('canvas');shadowCanvas.width=R.W;shadowCanvas.height=R.H;
+ shadowRaw=document.createElement('canvas');shadowRaw.width=R.W;shadowRaw.height=R.H;
+ shadowTex=new THREE.CanvasTexture(shadowCanvas);
+ shadowTex.minFilter=THREE.LinearFilter;shadowTex.magFilter=THREE.LinearFilter;
+ shadowTex.generateMipmaps=false;
+ const g=new THREE.PlaneGeometry(R.W*R.G,R.H*R.G);g.rotateX(-Math.PI/2);
+ shadowPlane=new THREE.Mesh(g,new THREE.MeshBasicMaterial({
+  map:shadowTex,transparent:true,depthWrite:false,
+  polygonOffset:true,polygonOffsetFactor:-6,polygonOffsetUnits:-6}));
+ shadowPlane.position.set(R.X0+R.W*R.G/2,1.5,-(R.Y0+R.H*R.G/2));
+ shadowPlane.renderOrder=8;
+ climateGroup.add(shadowPlane);
+ return shadowPlane;
+}
+// How dark a shadow is depends on how much of the hour's light is beam
+// rather than sky: London's overcast hours have almost no shadow at all.
+function shadowStrength(h){
+ if(!h)return 0;
+ return Math.max(0,Math.min(.5,h.dni/(h.dni+h.dhi*2.2+40)*.74));
+}
+function updateShadowMask(force){
+ if(!climateGroup)return;
+ const R=buildClimateRaster();buildShadowPlane();
+ const lat=epw?epw.loc.lat:51.885,lon=epw?epw.loc.lon:.235,tz=epw?epw.loc.tz:0;
+ const s=sunPosition(lat,lon,tz,climate.day,climate.hour);
+ const h=epwHour(climate.day,climate.hour),A=Math.round(shadowStrength(h)*255);
+ const key=Math.round(s.altitude*3)+'/'+Math.round(s.azimuth*1.5)+'/'+Math.round(A/6);
+ if(key===shadowKey&&!force)return;
+ shadowKey=key;
+ if(s.altitude<=1.5||A<5){shadowPlane.visible=false;return}
+ shadowPlane.visible=true;
+ const rad=Math.PI/180,sx=Math.sin(s.azimuth*rad),sy=Math.cos(s.azimuth*rad),
+  ta=Math.tan(s.altitude*rad);
+ const raw=shadowRaw.getContext('2d'),img=raw.createImageData(R.W,R.H),d=img.data;
+ for(let j=0;j<R.H;j++)for(let i=0;i<R.W;i++){
+  const id=j*R.W+i;
+  if(R.top[id]>1.6&&R.bot[id]<1.6)continue;        // a column, not its shadow
+  if(!sunBlocked(R,R.X0+(i+.5)*R.G,R.Y0+(j+.5)*R.G,SHADOW_EYE,sx,sy,ta))continue;
+  const o=((R.H-1-j)*R.W+i)*4;                      // the texture runs the other way up
+  d[o]=5;d[o+1]=8;d[o+2]=13;d[o+3]=A;
+ }
+ raw.putImageData(img,0,0);
+ const ctx=shadowCanvas.getContext('2d');
+ ctx.clearRect(0,0,R.W,R.H);
+ ctx.filter='blur(1.1px)';                          // so 2 m cells do not read as pixels
+ ctx.drawImage(shadowRaw,0,0);
+ ctx.filter='none';
+ shadowTex.needsUpdate=true;
 }
 function updateClimate(dt){
  if(!climateGroup)return;
