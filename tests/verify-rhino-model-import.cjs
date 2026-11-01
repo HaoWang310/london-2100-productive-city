@@ -208,11 +208,17 @@ assert(html.includes('g.visible=landscapeConfig.enabled&&allView&&(showAll||ids.
 // NAVIGATOR WATER v36 — the water belongs to no parcel since the re-cut, so the
 // navigator has to read it from the same footprint the 3D water is built from.
 assert(html.includes('function overviewWaterFootprint(){'), 'Navigator water footprint is missing');
-assert(html.includes("svg.innerHTML=overviewWaterPath()+model.parcels.map("), 'Water must be drawn under the parcels');
-assert(html.includes("const all=model.parcels.flatMap(p=>p.boundary).concat(overviewWaterFootprint().flat());"), 'Navigator extent must cover the water');
+assert(html.includes("svg.innerHTML=overviewWaterPath()+overviewRoadPath()+model.parcels.map("), 'Water and roads must be drawn under the parcels');
+assert(html.includes(".concat(overviewWaterFootprint().flat()).concat(overviewRoadFootprint().flat());"), 'Navigator extent must cover the water and the roads');
+// The carriageways were only the gaps between parcels, so a road with no plot
+// beside it — along the lagoon, at the site edge — was simply not drawn.
+assert(html.includes('function overviewRoadFootprint(){'), 'Navigator road footprint is missing');
+assert(html.includes('if(L<1e-9||n[2]/L<=.86)continue;'), 'Only the up-facing road deck belongs on a plan');
+assert(html.includes(".formOverviewRoad{fill:#1b2026;"), 'Navigator road style is missing');
+assert(html.includes("fillTris(water,'#2c5f7a');fillTris(road,'#1b2026');"), 'All-site thumbnail must draw the same roads');
 assert(html.includes(".formOverviewWater{fill:#2c5f7a;"), 'Navigator water style is missing');
 assert(html.includes("pointer-events:none;vector-effect:non-scaling-stroke}.formOverviewWater") || html.includes(".formOverviewWater{fill:#2c5f7a;stroke:#2c5f7a;stroke-width:.7;pointer-events:none"), 'Navigator water must not swallow parcel clicks');
-assert(html.includes("const water=overviewWaterFootprint();const pts=model.parcels"), 'All-site thumbnail must draw the same water');
+assert(html.includes("const water=overviewWaterFootprint(),road=overviewRoadFootprint();const pts=model.parcels"), 'All-site thumbnail must draw the same water and roads');
 // CROSSINGS v37 — the source stops its rows short of the kerb and leaves some
 // junction arms bare; the completion must stay measured, not styled.
 assert(html.includes('function completeCrossings(){'), 'Crossing completion is missing');
