@@ -381,11 +381,11 @@ assert(html.includes('return Math.max(0,Math.min(.5,dni/(dni+dhi*2.2+40)*.74));'
 assert(html.includes('shadowPlane.position.set(R.X0+R.W*R.G/2,1.5,-(R.Y0+R.H*R.G/2));'), 'The shadow sheet must sit over the plan graphics and under the decks');
 // The wind reads as flow only if it is drawn as flow.
 assert(html.includes('windPoints=new THREE.LineSegments(g,new THREE.LineBasicMaterial({vertexColors:true,'), 'Wind is drawn as streaks, not dots');
-assert(html.includes('const tail=2.5+spd*2.6,o=i*6;'), 'A streak must be as long as the hour is fast');
+assert(html.includes('const tail=Math.min(14,3+spd*1.4),o=i*6;'), 'A streak must be as long as the hour is fast, and no longer');
 // The old field measured out at 0.7 of 765 luminance units per pixel on the
 // published site: present in the buffer, invisible on the screen.
-assert(html.includes('const WIND_N=3000'), 'The particle field was thinned back below what is visible');
-assert(html.includes('opacity:.95,depthWrite:false,blending:THREE.AdditiveBlending'), 'The streaks were faded back below what is visible');
+assert(html.includes('const WIND_N=2200'), 'The particle field was thinned back below what is visible');
+assert(html.includes('opacity:.88,depthWrite:false,blending:THREE.AdditiveBlending'), 'The streaks were faded back below what is visible');
 assert(html.includes('const edgePoint=()=>{'), 'Particles must be released from the upwind edge, or the field has no direction');
 assert(html.includes('const ped=Math.max(.35,windAtHeight(met,PED_Z));'), 'Particles must travel at the pedestrian speed, not the airport reading');
 assert(html.includes('<button data-mode="climate">环境</button>'), 'The climate mode is not in the nav');

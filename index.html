@@ -4254,7 +4254,7 @@ function applyClimateLight(){
  updateShadowMask();updateSunPath();
  return {s,h};
 }
-const WIND_N=3000;
+const WIND_N=2200;
 function buildWindParticles(){
  if(windPoints){climateGroup.remove(windPoints);windPoints.geometry.dispose();windPoints=null}
  const N=WIND_N,pos=new Float32Array(N*6),col=new Float32Array(N*6);
@@ -4272,7 +4272,7 @@ function buildWindParticles(){
  // Opacity near 1 because the earlier .45 measured out at 0.7 of 765 luminance
  // units per pixel — present in the buffer and invisible on the screen.
  windPoints=new THREE.LineSegments(g,new THREE.LineBasicMaterial({vertexColors:true,
-  transparent:true,opacity:.95,depthWrite:false,blending:THREE.AdditiveBlending}));
+  transparent:true,opacity:.88,depthWrite:false,blending:THREE.AdditiveBlending}));
  windPoints.frustumCulled=false;windPoints.name='风环境粒子';
  climateGroup.add(windPoints);
 }
@@ -4330,12 +4330,12 @@ function stepWind(dt){
    const q=edgePoint();x=q[0];y=q[1];life=.8+Math.random()*1.6;
   }
   windState[i*3]=x;windState[i*3+1]=y;windState[i*3+2]=life;
-  const tail=2.5+spd*2.6,o=i*6;
+  const tail=Math.min(14,3+spd*1.4),o=i*6;
   pos[o]=x;pos[o+1]=2.2;pos[o+2]=-y;
   pos[o+3]=x-vx*tail;pos[o+4]=2.2;pos[o+5]=-(y-vy*tail);
   // cyan where the gap speeds the air up, deep blue where a deck slows it
-  const f=Math.min(1,spd/9),t=Math.min(1,life*2.2);
-  const br=(.5+.7*f)*t;
+  const f=Math.min(1,spd/6),t=Math.min(1,life*2.2);
+  const br=(.6+.4*f)*t;
   const r=(gain>1.2?.5:gain<.8?.16:.32)*br,g2=(gain>1.2?1:gain<.8?.42:.74)*br,b=(gain<.8?.9:1)*br;
   col[o]=r;col[o+1]=g2;col[o+2]=b;
   col[o+3]=r*.06;col[o+4]=g2*.06;col[o+5]=b*.06;
@@ -4347,12 +4347,12 @@ function stepWind(dt){
 // visible to move against: an arc from sunrise to sunset with a bead on it.
 function updateSunPath(){
  if(!climateGroup)return;
- const lat=epw?epw.loc.lat:51.885,lon=epw?epw.loc.lon:.235,tz=epw?epw.loc.tz:0,RR=430;
+ const lat=epw?epw.loc.lat:51.885,lon=epw?epw.loc.lon:.235,tz=epw?epw.loc.tz:0,RR=355;
  if(!sunPathLine){
   sunPathLine=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({
-   color:0xffd98a,transparent:true,opacity:.42,depthWrite:false}));
+   color:0xffd98a,transparent:true,opacity:.3,depthWrite:false}));
   sunPathLine.name='太阳轨迹';sunPathLine.frustumCulled=false;climateGroup.add(sunPathLine);
-  sunMarker=new THREE.Mesh(new THREE.SphereGeometry(8,18,12),
+  sunMarker=new THREE.Mesh(new THREE.SphereGeometry(6.5,18,12),
    new THREE.MeshBasicMaterial({color:0xfff1c4}));
   sunMarker.name='太阳';climateGroup.add(sunMarker);
  }

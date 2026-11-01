@@ -136,8 +136,9 @@ const must=[
  ['windAtHeight(h.ws,PED_Z)',  'the pedestrian wind readout'],
  ['sunHours.lo',               'the stretched sun ramp'],
  ['lo:pick(.02),hi:pick(.98)', 'the ramp percentiles'],
- ['const WIND_N=3000',         'the particle count raised for visibility'],
- ['opacity:.95',               'the particle opacity raised for visibility'],
+ ['const WIND_N=2200',         'the particle count raised for visibility'],
+ ['opacity:.88',               'the particle opacity raised for visibility'],
+ ['Math.min(14,3+spd*1.4)',    'the cap that stops a gale reading as rain'],
  ['edgePoint=',                'upwind release of the particles'],
  ['LAWSON[w.cat].k',           'the Lawson grade in the CSV'],
 ];
