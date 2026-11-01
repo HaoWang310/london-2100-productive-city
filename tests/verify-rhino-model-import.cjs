@@ -264,7 +264,12 @@ assert(html.includes('function exportPlotsCSV(){'), 'Plot schedule export is mis
 assert(html.includes("if(state.mode==='plots'){const lp=plotAt(e);"), 'Plots must be selectable in the view');
 // LAND USE v40 — green frame first, buildings second, capacity from the ratio.
 assert(html.includes('function planLandUse(){'), 'Land use planning is missing');
-assert(html.includes('const dWater=bfs(k=>k===3,ground),dRoad=bfs(k=>k===4,walkable);'), 'The three setback bands must be distance transforms');
+assert(html.includes('const dWater=bfs(k=>k===3,ground);'), 'The three setback bands must be distance transforms');
+// The road distance carries which road cell it came from, so a band cell knows
+// which way it faces. Without it the arc length runs straight round a corner
+// and one parcel came out as a chevron sitting on two streets at once.
+assert(html.includes('d2[o]=nd;srcRoad[o]=srcRoad[c];qq[t7++]=o;'), 'The road distance must carry its source');
+assert(html.includes('const b=sec*4096+Math.max(0,Math.min(n-1,Math.floor(sAl[c]*G/step)));'), 'A parcel may run along a street but not turn a corner');
 // A structure's plan edge is a curved form cut by a half-metre grid, so it is
 // nibbled all along, and a clearance measured off it came through the
 // subdivision as a staircase down one side of a plot.
@@ -289,7 +294,7 @@ assert(html.includes('return bestR*2*G>=landUse.minWidth;'), 'The width test mus
 assert(html.includes('if(use[c]===1&&grow[c]===INF){use[c]=-1;built-=G*G}'), 'The building band must be opened before it is split');
 // The cut runs across the street, not across one axis: a single axis fans the
 // cuts out where the frontage turns and the end parcels come to a point.
-assert(html.includes('const b=Math.max(0,Math.min(n-1,Math.floor(sAl[c]*G/step)));'), 'Parcels must be cut along the frontage');
+assert(html.includes('Math.floor(sAl[c]*G/step)'), 'Parcels must be cut along the frontage');
 assert(html.includes('d[o]=nd;sAl[o]=sAl[c];q[tail++]=o;'), 'The band must carry its frontage position inward');
 assert(html.includes('if(kept>=footprintTarget*.95)break;'), 'A plot rounded down one parcel at a time must be topped back up');
 assert(html.includes('if(Math.floor((k2+1)*keepRatio)>Math.floor(k2*keepRatio))keep.add(b);'), 'Dropped parcels must be spread evenly along the street');
