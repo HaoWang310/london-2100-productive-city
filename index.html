@@ -309,6 +309,16 @@ input[type=range]{accent-color:var(--sys-blue)}
 ::-webkit-scrollbar{width:7px;height:7px}
 ::-webkit-scrollbar-thumb{background:rgba(235,235,245,.3);border-radius:980px}
 ::-webkit-scrollbar-track{background:transparent}
+/* The feature toggles were tinted slabs. The system tints the LABEL and keeps
+   the chip itself a material, so they sit in the same row as everything else. */
+.layers #waterToggleMain,.layers #parkToggleMain,#waterToggle,.parkSettings button{
+ background:var(--sys-material)!important;border:.5px solid var(--sys-sep)!important;
+ border-radius:980px!important;-webkit-backdrop-filter:blur(24px) saturate(180%);
+ backdrop-filter:blur(24px) saturate(180%)}
+#waterToggle,#waterToggleMain{color:#64d2ff!important}
+.parkSettings button{color:#30d158!important}
+.layers #waterToggleMain:hover,#waterToggle:hover,.parkSettings button:hover{background:var(--sys-bg-3)!important}
+[aria-pressed="false"]#waterToggleMain,[aria-pressed="false"]#waterToggle{opacity:.45}
 /* Land panel picks up the same material and the system accent */
 .plotsPanel{border-radius:14px}
 .plotRow{border-radius:8px}
@@ -3544,7 +3554,7 @@ function buildLandPlots(){
   mesh.rotation.x=-Math.PI/2;mesh.position.y=.34;mesh.userData={plot:p};
   const pts=p.outer.map(([x,y])=>new THREE.Vector3(x,.37,-y));pts.push(pts[0].clone());
   const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
-   new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.34,depthWrite:false}));
+   new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.5,depthWrite:false}));
   mesh.userData.line=line;
   plotGroup.add(mesh);plotGroup.add(line);plotMeshes.push(mesh);
  }
@@ -3562,7 +3572,7 @@ function updateLandPlots(){
   m.material.color.set(on?'#0a84ff':hot?'#1d2026':'#07080a');
   m.material.opacity=on?.72:hot?.86:.82;
   m.userData.line.material.color.set(on?0x9fd0ff:0xffffff);
-  m.userData.line.material.opacity=on?.95:.34;
+  m.userData.line.material.opacity=on?.95:.5;
  }
 }
 function plotAt(e){
