@@ -268,6 +268,11 @@ assert(html.includes('const dWater=bfs(k=>k===3,ground),dRoad=bfs(k=>k===4,walka
 assert(html.includes('if(klass[c]===1&&dWater[c]>bw&&dRoad[c]>br&&dStruct[c]>bs)free[c]=1;'), 'Net developable ground must exclude all three bands');
 assert(html.includes('const gfaTarget=p.area*landUse.far;'), 'Capacity must come from the floor area ratio');
 assert(html.includes('short:Math.max(0,gfaTarget-footprint*landUse.storeys)'), 'A plot that cannot meet the ratio must report the shortfall, not force it');
+// And when the ratio asks for LESS than the frontage would give, the quantity
+// comes off the frontage, not the depth: a 4 m deep building is not a
+// building. Without this the 10 m floor took the site to 2.43 against 1.80.
+assert(html.includes('const keepRatio=bandArea>0?Math.min(1,footprintTarget/bandArea):1;'), 'Surplus capacity must be taken off the frontage');
+assert(html.includes('if(Math.floor((k2+1)*keepRatio)>Math.floor(k2*keepRatio))keep.add(b);'), 'Dropped parcels must be spread evenly along the street');
 // The building band grows inward FROM the street, so the green stays whole at the back.
 assert(html.includes('if(dRoad[c]<=nearBand){d[c]=0;q[tail++]=c}'), 'Depth must be measured from the frontage');
 assert(html.includes("const tag=-(20+gidx);for(const c of list)use[c]=tag;"), 'Each green piece needs its own tag or tracing picks up its neighbour');

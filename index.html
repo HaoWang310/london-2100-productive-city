@@ -3697,7 +3697,27 @@ function planLandUse(){
     if(i<e.box[0])e.box[0]=i;if(j<e.box[1])e.box[1]=j;
     if(i>e.box[2])e.box[2]=i;if(j>e.box[3])e.box[3]=j;
    }
-   for(const [b,e] of [...bucket.entries()].sort((a,c)=>a[0]-c[0])){
+   // A band shallower than the minimum depth is not a building, so when the
+   // ratio asks for less than the frontage would give, the quantity is taken
+   // off the FRONTAGE instead: parcels are dropped evenly along the street,
+   // which is how a street with gaps in it actually works. Without this the
+   // 10 m floor overbuilt every small plot and the site came out at 2.43
+   // against a target of 1.80.
+   const order=[...bucket.entries()].sort((a,c)=>a[0]-c[0]);
+   const bandArea=order.reduce((s2,[,e])=>s2+e.n*G*G,0);
+   const keepRatio=bandArea>0?Math.min(1,footprintTarget/bandArea):1;
+   const keep=new Set();
+   if(keepRatio>=.95)order.forEach(([b])=>keep.add(b));
+   else order.forEach(([b],k2)=>{
+    if(Math.floor((k2+1)*keepRatio)>Math.floor(k2*keepRatio))keep.add(b);
+   });
+   if(!keep.size&&order.length)keep.add(order[0][0]);
+   for(const [b,e] of order)if(!keep.has(b))
+    for(let j=e.box[1];j<=e.box[3];j++)for(let i=e.box[0];i<=e.box[2];i++){
+     const c=j*W+i;if(comp[c]===id&&use[c]===2+b)use[c]=-1;
+    }
+   for(const [b,e] of order){
+    if(!keep.has(b))continue;
     const a2=e.n*G*G;if(a2<landUse.minParcel)continue;
     const bx=[Math.max(0,e.box[0]-1),Math.max(0,e.box[1]-1),Math.min(W-1,e.box[2]+1),Math.min(H-1,e.box[3]+1)];
     const sh=regionShape((i,j)=>i>=0&&j>=0&&i<W&&j<H&&comp[j*W+i]===id&&use[j*W+i]===2+b,bx,plotRaster);
