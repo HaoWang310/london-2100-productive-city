@@ -107,3 +107,33 @@ Both now follow the same all-site rule the road markings, the medians, the
 furniture and the vehicles already used: visible in 全部场地 and in the three
 site modes, hidden as soon as a parcel card or a Form card is open. Nothing was
 removed from the water or planting geometry; only their visibility changed.
+
+## Loose edge-wall fins on the structure Forms (v35)
+
+Several of the embedded Rhino render meshes carry a strip of a slab's vertical
+edge wall that runs on past the top and bottom surfaces it belongs to. The strip
+is about 0.12 m wide and up to 11 m long, so at site zoom it draws as a one-pixel
+hair sticking out of the Form — the burrs visible in the Form library.
+
+Two things made it hard to find. The strips are well-formed quads, so every
+degenerate-triangle test passes them; three separate sliver filters (zero area,
+tiny area, high aspect ratio) removed 1,288 faces and changed nothing on screen.
+And removing only the exposed strip is not enough: the wall is several strips
+tall, so taking the outer one just uncovers the next. What identifies a fin is
+that its LONG edge is shared with no other face — a wall that is properly backed
+shares both long edges with a surface and never starts peeling.
+
+`trimLooseFins()` therefore peels iteratively, dropping the exposed strips and
+decrementing only their edges so the next pass sees what that uncovered. It runs
+once at load over the embedded model and the LOD model: 2,158 of 85,646 faces in
+the display model, 0.14 % of the surface area, converging in at most 8 passes,
+about 0.6 s for both models together.
+
+`E-01` and `C-11-17-S1` are thin plates by design — the whole object is 0.12 m
+strips — so peeling would consume them. Any unit that would lose more than 60 %
+of its area is left exactly as the Rhino file has it. If a future source adds
+more such elements, they will be named in the console line at load.
+
+No vertex is moved and nothing is added; only faces that bound no solid are
+dropped. The OBJ export says so in its header and still writes Rhino world
+coordinates.

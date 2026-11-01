@@ -153,6 +153,40 @@ assert(html.includes('const furniture=buildRoadFurniture(roadDesignGroup);'), 'F
 // they cut across the plot and show their section walls from the inside.
 assert(html.includes("if(state.mode==='report'&&(reportFormId||reportParcel!=='all')){waterGroup.visible=false;return}"), 'Water must be hidden in the parcel and Form views');
 assert(html.includes('g.visible=landscapeConfig.enabled&&allView&&(showAll||ids.includes(id));'), 'Planting must be hidden in the parcel and Form views');
+// FIN TRIM v35 — a strip of a slab's edge wall that runs past the surfaces it
+// belongs to is drawn as a hair sticking out of the Form. Run the real trim
+// over the embedded model and check what it did, not just that it is present.
+{
+ const zlib = require('node:zlib');
+ const g = html.match(/MODEL_GZIP\s*=\s*['"]([A-Za-z0-9+/=]+)['"]/);
+ assert(g, 'Embedded model payload is missing');
+ const embedded = JSON.parse(zlib.gunzipSync(Buffer.from(g[1], 'base64')).toString());
+ const from = html.indexOf('const FIN_WIDTH=');
+ assert(from > 0, 'Fin trim constants are missing');
+ const src = html.slice(from, html.indexOf('\n}\n', html.indexOf('function trimLooseFins')) + 3);
+ const sandbox = {};
+ vm.createContext(sandbox);
+ vm.runInContext(src + '\nthis.trimLooseFins = trimLooseFins; this.FIN_WIDTH = FIN_WIDTH;', sandbox);
+ const before = embedded.units.map(u => u.mesh.t.length / 3);
+ const report = sandbox.trimLooseFins(embedded.units);
+ assert(report.removed > 1200, 'Fin trim removed almost nothing: ' + report.removed);
+ // Thin plates are a real part of the design; the trim must never eat one.
+ // (the report is built inside the vm context, so compare it as text)
+ assert.equal([...report.leftAsModelled].sort().join(','), 'C-11-17-S1,E-01',
+  'Unexpected set of units left as modelled: ' + report.leftAsModelled.join(','));
+ for (const id of report.leftAsModelled) {
+  const i = embedded.units.findIndex(u => u.id === id);
+  assert.equal(embedded.units[i].mesh.t.length / 3, before[i], id + ' must keep every face');
+ }
+ const after = embedded.units.reduce((s, u) => s + u.mesh.t.length / 3, 0);
+ assert.equal(report.scanned - report.removed, after, 'Trim report does not match the meshes it wrote');
+ assert(report.removed / report.scanned < .05, 'Trim took too much of the model');
+ // Nothing exposed should be left behind: a second run has nothing to do.
+ assert.equal(sandbox.trimLooseFins(embedded.units).removed, 0, 'Fin trim is not stable');
+ // And no vertex moved — the trim only drops faces.
+ assert(embedded.units.every(u => u.mesh.t.every(i => i * 3 + 2 < u.mesh.v.length)),
+  'Trim left an index pointing outside the vertex list');
+}
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

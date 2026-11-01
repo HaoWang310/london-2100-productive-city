@@ -1715,6 +1715,69 @@ function toast(msg){$('#toast').textContent=msg;$('#toast').classList.add('show'
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000)}
 function bufferGeom(m){const g=new THREE.BufferGeometry(),p=new Float32Array(m.v.length);for(let i=0;i<p.length;i+=3){p[i]=m.v[i];p[i+1]=m.v[i+2];p[i+2]=-m.v[i+1]}g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setIndex(m.t);if(m.n){const n=new Float32Array(m.n.length);for(let i=0;i<n.length;i+=3){n[i]=m.n[i];n[i+1]=m.n[i+2];n[i+2]=-m.n[i+1]}g.setAttribute('normal',new THREE.BufferAttribute(n,3))}else g.computeVertexNormals();g.computeBoundingSphere();return g}
 function material(color){return new THREE.MeshStandardMaterial({color,roughness:.79,metalness:.05,side:THREE.DoubleSide})}
+// FORM GEOMETRY v35 — loose edge-wall fins on the structure Forms.
+// Several Rhino render meshes carry a strip of a slab's vertical edge wall that
+// runs on past the top and bottom surfaces it belongs to: a free-standing
+// ribbon about 0.12 m wide and up to 11 m long, drawn as a hair sticking out of
+// the Form. Each strip is a well-formed quad, so no degenerate-triangle test
+// finds it; what gives it away is that its LONG edge is shared with nothing,
+// while a wall that is properly backed shares both long edges with a surface.
+// Peeling has to be iterative: removing the outermost strip exposes the next.
+// A unit that would lose most of itself is a thin plate by design, not a fin,
+// so it is left exactly as the Rhino file has it. Nothing is added or moved —
+// only faces that bound no solid are dropped.
+const FIN_WIDTH=.13,FIN_KEEP=.6,FIN_PASSES=40;
+function trimLooseFins(units){
+ let scanned=0,removed=0,cleaned=0;const kept=[];
+ for(const u of units){
+  const m=u&&u.mesh;if(!m||!m.v||!m.t||!m.t.length)continue;
+  const v=m.v,t0=m.t,n=t0.length/3;scanned+=n;
+  // Weld by position: the render mesh repeats vertices per face, so face
+  // adjacency can only be read from coordinates.
+  const ids=new Map(),w=new Int32Array(v.length/3);
+  for(let i=0;i<v.length/3;i++){
+   const k=v[i*3].toFixed(3)+','+v[i*3+1].toFixed(3)+','+v[i*3+2].toFixed(3);
+   let id=ids.get(k);if(id===undefined){id=ids.size;ids.set(k,id)}w[i]=id;
+  }
+  const tri=[];
+  for(let f=0;f<n;f++){
+   const a=t0[f*3],b=t0[f*3+1],c=t0[f*3+2];
+   const P=[a,b,c].map(i=>[v[i*3],v[i*3+1],v[i*3+2]]);
+   const L=[0,1,2].map(j=>{const p=P[j],q=P[(j+1)%3];return Math.hypot(q[0]-p[0],q[1]-p[1],q[2]-p[2])});
+   const ux=[P[1][0]-P[0][0],P[1][1]-P[0][1],P[1][2]-P[0][2]],wx=[P[2][0]-P[0][0],P[2][1]-P[0][1],P[2][2]-P[0][2]];
+   const cr=[ux[1]*wx[2]-ux[2]*wx[1],ux[2]*wx[0]-ux[0]*wx[2],ux[0]*wx[1]-ux[1]*wx[0]];
+   const area=Math.hypot(cr[0],cr[1],cr[2])/2,longest=Math.max(L[0],L[1],L[2]);
+   const E=[[w[a],w[b]],[w[b],w[c]],[w[c],w[a]]].map(e=>e[0]<e[1]?e[0]+'|'+e[1]:e[1]+'|'+e[0]);
+   tri.push({area,L,longest,width:longest>0?2*area/longest:0,E});
+  }
+  const alive=new Uint8Array(n).fill(1);let gone=0,total=0;
+  const use=new Map(),strips=[];
+  for(let f=0;f<n;f++){total+=tri[f].area;
+   for(const e of tri[f].E)use.set(e,(use.get(e)||0)+1);
+   if(tri[f].width<FIN_WIDTH)strips.push(f);
+  }
+  // Each pass drops the strips that are now exposed and decrements only their
+  // edges, so the next pass sees what that uncovered without a full recount.
+  for(let pass=0;pass<FIN_PASSES&&strips.length;pass++){
+   const kill=[];
+   for(const f of strips){
+    if(!alive[f])continue;const r=tri[f];
+    // Only a LONG side counts: a strip's short ends meet the next strip, and
+    // an open short end is simply where the wall stops.
+    if(r.E.some((e,j)=>r.L[j]>r.longest*.5&&use.get(e)===1))kill.push(f);
+   }
+   if(!kill.length)break;
+   for(const f of kill){alive[f]=0;gone+=tri[f].area;for(const e of tri[f].E)use.set(e,use.get(e)-1)}
+  }
+  if(!gone)continue;
+  if(total&&gone/total>FIN_KEEP){kept.push(u.id);continue}
+  const out=[];let dropped=0;
+  for(let f=0;f<n;f++){if(alive[f]){out.push(t0[f*3],t0[f*3+1],t0[f*3+2])}else dropped++}
+  m.t=out;removed+=dropped;cleaned++;
+ }
+ return {scanned,removed,cleaned,leftAsModelled:kept};
+}
+
 
 // LANDSCAPE v10 — separate, optional, model-avoiding context layer.
 // Original Rhino-derived meshes and 24/58 parcel/unit topology remain untouched.
@@ -3477,7 +3540,7 @@ function renderReport(){const active=state.report;$$('[data-report]').forEach(b=
  $('#reportBody tr[data-id]').forEach(r=>r.onclick=()=>{if(state.report==='parcel'&&parcelById.has(r.dataset.id)){window.FORM_CHANGE_REPORT_PARCEL?.(r.dataset.id);$('#report').scrollTo({top:155,behavior:'smooth'});}else{setMode('overview');select(r.dataset.id);focusSelected()}});$('#exportManifest')?.addEventListener('click',exportManifest);$('#importManifest')?.addEventListener('click',importManifest);
 }
 function exportCSV(){renderReport();const esc=x=>'"'+String(x).replace(/"/g,'""')+'"';const csv='\ufeff'+[reportHeaders,...reportRows].map(r=>r.map(esc).join(',')).join('\r\n');download(new Blob([csv],{type:'text/csv;charset=utf-8'}),'FORM_'+state.report+'.csv');toast('当前表格已导出')}
-function exportOBJ(){const u=unitById.get(state.selected);if(!u)return;let text=`# FORM / ASSEMBLY\n# Source: 2(1).3dm | Units: meters | Original Rhino coordinates\n# Display segmentation; open cut boundaries, not fabrication ready\no ${u.id}\n`;const o=model.meta.origin;for(let i=0;i<u.mesh.v.length;i+=3)text+=`v ${u.mesh.v[i]+o[0]} ${u.mesh.v[i+1]+o[1]} ${u.mesh.v[i+2]+o[2]}\n`;for(let i=0;i<u.mesh.t.length;i+=3)text+=`f ${u.mesh.t[i]+1} ${u.mesh.t[i+1]+1} ${u.mesh.t[i+2]+1}\n`;download(new Blob([text],{type:'text/plain'}),u.id+'.obj');toast('单元 OBJ 已导出 · 保留 Rhino 原坐标')}
+function exportOBJ(){const u=unitById.get(state.selected);if(!u)return;let text=`# FORM / ASSEMBLY\n# Source: 2(1).3dm | Units: meters | Original Rhino coordinates\n# Display segmentation; open cut boundaries, not fabrication ready\n# Loose edge-wall fins dropped for display; no vertex moved, Rhino coordinates kept\no ${u.id}\n`;const o=model.meta.origin;for(let i=0;i<u.mesh.v.length;i+=3)text+=`v ${u.mesh.v[i]+o[0]} ${u.mesh.v[i+1]+o[1]} ${u.mesh.v[i+2]+o[2]}\n`;for(let i=0;i<u.mesh.t.length;i+=3)text+=`f ${u.mesh.t[i]+1} ${u.mesh.t[i+1]+1} ${u.mesh.t[i+2]+1}\n`;download(new Blob([text],{type:'text/plain'}),u.id+'.obj');toast('单元 OBJ 已导出 · 保留 Rhino 原坐标')}
 function exportManifest(){const d={application:'FORM / ASSEMBLY',version:1,source:model.meta.source,modelKey:'2-1-3dm-components-v2',unit:'m',origin:model.meta.origin,assembled:[...state.assembled],parts:assemblyOrder.map((u,i)=>({order:i+1,id:u.id,kind:u.kind,assembled:state.assembled.has(u.id)})),note:'Presentation assembly only; interfaces require design verification'};download(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),'FORM_assembly.json');try{localStorage.setItem('formAssemblyV2',JSON.stringify([...state.assembled]))}catch(e){}toast('装配清单已保存，可再次读取')}
 function importManifest(){const input=document.createElement('input');input.type='file';input.accept='.json';input.onchange=async()=>{try{const d=JSON.parse(await input.files[0].text());if(d.modelKey!=='2-1-3dm-components-v2'||!Array.isArray(d.assembled))throw Error();const ids=d.assembled.filter(id=>unitById.has(id));state.assembled=new Set(ids);renderReport();updateAssemblyUI();renderInspector();toast('装配清单已恢复')}catch(e){toast('清单不匹配，请使用本模型导出的 JSON')}};input.click()}
 function togglePresentation(){state.presentation=!state.presentation;document.body.classList.toggle('present',state.presentation);$('#presentBtn').textContent=state.presentation?'退出演示 ↙':'演示模式 ↗';setTimeout(()=>{resize();if(!state.isolated)fitWhole()},50)}
@@ -3491,6 +3554,7 @@ async function init(){try{
  model=JSON.parse(await new Response(stream).text());
  const lb=Uint8Array.from(atob(LOD_GZIP),c=>c.charCodeAt(0));
  lowModel=JSON.parse(await new Response(new Blob([lb]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
+ console.info('Loose edge-wall fins trimmed from the structure render meshes',trimLooseFins([...model.units,...(lowModel?.units||[])]));
  // Geometry-first source replacement: both the Site and Roads render meshes
  // are read from the SAME published Rhino file and remain in Rhino coordinates.
  // Keep original parcels, structures, assembly, water and greenery intact.
