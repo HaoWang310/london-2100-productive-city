@@ -184,6 +184,143 @@ body.formResizing,body.formResizing *{cursor:inherit!important;user-select:none!
 @media(max-width:600px){.report{padding:10px}.reportTop h1{font-size:14px}.reportTop .pill{font-size:11px;padding:7px}}
 @media print{.formSplitGrip,.formCanvasHeightGrip,.formMapResizeGrip,.formResizeGuide{display:none!important}.formStudio{height:auto!important;grid-template-columns:36% 1fr!important}.reportTop .eyebrow,.reportTop p{display:block}}
 </style>
+<style id="apple-dark-v39">
+/* APPLE-STYLE DARK v39 — one theme layer over the app's own rules.
+   The interface had been converted to dark surfaces only halfway: the chips,
+   the view bar, the badge, the labels, the report cards and the toast were all
+   still light-mode fills, so they read as white blobs floating on a black
+   stage. Rather than edit a few hundred declarations in place, the semantic
+   colours are restated here, once, and the leftovers are mapped onto them.
+   Values follow Apple's dark system palette: pure black base, elevated greys,
+   hairline separators at 12% white, secondary label at 60%, systemBlue accent,
+   and translucent materials for anything floating over content. */
+:root{
+ --sys-bg:#000000;            /* systemBackground */
+ --sys-bg-2:#1c1c1e;          /* secondarySystemBackground */
+ --sys-bg-3:#2c2c2e;          /* tertiarySystemBackground */
+ --sys-fill:rgba(120,120,128,.24);
+ --sys-fill-2:rgba(120,120,128,.32);
+ --sys-sep:rgba(255,255,255,.12);
+ --sys-label:#ffffff;
+ --sys-label-2:rgba(235,235,245,.6);
+ --sys-label-3:rgba(235,235,245,.3);
+ --sys-blue:#0a84ff;
+ --sys-material:rgba(28,28,30,.72);
+ --ink:var(--sys-label);--muted:var(--sys-label-2);--line:var(--sys-sep);
+ --soft:var(--sys-bg-2);--surface-1:var(--sys-bg-2);--gold:#d3b986;
+ --text-primary:var(--sys-label);
+}
+body{background:var(--sys-bg);color:var(--sys-label);
+ -webkit-font-smoothing:antialiased;letter-spacing:-.01em;
+ font-feature-settings:"ss01","cv01";}
+header,aside,.inspector{background:var(--sys-bg);}
+header{border-bottom:.5px solid var(--sys-sep)}
+aside{border-right:.5px solid var(--sys-sep)}
+.inspector{border-left:.5px solid var(--sys-sep)}
+.stage{background:var(--sys-bg)}
+/* Segmented control, the way the system draws one */
+.nav{background:var(--sys-fill);border:0;border-radius:9px;padding:2px;gap:2px}
+.nav button{border-radius:7px;color:var(--sys-label);opacity:.6;font-size:13px;
+ font-weight:500;padding:7px 18px;transition:background .18s,opacity .18s}
+.nav button:hover{background:transparent;opacity:.85}
+.nav button.active{background:#636366;color:#fff;opacity:1;
+ box-shadow:0 3px 8px rgba(0,0,0,.4),0 .5px 0 rgba(255,255,255,.12) inset}
+/* Filled accent button */
+.black,.nav button.active,.viewbar button.active{background:var(--sys-blue);color:#fff}
+.nav button.active{background:#636366}
+.viewbar button.active{background:var(--sys-fill-2);color:#fff}
+.black{border-radius:10px;font-weight:500}
+.black:hover{background:#3d9bff}
+.round,.pill{border:.5px solid var(--sys-sep);background:var(--sys-fill);color:var(--sys-label)}
+.round:hover,.pill:hover{background:var(--sys-fill-2)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--sys-blue);outline-offset:2px}
+/* Anything floating over the stage is a material, never a white card */
+.layer,.viewbar,.explodePanel,.badge,.label,.tooltip,.toast,.plotsPanel,.formOverview{
+ background:var(--sys-material);border:.5px solid var(--sys-sep);
+ -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
+ box-shadow:0 8px 32px rgba(0,0,0,.44);color:var(--sys-label)}
+.layer{border-radius:980px;color:var(--sys-label-2)}
+.layer.off{opacity:.38}
+.viewbar{border-radius:14px}
+.viewbar button{color:var(--sys-label-2);border-radius:10px}
+.viewbar button:hover{background:var(--sys-fill)}
+.separator{background:var(--sys-sep)}
+.explodePanel{border-radius:14px}
+.badge{border-radius:980px;color:var(--sys-label-2)}
+.badge::before{background:var(--sys-blue)}
+.label{border-radius:6px;color:var(--sys-label-2);font-weight:500}
+.tooltip{border-radius:10px;color:var(--sys-label)}
+.toast{border-radius:980px;color:var(--sys-label)}
+/* Lists and inspector */
+.search{background:var(--sys-fill);border:.5px solid var(--sys-sep);color:var(--sys-label);border-radius:10px}
+.search::placeholder{color:var(--sys-label-3)}
+.unitRow{border-radius:10px}
+.unitRow:hover{background:var(--sys-fill)}
+.unitRow.active{background:var(--sys-fill-2)}
+.unitRow .symbol{border:.5px solid var(--sys-sep);background:var(--sys-bg-2);color:var(--sys-label-2)}
+.unitRow.active .symbol{background:var(--sys-blue);border-color:var(--sys-blue);color:#fff}
+.unitRow small,.sideFoot,.hint,.small,.counter small,.statCard small,.statCard span{color:var(--sys-label-2)}
+.sideFoot b{color:var(--sys-label)}
+.dataLine{border-bottom:.5px solid var(--sys-sep)}
+.dataLine span{color:var(--sys-label-2)}
+.miniMap{background:var(--sys-bg-2);border:.5px solid var(--sys-sep);border-radius:12px}
+.tag{border:.5px solid var(--sys-sep);background:var(--sys-fill);border-radius:8px;color:var(--sys-label-2)}
+.inspector button.wide{border:.5px solid var(--sys-sep);background:var(--sys-fill)}
+.inspector button.wide:hover{background:var(--sys-fill-2)}
+.inspector .bottom{border-top:.5px solid var(--sys-sep)}
+.bottom button{border:.5px solid var(--sys-sep);background:var(--sys-fill)}
+.assemblyActions button{border:.5px solid var(--sys-sep);background:var(--sys-fill);border-radius:8px}
+.assemblyActions button:hover{background:var(--sys-fill-2)}
+input[type=range]{accent-color:var(--sys-blue)}
+/* Report */
+.report{background:var(--sys-bg)}
+.reportTabs{border-bottom:.5px solid var(--sys-sep)}
+.reportTabs button{color:var(--sys-label-2)}
+.reportTabs button.active{color:var(--sys-label);border-bottom-color:var(--sys-blue);border-color:transparent;border-bottom:2px solid var(--sys-blue)}
+.statCard,.reportBody{background:var(--sys-bg-2);border:.5px solid var(--sys-sep);border-radius:14px}
+.reportBody th{border-bottom:.5px solid var(--sys-sep);color:var(--sys-label-2)}
+.reportBody td{border-bottom:.5px solid var(--sys-sep)}
+.reportBody tr[data-id]:hover{background:var(--sys-fill)}
+.report th,.report td{border-color:var(--sys-sep)!important}
+.planWrap svg{background:var(--sys-bg-2);border-radius:12px}
+.step{border-bottom:.5px solid var(--sys-sep)}
+.step span{color:var(--sys-label-3)}
+.step p{color:var(--sys-label-2)}
+/* Modal, loader */
+.modalBackdrop{background:rgba(0,0,0,.5)}
+.modal{background:var(--sys-bg-2);border:.5px solid var(--sys-sep);border-radius:18px;
+ box-shadow:0 30px 90px rgba(0,0,0,.6)}
+.modal p,.modal td:last-child{color:var(--sys-label-2)}
+.modal td{border-bottom:.5px solid var(--sys-sep)}
+.loader{background:var(--sys-bg)}
+.loader .progress{background:var(--sys-fill)}
+.loader .progress::after{background:var(--sys-blue)}
+.loader p{color:var(--sys-label-2)}
+/* Form library and navigator */
+.formBrowser,.formViewer,.formStudio{background:var(--sys-bg)}
+.formCard{border-radius:12px}
+.formCard[aria-pressed="true"]{border-color:var(--sys-blue)!important;
+ box-shadow:0 0 0 1px var(--sys-blue) inset!important}
+.formOverview{border-radius:14px}
+.formOverviewParcel.selected{fill:#ebebf5}
+.formOverviewMarker{fill:#ffffff;stroke:#000}
+/* Scrollbars, the slim system kind */
+*{scrollbar-width:thin;scrollbar-color:rgba(235,235,245,.3) transparent}
+::-webkit-scrollbar{width:7px;height:7px}
+::-webkit-scrollbar-thumb{background:rgba(235,235,245,.3);border-radius:980px}
+::-webkit-scrollbar-track{background:transparent}
+/* Land panel picks up the same material and the system accent */
+.plotsPanel{border-radius:14px}
+.plotRow{border-radius:8px}
+.plotRow:hover{background:var(--sys-fill)}
+.plotRow.on{background:var(--sys-blue);color:#fff}
+.plotsChosen{color:var(--sys-label-2);border-bottom:.5px solid var(--sys-sep)}
+.plotsHead{border-bottom:.5px solid var(--sys-sep)}
+.plotsHead small{color:var(--sys-label-2)}
+.plotsHead button,.plotsFoot button{border:.5px solid var(--sys-sep);background:var(--sys-fill);border-radius:8px;color:var(--sys-label)}
+.plotsHead button:hover,.plotsFoot button:hover{background:var(--sys-fill-2)}
+.plotsFoot{border-top:.5px solid var(--sys-sep)}
+</style>
 </head><body>
 <div class="loader" id="loader"><div class="mark">FORM / ASSEMBLY</div><div class="progress"></div><p id="loadText">正在读取真实 Rhino 几何…</p></div>
 <header><button class="round" id="libraryToggle" aria-label="收起结构单元库" title="收起 / 展开结构单元库" aria-controls="partsSidebar" aria-expanded="true">☰</button><div><div class="brand">FORM <span>/</span> ASSEMBLY</div><div class="edition">LONDON 2100 · STRUCTURE ATLAS</div></div><nav class="nav" aria-label="工作模式"><button class="active" data-mode="overview">总览</button><button data-mode="explode">拆解</button><button data-mode="assembly">装配</button><button data-mode="plots">用地</button><button data-mode="report">报表</button></nav><div class="headerActions"><button class="round" id="helpBtn" title="操作说明">?</button><button class="pill" id="presentBtn">演示模式 ↗</button></div></header>
@@ -3400,14 +3537,14 @@ function buildLandPlots(){
  for(const p of landPlots){
   const sh=new THREE.Shape(p.outer.map(([x,y])=>new THREE.Vector2(x,y)));
   for(const h of p.holes)sh.holes.push(new THREE.Path(h.map(([x,y])=>new THREE.Vector2(x,y))));
-  const mesh=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshStandardMaterial({
-   color:'#c3a05c',roughness:.95,metalness:0,side:THREE.DoubleSide,
-   transparent:true,opacity:.58,depthWrite:false,
+  const mesh=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({
+   color:'#07080a',side:THREE.DoubleSide,
+   transparent:true,opacity:.82,depthWrite:false,
    polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}));
   mesh.rotation.x=-Math.PI/2;mesh.position.y=.34;mesh.userData={plot:p};
   const pts=p.outer.map(([x,y])=>new THREE.Vector3(x,.37,-y));pts.push(pts[0].clone());
   const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
-   new THREE.LineBasicMaterial({color:0xf6ead0,transparent:true,opacity:.8,depthWrite:false}));
+   new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.34,depthWrite:false}));
   mesh.userData.line=line;
   plotGroup.add(mesh);plotGroup.add(line);plotMeshes.push(mesh);
  }
@@ -3420,9 +3557,12 @@ function updateLandPlots(){
  plotGroup.visible=state.mode==='plots';
  for(const m of plotMeshes){
   const on=plotSelection.has(m.userData.plot.id),hot=plotHover===m.userData.plot.id;
-  m.material.color.set(on?'#ffd98a':hot?'#e0bd78':'#c3a05c');
-  m.material.opacity=on?.9:hot?.74:.58;
-  m.userData.line.material.opacity=on?1:.8;
+  // Black ground, systemBlue for what is picked — the selection colour the
+  // rest of the interface uses, so the plan reads the same way the UI does.
+  m.material.color.set(on?'#0a84ff':hot?'#1d2026':'#07080a');
+  m.material.opacity=on?.72:hot?.86:.82;
+  m.userData.line.material.color.set(on?0x9fd0ff:0xffffff);
+  m.userData.line.material.opacity=on?.95:.34;
  }
 }
 function plotAt(e){

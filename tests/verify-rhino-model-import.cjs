@@ -254,6 +254,17 @@ assert(html.includes("out.push('0','LWPOLYLINE','8','PLOT_'+p.id,"), 'DXF export
 assert(html.includes("(x+o[0]).toFixed(3),'20',(y+o[1]).toFixed(3)"), 'DXF must carry Rhino world coordinates');
 assert(html.includes('function exportPlotsCSV(){'), 'Plot schedule export is missing');
 assert(html.includes("if(state.mode==='plots'){const lp=plotAt(e);"), 'Plots must be selectable in the view');
+// THEME v39 — the interface was only half converted to dark: chips, view bar,
+// badge, labels, report cards and toast were still light-mode fills.
+assert(html.includes('<style id="apple-dark-v39">'), 'The dark theme layer is missing');
+assert(html.lastIndexOf('<style id="apple-dark-v39">') > html.lastIndexOf('<style id="form-resizable-layout-v14">'),
+ 'The theme layer must come last so it wins on equal specificity');
+assert(html.includes('--sys-blue:#0a84ff;'), 'The system accent is missing');
+for (const sel of ['.layer,.viewbar,.explodePanel,.badge,.label,.tooltip,.toast,.plotsPanel,.formOverview{'])
+ assert(html.includes(sel), 'Floating chrome must be a material, not a white card: ' + sel);
+// Black ground in the land mode, picked plots in the same accent as the UI.
+assert(html.includes("color:'#07080a',side:THREE.DoubleSide,"), 'Land plots must read black');
+assert(html.includes("m.material.color.set(on?'#0a84ff':hot?'#1d2026':'#07080a');"), 'Plot selection must use the system accent');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');
