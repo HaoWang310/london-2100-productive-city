@@ -145,6 +145,10 @@ assert(html.includes('const med=buildRoadMedians(roadDesignGroup);'), 'Medians a
 // FURNITURE v34 — signals sit at the ends of a crossing, lighting on the kerb.
 assert(html.includes('function buildRoadFurniture(group){'), 'Road furniture is missing');
 assert(html.includes('if(group2.length<3)continue;'), 'A lone bar must not be treated as a crossing');
+// A row that reaches both kerbs is wider than the 9 m search radius, so the
+// group has to grow along the row; from the seed alone it split, and the split
+// put a crossing end, and a pole, in the middle of the road.
+assert(html.includes('const r0=rungs[group2[a]],m0=[(r0[0]+r0[2])/2,(r0[1]+r0[3])/2];'), 'Rung clustering must grow along the row');
 assert(html.includes('if(!onRoad(ex+ux*t2*sgn2,ey+uy*t2*sgn2)){off=t2+.6;break}'), 'Signal poles must be walked out to the kerb');
 assert(html.includes('const px=-Math.sin(di),py=Math.cos(di);'), 'A crossing spans across its bars, not along them');
 assert(html.includes('const furniture=buildRoadFurniture(roadDesignGroup);'), 'Furniture is not built with the road detail');

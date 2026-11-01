@@ -2941,7 +2941,7 @@ function updateRoadDesignVisibility(){
 // cannot be read as polygons. Find them the other way round: rasterise the
 // carriageway, burn the line work in as walls, flood in from the kerb, and
 // whatever the flood cannot reach is enclosed by markings — the medians and
-// splitter islands. Measured on 2.3dm: 10 regions, 1,986 m².
+// splitter islands. Measured on 2.3dm: 3,328 m² over 36,983 cells.
 let medianLookup=null;
 function buildRoadMedians(group){
  const roads=model?.roads,lv=roadLineOverride?.v;
@@ -3073,15 +3073,17 @@ function completeCrossings(){
  for(let i=0;i<rungs.length;i++){
   if(used[i])continue;
   const g=[i];used[i]=true;
-  const mi=[(rungs[i][0]+rungs[i][2])/2,(rungs[i][1]+rungs[i][3])/2];
   const di=Math.atan2(rungs[i][3]-rungs[i][1],rungs[i][2]-rungs[i][0]);
-  for(let j=0;j<rungs.length;j++){
-   if(used[j])continue;
-   const mj=[(rungs[j][0]+rungs[j][2])/2,(rungs[j][1]+rungs[j][3])/2];
-   if(Math.hypot(mj[0]-mi[0],mj[1]-mi[1])>9)continue;
-   const dj=Math.atan2(rungs[j][3]-rungs[j][1],rungs[j][2]-rungs[j][0]);
-   if(Math.abs(Math.cos(di-dj))<.9)continue;
-   g.push(j);used[j]=true;
+  for(let a=0;a<g.length;a++){
+   const r0=rungs[g[a]],m0=[(r0[0]+r0[2])/2,(r0[1]+r0[3])/2];
+   for(let j=0;j<rungs.length;j++){
+    if(used[j])continue;
+    const mj=[(rungs[j][0]+rungs[j][2])/2,(rungs[j][1]+rungs[j][3])/2];
+    if(Math.hypot(mj[0]-m0[0],mj[1]-m0[1])>9)continue;
+    const dj=Math.atan2(rungs[j][3]-rungs[j][1],rungs[j][2]-rungs[j][0]);
+    if(Math.abs(Math.cos(di-dj))<.9)continue;
+    g.push(j);used[j]=true;
+   }
   }
   if(g.length<3)continue;
   rows.push({g,di});
@@ -3266,15 +3268,20 @@ function buildRoadFurniture(group){
  for(let i=0;i<rungs.length;i++){
   if(used[i])continue;
   const group2=[i];used[i]=true;
-  const mi=[(rungs[i][0]+rungs[i][2])/2,(rungs[i][1]+rungs[i][3])/2];
   const di=Math.atan2(rungs[i][3]-rungs[i][1],rungs[i][2]-rungs[i][0]);
-  for(let j=0;j<rungs.length;j++){
-   if(used[j])continue;
-   const mj=[(rungs[j][0]+rungs[j][2])/2,(rungs[j][1]+rungs[j][3])/2];
-   if(Math.hypot(mj[0]-mi[0],mj[1]-mi[1])>9)continue;
-   const dj=Math.atan2(rungs[j][3]-rungs[j][1],rungs[j][2]-rungs[j][0]);
-   if(Math.abs(Math.cos(di-dj))<.9)continue;
-   group2.push(j);used[j]=true;
+  // Grow along the row, not out from the seed: a row that now reaches both
+  // kerbs is wider than the 9 m radius, and measuring from the seed alone
+  // split it in two and put an end — a pole — in the middle of the road.
+  for(let a=0;a<group2.length;a++){
+   const r0=rungs[group2[a]],m0=[(r0[0]+r0[2])/2,(r0[1]+r0[3])/2];
+   for(let j=0;j<rungs.length;j++){
+    if(used[j])continue;
+    const mj=[(rungs[j][0]+rungs[j][2])/2,(rungs[j][1]+rungs[j][3])/2];
+    if(Math.hypot(mj[0]-m0[0],mj[1]-m0[1])>9)continue;
+    const dj=Math.atan2(rungs[j][3]-rungs[j][1],rungs[j][2]-rungs[j][0]);
+    if(Math.abs(Math.cos(di-dj))<.9)continue;
+    group2.push(j);used[j]=true;
+   }
   }
   if(group2.length<3)continue;                 // a lone bar is not a crossing
   // Each bar of a zebra runs ALONG the traffic, and it is the row of bars that
