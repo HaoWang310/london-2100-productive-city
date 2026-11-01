@@ -3106,47 +3106,20 @@ function completeCrossings(){
  // the bars carry no z of their own; the ribbon builder lays them on the deck
  let deck=0;for(let i=2;i<lv.length;i+=3)if(lv[i]>deck)deck=lv[i];
  const setZ=()=>{for(let i=2;i<out.v.length;i+=3)out.v[i]=deck};
- // --- 1. run every row out to its kerbs ------------------------------------
- const centres=[];let added=0;
- for(const {g,di} of rows){
-  const ux=Math.cos(di),uy=Math.sin(di),px=-uy,py=ux;
-  const ms=g.map(k=>{const r=rungs[k];return{mx:(r[0]+r[2])/2,my:(r[1]+r[3])/2}});
-  const ts=ms.map(m=>m.mx*px+m.my*py);
-  const lo=Math.min(...ts),hi=Math.max(...ts);
-  const cx=ms.reduce((s,m)=>s+m.mx,0)/ms.length,cy=ms.reduce((s,m)=>s+m.my,0)/ms.length;
-  centres.push([cx,cy]);
-  const base=cx*px+cy*py;
-  const endLo=[cx+px*(lo-base),cy+py*(lo-base)],endHi=[cx+px*(hi-base),cy+py*(hi-base)];
-  // The narrowest section within 10 m along the traffic direction: at the
-  // junction mouth the road opens sideways and a single walk never stops.
-  const reach=(ex,ey,dir)=>{
-   let limit=Infinity;
-   for(const s of [-10,-6,-3,0,3,6,10]){
-    let n=0;
-    for(let k=PITCH;k<=40;k+=PITCH){
-     if(barFits(ex+px*dir*k+ux*s,ey+py*dir*k+uy*s,ux,uy,BAR))n=k;else break;
-    }
-    if(n<limit)limit=n;
-   }
-   return limit;
-  };
-  for(const [end,dir] of [[endLo,-1],[endHi,1]]){
-   const span=reach(end[0],end[1],dir);
-   for(let k=PITCH;k<=span+1e-9;k+=PITCH){
-    const mx=end[0]+px*dir*k,my=end[1]+py*dir*k;
-    if(!clearOfMedian(mx,my))continue;
-    emit(mx,my,ux,uy);added++;
-   }
-  }
- }
- // --- 2. junctions, and the arms the drawing left bare ----------------------
- const seen=new Array(centres.length).fill(false),groups=[];
- for(let i=0;i<centres.length;i++){
+ // --- 1. where the junctions are -------------------------------------------
+ // Needed before anything is extended: a row has to be measured on its own
+ // approach, and the junction is the side a measurement must not look at.
+ const rowCentre=rows.map(({g})=>{
+  const ms=g.map(k=>{const r=rungs[k];return[(r[0]+r[2])/2,(r[1]+r[3])/2]});
+  return [ms.reduce((s2,m)=>s2+m[0],0)/ms.length,ms.reduce((s2,m)=>s2+m[1],0)/ms.length];
+ });
+ const seen=new Array(rowCentre.length).fill(false),groups=[];
+ for(let i=0;i<rowCentre.length;i++){
   if(seen[i])continue;
   const q=[i];seen[i]=true;
-  for(let a=0;a<q.length;a++)for(let j=0;j<centres.length;j++){
+  for(let a=0;a<q.length;a++)for(let j=0;j<rowCentre.length;j++){
    if(seen[j])continue;
-   if(Math.hypot(centres[j][0]-centres[q[a]][0],centres[j][1]-centres[q[a]][1])<34){seen[j]=true;q.push(j)}
+   if(Math.hypot(rowCentre[j][0]-rowCentre[q[a]][0],rowCentre[j][1]-rowCentre[q[a]][1])<34){seen[j]=true;q.push(j)}
   }
   groups.push(q);
  }
@@ -3156,20 +3129,72 @@ function completeCrossings(){
   let m=99;
   for(let a=0;a<8;a++){
    const t=a*Math.PI/4;let r=0;
-   for(let d=1;d<=20;d++){if(!onRoad(x+Math.cos(t)*d,y+Math.sin(t)*d))break;r=d}
+   for(let d=1;d<=24;d++){if(!onRoad(x+Math.cos(t)*d,y+Math.sin(t)*d))break;r=d}
    if(r<m)m=r;
   }
   return m;
  };
- const placed=[];
- for(const q of groups){
-  const gx=q.reduce((s,i)=>s+centres[i][0],0)/q.length;
-  const gy=q.reduce((s,i)=>s+centres[i][1],0)/q.length;
+ const nodes=groups.map(q=>{
+  const gx=q.reduce((s2,i)=>s2+rowCentre[i][0],0)/q.length;
+  const gy=q.reduce((s2,i)=>s2+rowCentre[i][1],0)/q.length;
   let cx=gx,cy=gy,best=-1;
   for(let dx=-22;dx<=22;dx+=2)for(let dy=-22;dy<=22;dy+=2){
    const x=gx+dx,y=gy+dy;if(!onRoad(x,y))continue;
    const r=clearRadius(x,y);if(r>best){best=r;cx=x;cy=y}
   }
+  return {q,cx,cy,r:Math.max(4,best)};
+ });
+ const nodeFor=(x,y)=>{
+  let best=null,bd=Infinity;
+  for(const n of nodes){const d=Math.hypot(n.cx-x,n.cy-y);if(d<bd){bd=d;best=n}}
+  return best;
+ };
+ // --- 2. run every row out to its kerbs ------------------------------------
+ const zones=[];let added=0;
+ for(let ri=0;ri<rows.length;ri++){
+  const {g,di}=rows[ri];
+  const ux=Math.cos(di),uy=Math.sin(di),px=-uy,py=ux;
+  const ms=g.map(k=>{const r=rungs[k];return{mx:(r[0]+r[2])/2,my:(r[1]+r[3])/2}});
+  const ts=ms.map(m=>m.mx*px+m.my*py);
+  const lo=Math.min(...ts),hi=Math.max(...ts);
+  const [cx,cy]=rowCentre[ri];
+  const base=cx*px+cy*py;
+  const endLo=[cx+px*(lo-base),cy+py*(lo-base)],endHi=[cx+px*(hi-base),cy+py*(hi-base)];
+  // A crossing has to match the carriageway it crosses, not the junction it
+  // sits beside: the mouth opens sideways, and a section taken there runs the
+  // row into the corner. Measure on the approach side only — away from the
+  // junction — and take the narrowest section found there.
+  const node=nodeFor(cx,cy);
+  let away=1;
+  if(node){const towards=(node.cx-cx)*ux+(node.cy-cy)*uy;away=towards>0?-1:1}
+  const offsets=[0,3,6,10].map(d=>d*away);
+  const reach=(ex,ey,dir)=>{
+   let limit=Infinity;
+   for(const s2 of offsets){
+    let n=0;
+    for(let k=PITCH;k<=40;k+=PITCH){
+     if(barFits(ex+px*dir*k+ux*s2,ey+py*dir*k+uy*s2,ux,uy,BAR))n=k;else break;
+    }
+    if(n<limit)limit=n;
+   }
+   return limit;
+  };
+  let a=0,b=0;
+  for(const [end,dir] of [[endLo,-1],[endHi,1]]){
+   const span=reach(end[0],end[1],dir);
+   if(dir<0)a=span;else b=span;
+   for(let k=PITCH;k<=span+1e-9;k+=PITCH){
+    const mx=end[0]+px*dir*k,my=end[1]+py*dir*k;
+    if(!clearOfMedian(mx,my))continue;
+    emit(mx,my,ux,uy);added++;
+   }
+  }
+  zones.push({cx,cy,ux,uy,px,py,half:BAR/2+.35,from:lo-base-a-WID,to:hi-base+b+WID});
+ }
+ // --- 3. the arms the drawing left bare ------------------------------------
+ const placed=[];
+ for(const node of nodes){
+  const {q,cx,cy,r}=node;
   // An arm is a direction in which the carriageway keeps going past the mouth.
   const open=[];
   for(let a=0;a<360;a+=5){
@@ -3180,24 +3205,26 @@ function completeCrossings(){
   const runs=[];
   for(const a of open){const L=runs[runs.length-1];if(L&&a-L[L.length-1]<=10)L.push(a);else runs.push([a])}
   if(runs.length>1&&runs[0][0]===0&&runs[runs.length-1].slice(-1)[0]>=350)runs[0]=runs.pop().concat(runs[0].map(x=>x+360));
-  const bearings=q.map(i=>(Math.atan2(centres[i][1]-cy,centres[i][0]-cx)*180/Math.PI+360)%360);
+  const bearings=q.map(i=>(Math.atan2(rowCentre[i][1]-cy,rowCentre[i][0]-cx)*180/Math.PI+360)%360);
   for(const run of runs){
-   const dirDeg=(run.reduce((s,x)=>s+x,0)/run.length)%360;
+   const dirDeg=(run.reduce((s2,x)=>s2+x,0)/run.length)%360;
    if(bearings.some(h=>Math.abs(((h-dirDeg+540)%360)-180)<38))continue;
    const ang=dirDeg*Math.PI/180,ux=Math.cos(ang),uy=Math.sin(ang),px=-uy,py=ux;
-   // Stand clear of the mouth, then take the narrowest section on offer.
+   // Start beyond the junction's own circle, never inside the mouth, then
+   // take the narrowest section the approach offers.
    let pick=null;
-   for(let s=6;s<=16;s++){
-    const mx=cx+ux*s,my=cy+uy*s;
+   for(let s2=Math.ceil(r)+3;s2<=Math.ceil(r)+14;s2++){
+    const mx=cx+ux*s2,my=cy+uy*s2;
+    if(!onRoad(mx,my))break;
     let a=0,b=0;
     for(let k=PITCH/2;k<=30;k+=PITCH/2){if(barFits(mx-px*k,my-py*k,ux,uy,BAR))a=k;else break}
     for(let k=PITCH/2;k<=30;k+=PITCH/2){if(barFits(mx+px*k,my+py*k,ux,uy,BAR))b=k;else break}
     const w=a+b;
     if(w<4||w>24)continue;
-    if(!pick||w<pick.w-.5)pick={s,a,b,w,mx,my};
+    if(!pick||w<pick.w-.5)pick={s:s2,a,b,w,mx,my};
    }
    if(!pick)continue;
-   if(centres.some(c=>Math.hypot(c[0]-pick.mx,c[1]-pick.my)<11))continue;
+   if(rowCentre.some(c=>Math.hypot(c[0]-pick.mx,c[1]-pick.my)<11))continue;
    if(placed.some(c=>Math.hypot(c[0]-pick.mx,c[1]-pick.my)<11))continue;
    const bars=[];
    for(let t=-pick.a+PITCH/2;t<=pick.b-PITCH/2+1e-9;t+=PITCH){
@@ -3209,13 +3236,15 @@ function completeCrossings(){
    if(bars.length<4)continue;
    for(const [mx,my] of bars)emit(mx,my,ux,uy);
    placed.push([pick.mx,pick.my]);
+   zones.push({cx:pick.mx,cy:pick.my,ux,uy,px,py,half:BAR/2+.35,from:-pick.a-WID,to:pick.b+WID});
   }
  }
  setZ();
  return {v:out.v,w:out.w,
   report:{sourceCrossings:rows.length,barLength:+BAR.toFixed(2),barWidth:+WID.toFixed(2),
    pitch:+PITCH.toFixed(2),junctions:groups.length,barsToKerb:added,
-   newCrossings:placed.length,barsAdded:out.w.length}};
+   newCrossings:placed.length,barsAdded:out.w.length},
+  zones};
 }
 // ROAD FURNITURE v34 — signals and street lighting, both positioned from the
 // source rather than scattered. Signals go where the drawing already puts a
@@ -3458,6 +3487,44 @@ function solveRoadVehiclePositions(limit){
   return false;
  };
  const CAR_LEN=4.32,CAR_WID=1.83,MARGIN=.5;
+ // A car sitting astride a painted line is the first thing the eye catches.
+ // Index the lane work and refuse any footprint a line actually passes through
+ // — the lane offset alone cannot know where the source drew its lines.
+ const PC=10,paint=new Map();
+ if(roadLineOverride?.v&&roadLineOverride.w){
+  const qv=roadLineOverride.v,qw=roadLineOverride.w;
+  for(let s2=0,seg=0;s2+5<qv.length;s2+=6,seg++){
+   if((qw[seg]||0)>=.3)continue;              // crossings are handled above
+   const ax=qv[s2],ay=qv[s2+1],bx=qv[s2+3],by=qv[s2+4];
+   const it=[ax,ay,bx,by];
+   const i0=Math.floor(Math.min(ax,bx)/PC),i1=Math.floor(Math.max(ax,bx)/PC);
+   const j0=Math.floor(Math.min(ay,by)/PC),j1=Math.floor(Math.max(ay,by)/PC);
+   for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){
+    const id=i+','+j;if(!paint.has(id))paint.set(id,[]);paint.get(id).push(it);
+   }
+  }
+ }
+ // Liang–Barsky in the car's own frame: if any part of the line survives the
+ // clip to the footprint, the line runs under the car.
+ const onPaint=(x,y,ux,uy,hl,hw)=>{
+  const i=Math.floor(x/PC),j=Math.floor(y/PC);
+  for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){
+   for(const [ax,ay,bx,by] of (paint.get((i+di)+','+(j+dj))||[])){
+    const p0=[(ax-x)*ux+(ay-y)*uy,-(ax-x)*uy+(ay-y)*ux];
+    const p1=[(bx-x)*ux+(by-y)*uy,-(bx-x)*uy+(by-y)*ux];
+    let t0=0,t1=1,ok=true;
+    for(const [p,q] of [[-(p1[0]-p0[0]),p0[0]+hl],[p1[0]-p0[0],hl-p0[0]],
+                        [-(p1[1]-p0[1]),p0[1]+hw],[p1[1]-p0[1],hw-p0[1]]]){
+     if(Math.abs(p)<1e-9){if(q<0){ok=false;break}continue}
+     const r=q/p;
+     if(p<0){if(r>t1){ok=false;break}if(r>t0)t0=r}
+     else{if(r<t0){ok=false;break}if(r<t1)t1=r}
+    }
+    if(ok&&t1>t0)return true;
+   }
+  }
+  return false;
+ };
  const fits=(x,y,ux,uy)=>{
   const vx=-uy,vy=ux,hl=CAR_LEN/2+MARGIN,hw=CAR_WID/2+MARGIN;
   for(const a of [-hl,-hl/2,0,hl/2,hl])for(const b of [-hw,0,hw]){
@@ -3467,6 +3534,7 @@ function solveRoadVehiclePositions(limit){
    if(medianLookup&&medianLookup(px,py))return false;
    if(onCrossing(px,py))return false;
   }
+  if(onPaint(x,y,ux,uy,CAR_LEN/2+.15,CAR_WID/2+.15))return false;
   return true;
  };
  // Heading comes from the lane work, not from "which way can I drive furthest".
@@ -3624,18 +3692,46 @@ function buildScene(){
    if(med)roadDesignGroup.userData.medians=med;
    roadCrossingOverride=completeCrossings();
    const pos=[];
-   const ribbon=(lv,lw)=>{
+   // Lane work stops at a crossing: a centre line painted straight through the
+   // zebra is the one marking a real road never has. The zones come from the
+   // crossings themselves, so a line breaks exactly where the bars are.
+   const zones=roadCrossingOverride?.zones||[];
+   const inCrossing=(x,y)=>zones.some(z=>{
+    const dx=x-z.cx,dy=y-z.cy;
+    const du=dx*z.ux+dy*z.uy;if(du<-z.half||du>z.half)return false;
+    const dp=dx*z.px+dy*z.py;return dp>=z.from&&dp<=z.to;
+   });
+   const quad=(ax,ay,az,bx,by,bz,wd)=>{
+    const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy);
+    if(d<1e-6)return;
+    const h=wd/2,nx=-dy/d*h,ny=dx/d*h,y1=az+.014,y2=bz+.014;
+    pos.push(ax+nx,y1,-(ay+ny), bx+nx,y2,-(by+ny), bx-nx,y2,-(by-ny),
+             ax+nx,y1,-(ay+ny), bx-nx,y2,-(by-ny), ax-nx,y1,-(ay-ny));
+   };
+   const ribbon=(lv,lw,clip)=>{
     for(let s2=0,seg=0;s2+5<lv.length;s2+=6,seg++){
      const ax=lv[s2],ay=lv[s2+1],az=lv[s2+2],bx=lv[s2+3],by=lv[s2+4],bz=lv[s2+5];
-     const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy);
+     const wd=lw[seg]||.16,d=Math.hypot(bx-ax,by-ay);
      if(d<1e-6)continue;
-     const h=(lw[seg]||.16)/2,nx=-dy/d*h,ny=dx/d*h,y1=az+.014,y2=bz+.014;
-     pos.push(ax+nx,y1,-(ay+ny), bx+nx,y2,-(by+ny), bx-nx,y2,-(by-ny),
-              ax+nx,y1,-(ay+ny), bx-nx,y2,-(by-ny), ax-nx,y1,-(ay-ny));
+     if(!clip||wd>=.3||!zones.length){quad(ax,ay,az,bx,by,bz,wd);continue}
+     // Walk the line in short pieces and keep the ones outside every zone,
+     // joining consecutive survivors so the kept run stays a single ribbon.
+     const n=Math.max(1,Math.ceil(d/.4));
+     let run=null;
+     for(let k=0;k<n;k++){
+      const t0=k/n,t1=(k+1)/n,tm=(t0+t1)/2;
+      const mx=ax+(bx-ax)*tm,my=ay+(by-ay)*tm;
+      if(inCrossing(mx,my)){
+       if(run){quad(run[0],run[1],run[2],ax+(bx-ax)*t0,ay+(by-ay)*t0,az+(bz-az)*t0,wd);run=null}
+       continue;
+      }
+      if(!run)run=[ax+(bx-ax)*t0,ay+(by-ay)*t0,az+(bz-az)*t0];
+     }
+     if(run)quad(run[0],run[1],run[2],bx,by,bz,wd);
     }
    };
-   ribbon(roadLineOverride.v,roadLineOverride.w||[]);
-   if(roadCrossingOverride)ribbon(roadCrossingOverride.v,roadCrossingOverride.w);
+   ribbon(roadLineOverride.v,roadLineOverride.w||[],true);
+   if(roadCrossingOverride)ribbon(roadCrossingOverride.v,roadCrossingOverride.w,false);
    const lg=new THREE.BufferGeometry();
    lg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
    lg.computeVertexNormals();

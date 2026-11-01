@@ -130,10 +130,18 @@ assert(html.includes('roadLineOverride=importedModel.lines?.v?.length?importedMo
 assert(html.includes("lines.name='2.3dm Default 图层划线';"), 'Road lines are not drawn');
 // WebGL ignores line width, so markings are ribbons sized by the importer.
 assert(importer.includes('f.bold=beside>=2;'), 'Zebra rungs are not told apart from lane dashes');
-assert(html.includes('const h=(lw[seg]||.16)/2,'), 'Markings are not drawn at their classified width');
+assert(html.includes('const wd=lw[seg]||.16,'), 'Markings are not drawn at their classified width');
+// A centre line painted straight through a zebra is the marking a real road
+// never has, so lane work is clipped against the crossing zones.
+assert(html.includes('const inCrossing=(x,y)=>zones.some(z=>{'), 'Lane work is not clipped at the crossings');
+assert(html.includes("ribbon(roadLineOverride.v,roadLineOverride.w||[],true);"), 'Source lane work must be clipped');
+assert(html.includes("ribbon(roadCrossingOverride.v,roadCrossingOverride.w,false);"), 'Crossing bars must not clip themselves');
 assert(html.includes('if(atSiteEdge(i,j))continue;'), 'Median flood must not seed from the site boundary');
 assert(html.includes('if(medianLookup&&medianLookup(px,py))return false;'), 'Traffic must keep off the medians');
 assert(html.includes('if(onCrossing(px,py))return false;'), 'Traffic must keep off the crossings');
+// A car astride a painted line is the first thing the eye catches, and the
+// lane offset alone cannot know where the source drew its lines.
+assert(html.includes('if(onPaint(x,y,ux,uy,CAR_LEN/2+.15,CAR_WID/2+.15))return false;'), 'No car may straddle a painted line');
 // Heading follows the lane work; the longest-run test is only a fallback.
 assert(html.includes('const ang=laneAngleAt(x,y);if(ang===null)continue;'), 'Car heading must come from the lane lines, with no guess fallback');
 assert(html.includes('if(runLength(x,y,ang)<18)continue;'), 'A car must have road ahead and behind');
@@ -205,13 +213,16 @@ assert(html.includes('function completeCrossings(){'), 'Crossing completion is m
 assert(html.includes('let roadCrossingOverride=null;'), 'Completed crossings need their own channel');
 assert(html.includes('const med=buildRoadMedians(roadDesignGroup);\n   if(med)roadDesignGroup.userData.medians=med;\n   roadCrossingOverride=completeCrossings();'),
  'Medians must be found from the source line work before the crossings are completed');
-assert(html.includes('if(roadCrossingOverride)ribbon(roadCrossingOverride.v,roadCrossingOverride.w);'), 'Completed crossings are not drawn');
 assert(html.includes('for(const src of [roadLineOverride,roadCrossingOverride]){'), 'Signals must read the completed crossings');
 // A bar is laid only where the whole of it is on the carriageway and off a median.
 assert(html.includes('const barFits=(mx,my,ux,uy,len)=>{'), 'Bars must be tested against the carriageway');
 assert(html.includes('if(!clearOfMedian(mx,my))continue;'), 'A crossing must not run across a planted median');
-// The narrowest section wins, or a junction mouth stretches one crossing across it.
-assert(html.includes('for(const s of [-10,-6,-3,0,3,6,10]){'), 'Crossing reach must be the narrowest section nearby');
+// A crossing matches the carriageway it crosses, not the junction beside it:
+// the section is taken on the approach side only, and the narrowest one wins.
+assert(html.includes('const offsets=[0,3,6,10].map(d=>d*away);'), 'Crossing reach must be measured on the approach side');
+assert(html.includes('if(node){const towards=(node.cx-cx)*ux+(node.cy-cy)*uy;away=towards>0?-1:1}'), 'The approach side is the one away from the junction');
+// A new crossing starts beyond the junction's own circle, never in the mouth.
+assert(html.includes('for(let s2=Math.ceil(r)+3;s2<=Math.ceil(r)+14;s2++){'), 'A new crossing must stand back from the junction');
 // Bar length, width and pitch are read from the source rows, never typed in.
 assert(html.includes('const BAR=median(rungs.map(r=>Math.hypot(r[2]-r[0],r[3]-r[1])));'), 'Bar length must come from the source');
 assert(html.includes('const PITCH=pitches.length?median(pitches):1;'), 'Bar pitch must come from the source');
