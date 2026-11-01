@@ -329,6 +329,11 @@ assert(html.includes('function tightBox(poly){'), 'The cut direction must come f
 assert(html.includes('const alongU=du>=dv;'), 'The cut must run across the longer side');
 // One control, and it moves the pattern rather than the quantities.
 assert(html.includes('<label class="luSlider">随机<input id="luSeed" type="range"'), 'The random control is missing');
+assert(html.includes('<label class="luSlider">大小<input id="luSize" type="range"'), 'The grain control is missing');
+// A floor of a quarter of the target deleted every plot under 375 m²: thirteen
+// of them vanished from the plan rather than showing as the one small lot they
+// are. Only a degenerate ring is dropped.
+assert(html.includes("r.length>=3&&Math.abs(polyArea(r))>1);"), 'No plot may be dropped for being small');
 assert(html.includes("const rand=seeded('land-subdivision-v43-'+lotSeed);"), 'The seed must drive the subdivision');
 assert(html.includes('buildLandPlots(true);renderPlotPanel();updateLandPlots();'), 'Moving the seed must not re-solve the plots');
 assert(!html.includes('luCoverage')&&!html.includes('luFar'), 'The ratio and green controls are set aside for now');

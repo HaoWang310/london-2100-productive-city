@@ -3662,8 +3662,8 @@ function solveLandPlots(){
 // Each lot is cut across the long side of the plot's own bounding box, so the
 // cut runs the short way and the pieces stay square-ish; the position carries
 // a little jitter from a seeded generator, which is what the 随机 slider moves.
-const LOT_TARGET=1500,LOT_JITTER=.34,LOT_DEPTH=6;
-let lotSeed=7;
+const LOT_JITTER=.34,LOT_DEPTH=8;
+let lotSeed=7,lotTarget=700;
 function polyArea(r){let s=0;for(let i=0;i<r.length;i++){const a=r[i],b=r[(i+1)%r.length];s+=a[0]*b[1]-b[0]*a[1]}return s/2}
 // Sutherland-Hodgman against one half-plane. The plots are convex enough for
 // this; a concave one can come back with a zero-width bridge, which the
@@ -3709,7 +3709,7 @@ function tightBox(poly){
 }
 function subdividePolygon(poly,target,rand,depth){
  const area=Math.abs(polyArea(poly));
- if(depth>=LOT_DEPTH||area<=target*1.35||poly.length<3)return [poly];
+ if(depth>=LOT_DEPTH||area<=target*1.3||poly.length<3)return [poly];
  const box=tightBox(poly);
  if(!box)return [poly];
  const du=box.u1-box.u0,dv=box.v1-box.v0;
@@ -3735,8 +3735,12 @@ function planLandUse(){
  let lots=0,areaSum=0;
  for(const p of landPlots){
   p.green=[];
-  const pieces=subdividePolygon(p.outer,LOT_TARGET,rand,0)
-   .filter(r=>r.length>=3&&Math.abs(polyArea(r))>=LOT_TARGET*.25);
+  // Never drop a piece for being small. The floor used to be a quarter of the
+  // target, which deleted every plot under 375 m² outright — thirteen of them
+  // vanished from the plan rather than appearing as the single small lot they
+  // are. Only a degenerate ring is dropped now.
+  const pieces=subdividePolygon(p.outer,lotTarget,rand,0)
+   .filter(r=>r.length>=3&&Math.abs(polyArea(r))>1);
   p.parcels=pieces.map((r,i)=>({
    id:p.id+'-'+String(i+1).padStart(2,'0'),
    area:Math.abs(polyArea(r)),outer:r,holes:[]}));
@@ -3745,7 +3749,8 @@ function planLandUse(){
    lotArea:p.parcels.length?p.parcels.reduce((s,x)=>s+x.area,0)/p.parcels.length:0};
  }
  landUseTotals={plots:landPlots.length,lots,area:areaSum,
-  average:lots?areaSum/lots:0,seed:lotSeed,target:LOT_TARGET};
+  average:lots?areaSum/lots:0,seed:lotSeed,target:lotTarget,
+  undivided:landPlots.filter(p=>p.parcels.length<2).length};
  console.info('Plots subdivided into lots',landUseTotals);
  return landUseTotals;
 }
@@ -3839,7 +3844,7 @@ function renderPlotPanel(){
  document.querySelector('#plotTotals').innerHTML=
   `<span>子地块</span><b>${T.lots||0}</b>`+
   `<span>平均面积</span><b>${fmt(Math.round(T.average||0))} m²</b>`+
-  `<span>目标面积</span><b>${fmt(T.target||0)} m²</b>`+
+  `<span>未细分</span><b>${T.undivided||0} 块</b>`+
   `<span>随机值</span><b>${T.seed||0}</b>`;
  document.querySelector('#plotChosen').textContent=sel.length
   ?`已选 ${sel.length} 块 · ${fmt(Math.round(chosen.reduce((s,p)=>s+p.area,0)))} m²`
@@ -3914,6 +3919,8 @@ function initPlotsUI(){
   <div class="luForm">
    <label class="luSlider">随机<input id="luSeed" type="range" min="1" max="60" step="1" value="${lotSeed}">
     <b id="luSeedVal">${lotSeed}</b></label>
+   <label class="luSlider">大小<input id="luSize" type="range" min="250" max="2500" step="50" value="${lotTarget}">
+    <b id="luSizeVal">${lotTarget}</b></label>
   </div>
   <div class="luTotals" id="plotTotals"></div>
   <div class="plotsChosen" id="plotChosen">—</div>
@@ -3929,6 +3936,12 @@ function initPlotsUI(){
  seed.addEventListener('input',()=>{
   lotSeed=Number(seed.value)||1;
   el.querySelector('#luSeedVal').textContent=lotSeed;
+  replanLandUse();
+ });
+ const size=el.querySelector('#luSize');
+ size.addEventListener('input',()=>{
+  lotTarget=Number(size.value)||700;
+  el.querySelector('#luSizeVal').textContent=lotTarget;
   replanLandUse();
  });
  el.querySelector('#plotDxf').onclick=exportPlotsDXF;
