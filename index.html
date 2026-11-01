@@ -4812,6 +4812,26 @@ function buildRoadFurniture(group){
    cnt.set(e,(cnt.get(e)||0)+1);if(!store.has(e))store.set(e,[a,b]);
   }
  }
+ // A column under a deck must not spear it. The lamp was a flat 7.2 m and the
+ // structures' soffit is a flat 7.2 m, so every lamp standing beneath one came
+ // straight out through the top. The same height field the sunlight hours are
+ // counted on answers the question; where it reports no structure the lamp
+ // keeps its full height, and where the soffit is too low for a lamp at all
+ // the lamp is simply not placed. The arm reaches 1.4 m toward the road, so
+ // the clearance is sampled around the column, not only under it.
+ const CR=buildClimateRaster();
+ const soffitAt=(x,y)=>{
+  let lo=Infinity;
+  for(let ox=-2;ox<=2;ox+=2)for(let oy=-2;oy<=2;oy+=2){
+   const i=Math.floor((x+ox-CR.X0)/CR.G),j=Math.floor((y+oy-CR.Y0)/CR.G);
+   if(i<0||j<0||i>=CR.W||j>=CR.H)continue;
+   const id=j*CR.W+i;
+   if(CR.top[id]>.2&&CR.bot[id]<1e8&&CR.bot[id]<lo)lo=CR.bot[id];
+  }
+  return lo;
+ };
+ const LAMP_H=7.2,LAMP_CLEAR=.6,LAMP_MIN=3.2;
+ let lampsShortened=0,lampsSkipped=0;
  const SPACING=26,LG=SPACING,lampCells=new Map();
  const farEnough=(x,y)=>{
   const i=Math.floor(x/LG),j=Math.floor(y/LG);
@@ -4835,7 +4855,14 @@ function buildRoadFurniture(group){
    const inward=onRoad(x+nx*1.2,y+ny*1.2)?1:onRoad(x-nx*1.2,y-ny*1.2)?-1:0;
    if(!inward)continue;
    const px=x-nx*.7*inward,py=y-ny*.7*inward;
-   const h=7.2,ang=Math.atan2(ny*inward,nx*inward);
+   const soffit=soffitAt(px,py);
+   let h=LAMP_H;
+   if(soffit<1e8){
+    h=soffit-deck-LAMP_CLEAR;
+    if(h<LAMP_MIN){lampsSkipped++;continue}
+    lampsShortened++;
+   }
+   const ang=Math.atan2(ny*inward,nx*inward);
    batch.add(post,matPole,px,deck+h/2,-py,1,h,1);
    batch.add(box,matPole,px+Math.cos(ang)*.7,deck+h-.1,-(py+Math.sin(ang)*.7),1.5,.12,.12,-ang);
    batch.add(box,matLampHead,px+Math.cos(ang)*1.4,deck+h-.22,-(py+Math.sin(ang)*1.4),.62,.16,.3,-ang);
@@ -4845,7 +4872,7 @@ function buildRoadFurniture(group){
   }
  }
  batch.commit(group,'道路设施');
- return {signals,crossings:crossings.length,lamps};
+ return {signals,crossings:crossings.length,lamps,lampsShortened,lampsSkipped};
 }
 function initRoadDesignUI(){
  const main=document.querySelector('.stage .layers');

@@ -388,6 +388,12 @@ assert(html.includes('const WIND_N=2200'), 'The particle field was thinned back 
 assert(html.includes('opacity:.88,depthWrite:false,blending:THREE.AdditiveBlending'), 'The streaks were faded back below what is visible');
 assert(html.includes('const edgePoint=()=>{'), 'Particles must be released from the upwind edge, or the field has no direction');
 assert(html.includes('const ped=Math.max(.35,windAtHeight(met,PED_Z));'), 'Particles must travel at the pedestrian speed, not the airport reading');
+// A lamp column was a flat 7.2 m and the structures' soffit is a flat 7.2 m,
+// so every lamp standing under a deck came out through the top of it.
+assert(html.includes('const LAMP_H=7.2,LAMP_CLEAR=.6,LAMP_MIN=3.2;'), 'The lamp clearance rule is missing');
+assert(html.includes('const soffit=soffitAt(px,py);'), 'Lamps must be tested against the soffit above them');
+assert(html.includes('if(h<LAMP_MIN){lampsSkipped++;continue}'), 'A lamp with no headroom must not be placed at all');
+assert(html.includes('lamps,lampsShortened,lampsSkipped'), 'The furniture report must say how many lamps the decks changed');
 assert(html.includes('<button data-mode="climate">环境</button>'), 'The climate mode is not in the nav');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
