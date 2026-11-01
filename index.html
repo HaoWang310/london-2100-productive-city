@@ -3784,11 +3784,11 @@ function buildLandPlots(keepPlots){
    plotGroup.add(m);base.userData.parts.push(m);
   }
   for(const b of p.parcels){
-   const m=flat(b,'#d9dee5',.42,3);m.userData.kind='build';
+   const m=flat(b,'#8e99a8',.42,3);m.userData.kind='build';
    plotGroup.add(m);base.userData.parts.push(m);
-   const q=b.outer.map(([x,y])=>new THREE.Vector3(x,.44,-y));q.push(q[0].clone());
+   const q=b.outer.map(([x,y])=>new THREE.Vector3(x,.45,-y));q.push(q[0].clone());
    const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(q),
-    new THREE.LineBasicMaterial({color:0x8d939c,transparent:true,opacity:.8,depthWrite:false}));
+    new THREE.LineBasicMaterial({color:0x0b0d10,transparent:true,opacity:.65,depthWrite:false}));
    plotGroup.add(l);base.userData.parts.push(l);
   }
  }
@@ -3810,7 +3810,7 @@ function updateLandPlots(){
   // plot's own ground is no longer visible to colour.
   for(const part of m.userData.parts){
    if(part.userData.kind!=='build')continue;
-   part.material.color.set(on?'#0a84ff':hot?'#f4f6f9':'#d9dee5');
+   part.material.color.set(on?'#0a84ff':hot?'#aab6c4':'#8e99a8');
   }
  }
 }

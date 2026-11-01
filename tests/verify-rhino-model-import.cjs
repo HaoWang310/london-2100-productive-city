@@ -299,7 +299,7 @@ assert(html.includes('color,side:THREE.DoubleSide,depthWrite:true,depthTest:true
 assert(html.includes('m.rotation.x=-Math.PI/2;m.position.y=y;m.renderOrder=order;return m;'), 'The plot layers need an explicit order');
 // Open then close: the first takes the spikes off, the second fills the bites
 // the depth contour and a structure's ragged plan edge leave in its side.
-assert(html.includes("part.material.color.set(on?'#0a84ff':hot?'#f4f6f9':'#d9dee5');"), 'Plot selection must use the system accent');
+assert(html.includes("part.material.color.set(on?'#0a84ff':hot?'#aab6c4':'#8e99a8');"), 'Plot selection must use the system accent');
 // The coverage control reads a percentage, so its clamp is in percent too.
 // Clamped against .05 and .9 the typed 45 became 0.9, then /100 gave a 0.9%
 // cap that bound before every other setting and froze the whole plan.
