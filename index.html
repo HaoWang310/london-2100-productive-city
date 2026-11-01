@@ -3512,13 +3512,27 @@ function smoothRing(r){
 function regionShape(inside,box,R,minRing){
  let rings=traceRings(inside,box,R).map(smoothRing).filter(r=>r.length>=3);
  if(!rings.length)return null;
- rings.sort((a,b)=>Math.abs(shoelace(b))-Math.abs(shoelace(a)));
- const holes=rings.slice(1).filter(r=>Math.abs(shoelace(r))>(minRing||4));
+ // Orientation decides what a ring IS. The tracer walks a filled cell
+ // anticlockwise, so an outline comes back positive and a hole negative.
+ // Sorting on absolute area and calling everything after the first a hole
+ // turned a region that happened to fall in two pieces into one piece with
+ // the other subtracted out of it — which is where the 3 m² parcels and the
+ // 0.01 compactness came from. Keep the largest outline, take only true
+ // holes, and drop any further piece rather than subtracting it.
+ const outers=rings.filter(r=>shoelace(r)>0).sort((a,b)=>shoelace(b)-shoelace(a));
+ if(!outers.length)return null;
+ const outer=outers[0];
+ const inPoly=(pt,poly)=>{let hit=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+   const [xi,yi]=poly[i],[xj,yj]=poly[j];
+   if((yi>pt[1])!==(yj>pt[1])&&pt[0]<(xj-xi)*(pt[1]-yi)/(yj-yi+1e-12)+xi)hit=!hit}
+  return hit};
+ const holes=rings.filter(r=>shoelace(r)<0&&Math.abs(shoelace(r))>(minRing||4)&&inPoly(r[0],outer));
  // The drawn outline is the one that gets exported and the one the areas are
  // quoted from, so the figure comes off the polygon, not off the cell count
  // that produced it — otherwise the table and the DXF disagree.
- const area=Math.abs(shoelace(rings[0]))-holes.reduce((s2,h)=>s2+Math.abs(shoelace(h)),0);
- return {outer:rings[0],holes,area:Math.max(0,area)};
+ const area=shoelace(outer)-holes.reduce((s2,h)=>s2+Math.abs(shoelace(h)),0);
+ return {outer,holes,area:Math.max(0,area)};
 }
 // --- 1. the plots -----------------------------------------------------------
 // klass: 0 off site, 1 open ground, 3 water, 4 carriageway, 5 structure
@@ -3839,6 +3853,14 @@ function planLandUse(){
     const bx=[Math.max(0,e.box[0]-1),Math.max(0,e.box[1]-1),Math.min(W-1,e.box[2]+1),Math.min(H-1,e.box[3]+1)];
     const sh=regionShape((i,j)=>i>=0&&j>=0&&i<W&&j<H&&comp[j*W+i]===id&&use[j*W+i]===2+b,bx,plotRaster);
     if(!sh)continue;
+    // Last gate, on the shape that actually gets drawn: smoothing can take a
+    // marginal bucket under the floor, and a 40 m² offcut is not a house plot.
+    if(sh.area<landUse.minParcel*.6){
+     for(let j=e.box[1];j<=e.box[3];j++)for(let i=e.box[0];i<=e.box[2];i++){
+      const c=j*W+i;if(comp[c]===id&&use[c]===2+b)use[c]=-1;
+     }
+     continue;
+    }
     p.parcels.push({id:p.id+'-B'+String(p.parcels.length+1).padStart(2,'0'),
      area:sh.area,outer:sh.outer,holes:sh.holes});
    }

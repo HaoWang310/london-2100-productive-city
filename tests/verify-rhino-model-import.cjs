@@ -315,6 +315,12 @@ assert(html.includes('function smoothRing(r){'), 'Ring smoothing is missing');
 assert(html.includes('const PLOT_G=.5,PLOT_MIN=60,PLOT_SIMPLIFY=1,PLOT_CORNER=.52,PLOT_ROUNDS=2;'), 'The tolerance must sit above what the grid can produce');
 assert(html.includes('if(turn>=PLOT_CORNER||la<.8||lc<.8){out.push(b);continue}'), 'A real corner must survive the rounding');
 assert(html.includes('rings=traceRings(inside,box,R).map(smoothRing)'), 'Every traced ring must be smoothed');
+// Orientation decides what a ring is: the tracer walks anticlockwise, so an
+// outline is positive and a hole negative. Sorting on absolute area turned a
+// region in two pieces into one piece with the other subtracted out of it.
+assert(html.includes('const outers=rings.filter(r=>shoelace(r)>0)'), 'Outlines must be told from holes by orientation');
+assert(html.includes('const holes=rings.filter(r=>shoelace(r)<0&&'), 'Only a negative ring inside the outline is a hole');
+assert(html.includes('if(sh.area<landUse.minParcel*.6){'), 'The floor must also be applied to the shape that is drawn');
 // One shape, one area: the table, the ratio and the DXF must agree.
 assert(html.includes('area:sh.area,outer:sh.outer,holes:sh.holes});'), 'Parcel areas must come off the drawn polygon');
 assert(html.includes('plots.push({raster:f.id,area:shape.area,'), 'Plot areas must come off the drawn polygon');
