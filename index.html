@@ -3712,13 +3712,16 @@ function planLandUse(){
     if(Math.floor((k2+1)*keepRatio)>Math.floor(k2*keepRatio))keep.add(b);
    });
    if(!keep.size&&order.length)keep.add(order[0][0]);
-   for(const [b,e] of order)if(!keep.has(b))
-    for(let j=e.box[1];j<=e.box[3];j++)for(let i=e.box[0];i<=e.box[2];i++){
-     const c=j*W+i;if(comp[c]===id&&use[c]===2+b)use[c]=-1;
-    }
    for(const [b,e] of order){
-    if(!keep.has(b))continue;
-    const a2=e.n*G*G;if(a2<landUse.minParcel)continue;
+    const a2=e.n*G*G;
+    // A kept sliver below the minimum parcel is not a building either, and it
+    // has to be handed back to the green or it falls out of both tallies.
+    if(!keep.has(b)||a2<landUse.minParcel){
+     for(let j=e.box[1];j<=e.box[3];j++)for(let i=e.box[0];i<=e.box[2];i++){
+      const c=j*W+i;if(comp[c]===id&&use[c]===2+b)use[c]=-1;
+     }
+     continue;
+    }
     const bx=[Math.max(0,e.box[0]-1),Math.max(0,e.box[1]-1),Math.min(W-1,e.box[2]+1),Math.min(H-1,e.box[3]+1)];
     const sh=regionShape((i,j)=>i>=0&&j>=0&&i<W&&j<H&&comp[j*W+i]===id&&use[j*W+i]===2+b,bx,plotRaster);
     if(!sh)continue;
