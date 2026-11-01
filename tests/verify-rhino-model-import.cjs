@@ -337,6 +337,35 @@ assert(html.includes("r.length>=3&&Math.abs(polyArea(r))>1);"), 'No plot may be 
 assert(html.includes("const rand=seeded('land-subdivision-v43-'+lotSeed);"), 'The seed must drive the subdivision');
 assert(html.includes('buildLandPlots(true);renderPlotPanel();updateLandPlots();'), 'Moving the seed must not re-solve the plots');
 assert(!html.includes('luCoverage')&&!html.includes('luFar'), 'The ratio and green controls are set aside for now');
+// CLIMATE v44 — the real London year, from the EPW the project supplied.
+assert(fs.existsSync('london.epw'), 'The EPW weather file is missing from the repository');
+{
+ const epw = fs.readFileSync('london.epw', 'utf8').split(/\r?\n/);
+ const loc = epw[0].split(',');
+ assert.equal(loc[0], 'LOCATION', 'The EPW must start with its LOCATION header');
+ assert(Math.abs(Number(loc[6]) - 51.885) < .01 && Math.abs(Number(loc[7]) - 0.235) < .01,
+  'The EPW must be the London site it claims to be');
+ const rows = epw.slice(8).filter(l => l.split(',').length > 30);
+ assert.equal(rows.length, 8760, 'A weather year is 8,760 hours, found ' + rows.length);
+}
+assert(html.includes("const EPW_URL='./london.epw';"), 'The app must read the EPW, not a copy of its numbers');
+// The sun is placed by the NOAA algorithm, not by a guess at an angle.
+assert(html.includes('function sunPosition(lat,lon,tz,dayOfYear,hour){'), 'Solar position is missing');
+assert(html.includes('const eq=229.18*(7.5e-5+1.868e-3*Math.cos(g)'), 'The equation of time must be applied');
+// Brightness comes from the file: an overcast London hour must look overcast.
+assert(html.includes('sunLight.intensity=s.altitude<=0?0:Math.min(3.4,dni/900*2.9*(.35+.65*up));'), 'The key light must be driven by direct normal irradiance');
+assert(html.includes('skyLight.intensity=.55+Math.min(2.1,dhi/190)'), 'The sky must be driven by diffuse irradiance');
+// Shadows are marched on a height field; 85,000 triangles per sample is not a
+// sum anyone can afford, and the structures are elevated so the underside
+// matters as much as the top.
+assert(html.includes('function sunBlocked(R,x,y,eye,sx,sy,tanAlt){'), 'Shadow marching is missing');
+assert(html.includes('if(ray<=bot[id]-.5)continue;               // passes underneath, keep going'), 'A low sun passes under an elevated deck');
+// Two sunlight figures: the geometric one, and the one London actually gets.
+assert(html.includes('real+=f*epw.sunFreq[m+1][Math.min(23,Math.floor(h))];'), 'Sunlight hours must be weighted by how often the sun actually shines');
+// The rose is counted off the file's own 8,760 readings, calms excluded.
+assert(html.includes('if(x.ws<.5){calm++;continue}'), 'A wind rose excludes calms from the directional tally');
+assert(html.includes('function windRoseSVG(monthIdx){'), 'The wind rose is missing');
+assert(html.includes('<button data-mode="climate">环境</button>'), 'The climate mode is not in the nav');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

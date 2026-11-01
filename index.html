@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FORM / ASSEMBLY — Studio v12 · 可收起结构单元库</title><style>
-:root{--ink:#f5f5f7;--muted:#848484;--line:#303238;--soft:#1e2024;--purple:#383a3d;--gold:#d3b986}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#15171a;font-size:13px;overflow:hidden}button,input,select{font:inherit}button{cursor:pointer;border:0;background:transparent;color:inherit}button:focus-visible,input:focus-visible{outline:2px solid #a4a7ae;outline-offset:3px}button:disabled{opacity:.3;cursor:default}button:hover{background:#26292e}header{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 30px;gap:28px;background:#15171a;position:relative;z-index:5}.brand{font-size:17px;letter-spacing:1.8px;font-weight:650;white-space:nowrap}.brand span{color:#a8a8a8;font-weight:350;margin:0 4px}.edition{font-size:10px;letter-spacing:1.5px;color:#929292;margin-top:6px}.nav{display:flex;gap:3px;padding:4px;border:1px solid var(--line);border-radius:30px;margin:auto}.nav button{padding:9px 22px;border-radius:24px;color:#a4a7ae}.nav button.active{background:#e9ecf0;color:#111215;box-shadow:0 2px 5px #0001}.headerActions{display:flex;align-items:center;gap:8px}.round{border:1px solid var(--line);border-radius:50%;width:36px;height:36px;font-size:17px}.pill{padding:10px 17px;border:1px solid var(--line);border-radius:22px;white-space:nowrap}.black{background:#e9ecf0;color:#111215}.black:hover{background:#444}.app{display:flex;height:calc(100dvh - 76px)}aside{width:254px;flex-shrink:0;border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--surface-1);z-index:2}.sideHead{padding:25px 22px 18px}.eyebrow{font-size:10px;letter-spacing:2px;color:#8a8a8a;text-transform:uppercase}.sideHead h2{font-size:20px;letter-spacing:-.5px;font-weight:550;margin:10px 0 8px}.small{font-size:11px;line-height:1.7;color:var(--muted)}.search{border:1px solid var(--line);background:#1e2024;border-radius:10px;width:100%;padding:9px 12px;margin-top:17px;color:#333}.switchTabs{display:flex;padding:0 18px 14px;gap:4px}.switchTabs button{flex:1;border-radius:7px;font-size:11px;padding:7px 3px;color:#a4a7ae}.switchTabs button.active{background:#26292e;color:#e9ecf0}.unitList{overflow:auto;flex:1;padding:0 10px 12px;scrollbar-width:thin}.unitRow{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;text-align:left;border-radius:9px;position:relative}.unitRow.active{background:#26292e}.unitRow .symbol{width:27px;height:27px;border:1px solid #d9d9de;border-radius:7px;display:grid;place-items:center;font-size:13px;color:#a4a7ae;background:#15171a}.unitRow.active .symbol{background:#e9ecf0;color:var(--text-primary);border-color:#e9ecf0}.unitRow .txt{flex:1}.unitRow strong{font-size:12px;font-weight:550;letter-spacing:.3px}.unitRow small{font-size:10px;color:#909095;display:block;margin-top:4px}.unitRow .dot{width:5px;height:5px;border-radius:50%;background:#b7b7bd}.sideFoot{border-top:1px solid var(--line);padding:16px 22px;font-size:10px;color:#929295;line-height:1.8}.sideFoot b{color:#414145;font-weight:500}.stage{flex:1;position:relative;min-width:0;overflow:hidden;background:#101114}#viewport{width:100%;height:100%;position:absolute;inset:0}canvas{display:block;touch-action:none}.stageTitle{position:absolute;top:29px;left:32px;pointer-events:none;z-index:1}.stageTitle h1{font-size:31px;letter-spacing:-1.3px;font-weight:450;margin:9px 0 11px}.stageTitle p{color:#838387;font-size:11px;margin:0;max-width:450px;line-height:1.8}.counter{display:flex;gap:25px;margin-top:22px}.counter b{font-size:21px;font-weight:450;letter-spacing:-.6px}.counter small{display:block;color:#98989e;font-size:10px;margin-top:6px}.layers{position:absolute;top:28px;right:26px;z-index:2;display:flex;flex-direction:column;align-items:flex-end;gap:7px}.layer{font-size:11px;background:#ffffffd9;border:1px solid #e4e4e8;padding:8px 11px;border-radius:20px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(12px)}.layer.off{opacity:.4}.swatch{height:6px;width:6px;border-radius:50%;background:#a4a7ae}.canvasFoot{position:absolute;bottom:103px;left:30px;font-size:10px;color:#a1a1a8;pointer-events:none;letter-spacing:.3px}.viewbar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:#fffffff2;border:1px solid #dedee4;border-radius:16px;box-shadow:0 8px 30px #00000008;display:flex;align-items:center;padding:6px;gap:3px;z-index:3;backdrop-filter:blur(20px);white-space:nowrap}.viewbar button{font-size:11px;border-radius:10px;padding:10px 13px;color:#717176}.viewbar button.active{background:#232326;color:#15171a}.separator{height:20px;width:1px;background:#e4e4e7;margin:0 4px}.explodePanel{position:absolute;bottom:99px;left:50%;transform:translateX(-50%);width:min(410px,75%);background:#ffffffed;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:none;z-index:3;backdrop-filter:blur(16px)}.sliderHead{display:flex;justify-content:space-between;font-size:11px;margin-bottom:10px}.sliderHead span{color:#a4a7ae}input[type=range]{accent-color:#28282b;width:100%;height:4px;cursor:pointer}.inspector{width:280px;border-left:1px solid var(--line);background:var(--surface-1);display:flex;flex-direction:column;flex-shrink:0;z-index:2}.inspectContent{padding:27px 23px;overflow:auto;flex:1}.inspectContent h2{font-size:30px;letter-spacing:-1px;font-weight:450;margin:13px 0 6px}.inspectContent .subtitle{font-size:11px;color:#a4a7ae;line-height:1.8}.miniMap{width:100%;height:136px;background:#1e2024;border:1px solid #efeff0;border-radius:12px;margin:24px 0 19px;overflow:hidden}.miniMap svg{width:100%;height:100%}.sectionLabel{font-size:10px;letter-spacing:1px;color:#a4a7ae;margin:24px 0 12px}.dataLine{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #26292e;font-size:11px}.dataLine span{color:#8b8b90}.dataLine b{font-weight:450;text-align:right}.inspector button.wide{display:block;width:100%;margin-top:9px;border-radius:10px;padding:11px;font-size:11px;border:1px solid var(--line)}.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.tag{border:1px solid #e5e5e9;border-radius:7px;padding:6px 9px;font-size:10px;background:#1e2024}.hint{font-size:10px;line-height:1.9;color:#969ca6;margin-top:20px}.inspector .bottom{border-top:1px solid var(--line);padding:16px 23px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#a4a7ae}.bottom button{border:1px solid var(--line);border-radius:7px;padding:5px 10px}.badge{position:absolute;left:32px;bottom:28px;background:#fff9;border:1px solid #dddde1;border-radius:20px;padding:9px 13px;font-size:10px;color:#6e6e75;z-index:2}.badge::before{content:"";display:inline-block;background:#74747d;width:5px;height:5px;border-radius:50%;margin-right:7px}.tooltip{position:absolute;pointer-events:none;background:#202024e8;color:var(--text-primary);padding:7px 10px;font-size:11px;border-radius:8px;display:none;z-index:9}.labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}.label{position:absolute;font-size:9px;font-weight:500;transform:translate(-50%,-50%);background:#ffffffe8;border:1px solid #d1d1d8;padding:3px 5px;border-radius:4px;color:#666;white-space:nowrap}.report{position:absolute;inset:0;background:#1e2024;z-index:4;display:none;overflow:auto;padding:34px 38px}.reportTop{display:flex;justify-content:space-between;align-items:center;gap:14px}.report h1{font-size:30px;font-weight:450;margin:9px 0}.report p{font-size:12px;color:#929295;line-height:1.9}.reportTabs{display:flex;gap:6px;margin:24px 0 23px;border-bottom:1px solid #ddd}.reportTabs button{font-size:12px;padding:12px 16px;color:#a4a7ae;border-bottom:2px solid transparent}.reportTabs button.active{color:#e9ecf0;border-bottom-color:#e9ecf0}.statsGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.statCard{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:12px;padding:20px}.statCard small{font-size:10px;color:#a4a7ae}.statCard b{display:block;font-size:25px;font-weight:450;margin-top:12px}.statCard span{display:block;color:#969ca6;font-size:10px;margin-top:8px}.reportBody{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:14px;padding:23px;overflow-x:auto}.reportBody h3{font-size:15px;font-weight:500;margin:0 0 17px}.reportBody table{border-collapse:collapse;width:100%;text-align:left;white-space:nowrap;font-size:11px}.reportBody th{font-size:10px;color:#9a9a9f;font-weight:450;border-bottom:1px solid #ddd;padding:12px 10px}.reportBody td{padding:12px 10px;border-bottom:1px solid #efeff2}.reportBody tr[data-id]{cursor:pointer}.reportBody tr[data-id]:hover{background:#f6f6f8}.reportNote{font-size:10px!important;max-width:850px}.planWrap{display:grid;grid-template-columns:1.2fr 1fr;gap:25px;margin-bottom:26px}.planWrap svg{width:100%;height:280px;background:#f8f8fa;border-radius:10px}.steps{display:grid;gap:13px}.step{border-bottom:1px solid #eee;padding:14px 0;display:flex;gap:15px}.step b{font-weight:500;font-size:13px}.step span{color:#969ca6;font-size:10px;letter-spacing:1px}.step p{margin:6px 0 0;font-size:11px}.modalBackdrop{position:fixed;inset:0;background:#0004;backdrop-filter:blur(8px);z-index:20;display:none;align-items:center;justify-content:center}.modal{background:#15171a;border-radius:20px;width:480px;max-width:90vw;padding:30px;box-shadow:0 25px 90px #0002}.modal h2{font-size:23px;font-weight:500;margin:0 0 20px}.modal p{font-size:12px;color:#a4a7ae;line-height:1.9}.modal table{width:100%;font-size:12px;border-collapse:collapse}.modal td{padding:11px 0;border-bottom:1px solid #eee}.modal td:last-child{text-align:right;color:#a4a7ae}.toast{position:fixed;bottom:25px;left:50%;transform:translate(-50%,20px);background:#202024;color:var(--text-primary);font-size:12px;padding:13px 20px;border-radius:30px;z-index:50;opacity:0;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}.loader{position:fixed;inset:0;background:#1e2024;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px}.loader .mark{font-size:24px;letter-spacing:5px;font-weight:400}.loader .progress{width:150px;height:2px;background:#ddd;overflow:hidden}.loader .progress::after{content:"";display:block;background:#e9ecf0;width:50%;height:100%;animation:load 1s infinite alternate}.loader p{font-size:11px;color:#a4a7ae}@keyframes load{to{transform:translateX(100%)}}.reportMode .inspector{display:none}.present header{height:60px}.present .app{height:calc(100dvh - 60px)}.present aside,.present .inspector{display:none}.present .stageTitle h1{font-size:40px}.present .stageTitle{top:35px;left:42px}.present .stageTitle p{font-size:13px}.assemblyActions{display:none;margin-top:12px;gap:5px}.assemblyActions button{font-size:10px;padding:8px 10px;border:1px solid #ddd;border-radius:8px}.mobileSide{display:none}.plotsPanel{position:absolute;top:28px;left:32px;width:244px;max-height:calc(100% - 190px);background:#16181cf2;border:1px solid var(--line);border-radius:13px;display:none;flex-direction:column;z-index:3;backdrop-filter:blur(14px);overflow:hidden}body.plotsMode .plotsPanel{display:flex}body.plotsMode .stageTitle{display:none}.plotsHead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:13px 14px 10px;border-bottom:1px solid var(--line)}.plotsHead strong{font-size:13px;font-weight:600;display:block}.plotsHead small{display:block;font-size:10px;color:#9aa1ab;margin-top:4px}.plotsHead button{font-size:10px;border:1px solid var(--line);border-radius:7px;padding:5px 8px;color:#c8ced7;white-space:nowrap}.plotsChosen{font-size:10px;color:#d9c79a;padding:8px 14px;border-bottom:1px solid var(--line)}.plotList{overflow:auto;flex:1;padding:6px;scrollbar-width:thin;min-height:90px}.plotRow{width:100%;display:flex;justify-content:space-between;gap:10px;padding:7px 9px;border-radius:7px;font-size:11px;color:#b9bfc8;text-align:left}.plotRow:hover{background:#262a30}.plotRow.on{background:#3a3220;color:#ffd98a}.luForm{padding:10px 12px;border-bottom:.5px solid var(--line)}.luSlider{display:flex;align-items:center;gap:10px;font-size:11px;color:#9aa1ab}.luSlider input[type=range]{flex:1;min-width:0}.luSlider b{font-weight:600;color:#e9ecf0;min-width:22px;text-align:right}.plotsFoot{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--line)}.plotsFoot button{flex:1;font-size:10px;border:1px solid var(--line);border-radius:8px;padding:8px 6px;color:#e1e5ea;background:#22262c}.plotsFoot button:hover{background:#333941}.luForm{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 12px;border-bottom:.5px solid var(--sys-sep)}.luForm label{display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--sys-label-2)}.luForm input{width:100%;padding:6px 8px;font-size:12px;border-radius:7px;border:.5px solid var(--sys-sep);background:var(--sys-fill);color:var(--sys-label)}.luForm #luApply{grid-column:1/-1;margin-top:2px;padding:8px;font-size:11px;border-radius:8px;background:var(--sys-blue);color:#fff}.luForm #luApply:hover{background:#3d9bff}.luTotals{display:grid;grid-template-columns:auto auto;gap:3px 10px;padding:9px 13px;font-size:10px;border-bottom:.5px solid var(--sys-sep)}.luTotals span{color:var(--sys-label-2)}.luTotals b{font-weight:600;text-align:right}.plotHeadRow{display:flex;gap:6px;padding:6px 15px 4px;font-size:9px;color:var(--sys-label-3);letter-spacing:.3px}.plotHeadRow span:first-child,.plotRow span:first-child{flex:1}.plotCell{width:46px;text-align:right;flex:none}
+:root{--ink:#f5f5f7;--muted:#848484;--line:#303238;--soft:#1e2024;--purple:#383a3d;--gold:#d3b986}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#15171a;font-size:13px;overflow:hidden}button,input,select{font:inherit}button{cursor:pointer;border:0;background:transparent;color:inherit}button:focus-visible,input:focus-visible{outline:2px solid #a4a7ae;outline-offset:3px}button:disabled{opacity:.3;cursor:default}button:hover{background:#26292e}header{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 30px;gap:28px;background:#15171a;position:relative;z-index:5}.brand{font-size:17px;letter-spacing:1.8px;font-weight:650;white-space:nowrap}.brand span{color:#a8a8a8;font-weight:350;margin:0 4px}.edition{font-size:10px;letter-spacing:1.5px;color:#929292;margin-top:6px}.nav{display:flex;gap:3px;padding:4px;border:1px solid var(--line);border-radius:30px;margin:auto}.nav button{padding:9px 22px;border-radius:24px;color:#a4a7ae}.nav button.active{background:#e9ecf0;color:#111215;box-shadow:0 2px 5px #0001}.headerActions{display:flex;align-items:center;gap:8px}.round{border:1px solid var(--line);border-radius:50%;width:36px;height:36px;font-size:17px}.pill{padding:10px 17px;border:1px solid var(--line);border-radius:22px;white-space:nowrap}.black{background:#e9ecf0;color:#111215}.black:hover{background:#444}.app{display:flex;height:calc(100dvh - 76px)}aside{width:254px;flex-shrink:0;border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--surface-1);z-index:2}.sideHead{padding:25px 22px 18px}.eyebrow{font-size:10px;letter-spacing:2px;color:#8a8a8a;text-transform:uppercase}.sideHead h2{font-size:20px;letter-spacing:-.5px;font-weight:550;margin:10px 0 8px}.small{font-size:11px;line-height:1.7;color:var(--muted)}.search{border:1px solid var(--line);background:#1e2024;border-radius:10px;width:100%;padding:9px 12px;margin-top:17px;color:#333}.switchTabs{display:flex;padding:0 18px 14px;gap:4px}.switchTabs button{flex:1;border-radius:7px;font-size:11px;padding:7px 3px;color:#a4a7ae}.switchTabs button.active{background:#26292e;color:#e9ecf0}.unitList{overflow:auto;flex:1;padding:0 10px 12px;scrollbar-width:thin}.unitRow{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;text-align:left;border-radius:9px;position:relative}.unitRow.active{background:#26292e}.unitRow .symbol{width:27px;height:27px;border:1px solid #d9d9de;border-radius:7px;display:grid;place-items:center;font-size:13px;color:#a4a7ae;background:#15171a}.unitRow.active .symbol{background:#e9ecf0;color:var(--text-primary);border-color:#e9ecf0}.unitRow .txt{flex:1}.unitRow strong{font-size:12px;font-weight:550;letter-spacing:.3px}.unitRow small{font-size:10px;color:#909095;display:block;margin-top:4px}.unitRow .dot{width:5px;height:5px;border-radius:50%;background:#b7b7bd}.sideFoot{border-top:1px solid var(--line);padding:16px 22px;font-size:10px;color:#929295;line-height:1.8}.sideFoot b{color:#414145;font-weight:500}.stage{flex:1;position:relative;min-width:0;overflow:hidden;background:#101114}#viewport{width:100%;height:100%;position:absolute;inset:0}canvas{display:block;touch-action:none}.stageTitle{position:absolute;top:29px;left:32px;pointer-events:none;z-index:1}.stageTitle h1{font-size:31px;letter-spacing:-1.3px;font-weight:450;margin:9px 0 11px}.stageTitle p{color:#838387;font-size:11px;margin:0;max-width:450px;line-height:1.8}.counter{display:flex;gap:25px;margin-top:22px}.counter b{font-size:21px;font-weight:450;letter-spacing:-.6px}.counter small{display:block;color:#98989e;font-size:10px;margin-top:6px}.layers{position:absolute;top:28px;right:26px;z-index:2;display:flex;flex-direction:column;align-items:flex-end;gap:7px}.layer{font-size:11px;background:#ffffffd9;border:1px solid #e4e4e8;padding:8px 11px;border-radius:20px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(12px)}.layer.off{opacity:.4}.swatch{height:6px;width:6px;border-radius:50%;background:#a4a7ae}.canvasFoot{position:absolute;bottom:103px;left:30px;font-size:10px;color:#a1a1a8;pointer-events:none;letter-spacing:.3px}.viewbar{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);background:#fffffff2;border:1px solid #dedee4;border-radius:16px;box-shadow:0 8px 30px #00000008;display:flex;align-items:center;padding:6px;gap:3px;z-index:3;backdrop-filter:blur(20px);white-space:nowrap}.viewbar button{font-size:11px;border-radius:10px;padding:10px 13px;color:#717176}.viewbar button.active{background:#232326;color:#15171a}.separator{height:20px;width:1px;background:#e4e4e7;margin:0 4px}.explodePanel{position:absolute;bottom:99px;left:50%;transform:translateX(-50%);width:min(410px,75%);background:#ffffffed;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:none;z-index:3;backdrop-filter:blur(16px)}.sliderHead{display:flex;justify-content:space-between;font-size:11px;margin-bottom:10px}.sliderHead span{color:#a4a7ae}input[type=range]{accent-color:#28282b;width:100%;height:4px;cursor:pointer}.inspector{width:280px;border-left:1px solid var(--line);background:var(--surface-1);display:flex;flex-direction:column;flex-shrink:0;z-index:2}.inspectContent{padding:27px 23px;overflow:auto;flex:1}.inspectContent h2{font-size:30px;letter-spacing:-1px;font-weight:450;margin:13px 0 6px}.inspectContent .subtitle{font-size:11px;color:#a4a7ae;line-height:1.8}.miniMap{width:100%;height:136px;background:#1e2024;border:1px solid #efeff0;border-radius:12px;margin:24px 0 19px;overflow:hidden}.miniMap svg{width:100%;height:100%}.sectionLabel{font-size:10px;letter-spacing:1px;color:#a4a7ae;margin:24px 0 12px}.dataLine{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #26292e;font-size:11px}.dataLine span{color:#8b8b90}.dataLine b{font-weight:450;text-align:right}.inspector button.wide{display:block;width:100%;margin-top:9px;border-radius:10px;padding:11px;font-size:11px;border:1px solid var(--line)}.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.tag{border:1px solid #e5e5e9;border-radius:7px;padding:6px 9px;font-size:10px;background:#1e2024}.hint{font-size:10px;line-height:1.9;color:#969ca6;margin-top:20px}.inspector .bottom{border-top:1px solid var(--line);padding:16px 23px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#a4a7ae}.bottom button{border:1px solid var(--line);border-radius:7px;padding:5px 10px}.badge{position:absolute;left:32px;bottom:28px;background:#fff9;border:1px solid #dddde1;border-radius:20px;padding:9px 13px;font-size:10px;color:#6e6e75;z-index:2}.badge::before{content:"";display:inline-block;background:#74747d;width:5px;height:5px;border-radius:50%;margin-right:7px}.tooltip{position:absolute;pointer-events:none;background:#202024e8;color:var(--text-primary);padding:7px 10px;font-size:11px;border-radius:8px;display:none;z-index:9}.labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}.label{position:absolute;font-size:9px;font-weight:500;transform:translate(-50%,-50%);background:#ffffffe8;border:1px solid #d1d1d8;padding:3px 5px;border-radius:4px;color:#666;white-space:nowrap}.report{position:absolute;inset:0;background:#1e2024;z-index:4;display:none;overflow:auto;padding:34px 38px}.reportTop{display:flex;justify-content:space-between;align-items:center;gap:14px}.report h1{font-size:30px;font-weight:450;margin:9px 0}.report p{font-size:12px;color:#929295;line-height:1.9}.reportTabs{display:flex;gap:6px;margin:24px 0 23px;border-bottom:1px solid #ddd}.reportTabs button{font-size:12px;padding:12px 16px;color:#a4a7ae;border-bottom:2px solid transparent}.reportTabs button.active{color:#e9ecf0;border-bottom-color:#e9ecf0}.statsGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.statCard{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:12px;padding:20px}.statCard small{font-size:10px;color:#a4a7ae}.statCard b{display:block;font-size:25px;font-weight:450;margin-top:12px}.statCard span{display:block;color:#969ca6;font-size:10px;margin-top:8px}.reportBody{background:var(--surface-1);border:1px solid #e6e6e9;border-radius:14px;padding:23px;overflow-x:auto}.reportBody h3{font-size:15px;font-weight:500;margin:0 0 17px}.reportBody table{border-collapse:collapse;width:100%;text-align:left;white-space:nowrap;font-size:11px}.reportBody th{font-size:10px;color:#9a9a9f;font-weight:450;border-bottom:1px solid #ddd;padding:12px 10px}.reportBody td{padding:12px 10px;border-bottom:1px solid #efeff2}.reportBody tr[data-id]{cursor:pointer}.reportBody tr[data-id]:hover{background:#f6f6f8}.reportNote{font-size:10px!important;max-width:850px}.planWrap{display:grid;grid-template-columns:1.2fr 1fr;gap:25px;margin-bottom:26px}.planWrap svg{width:100%;height:280px;background:#f8f8fa;border-radius:10px}.steps{display:grid;gap:13px}.step{border-bottom:1px solid #eee;padding:14px 0;display:flex;gap:15px}.step b{font-weight:500;font-size:13px}.step span{color:#969ca6;font-size:10px;letter-spacing:1px}.step p{margin:6px 0 0;font-size:11px}.modalBackdrop{position:fixed;inset:0;background:#0004;backdrop-filter:blur(8px);z-index:20;display:none;align-items:center;justify-content:center}.modal{background:#15171a;border-radius:20px;width:480px;max-width:90vw;padding:30px;box-shadow:0 25px 90px #0002}.modal h2{font-size:23px;font-weight:500;margin:0 0 20px}.modal p{font-size:12px;color:#a4a7ae;line-height:1.9}.modal table{width:100%;font-size:12px;border-collapse:collapse}.modal td{padding:11px 0;border-bottom:1px solid #eee}.modal td:last-child{text-align:right;color:#a4a7ae}.toast{position:fixed;bottom:25px;left:50%;transform:translate(-50%,20px);background:#202024;color:var(--text-primary);font-size:12px;padding:13px 20px;border-radius:30px;z-index:50;opacity:0;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}.loader{position:fixed;inset:0;background:#1e2024;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px}.loader .mark{font-size:24px;letter-spacing:5px;font-weight:400}.loader .progress{width:150px;height:2px;background:#ddd;overflow:hidden}.loader .progress::after{content:"";display:block;background:#e9ecf0;width:50%;height:100%;animation:load 1s infinite alternate}.loader p{font-size:11px;color:#a4a7ae}@keyframes load{to{transform:translateX(100%)}}.reportMode .inspector{display:none}.present header{height:60px}.present .app{height:calc(100dvh - 60px)}.present aside,.present .inspector{display:none}.present .stageTitle h1{font-size:40px}.present .stageTitle{top:35px;left:42px}.present .stageTitle p{font-size:13px}.assemblyActions{display:none;margin-top:12px;gap:5px}.assemblyActions button{font-size:10px;padding:8px 10px;border:1px solid #ddd;border-radius:8px}.mobileSide{display:none}.plotsPanel{position:absolute;top:28px;left:32px;width:244px;max-height:calc(100% - 190px);background:#16181cf2;border:1px solid var(--line);border-radius:13px;display:none;flex-direction:column;z-index:3;backdrop-filter:blur(14px);overflow:hidden}body.plotsMode .plotsPanel{display:flex}body.plotsMode .stageTitle{display:none}.plotsHead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:13px 14px 10px;border-bottom:1px solid var(--line)}.plotsHead strong{font-size:13px;font-weight:600;display:block}.plotsHead small{display:block;font-size:10px;color:#9aa1ab;margin-top:4px}.plotsHead button{font-size:10px;border:1px solid var(--line);border-radius:7px;padding:5px 8px;color:#c8ced7;white-space:nowrap}.plotsChosen{font-size:10px;color:#d9c79a;padding:8px 14px;border-bottom:1px solid var(--line)}.plotList{overflow:auto;flex:1;padding:6px;scrollbar-width:thin;min-height:90px}.plotRow{width:100%;display:flex;justify-content:space-between;gap:10px;padding:7px 9px;border-radius:7px;font-size:11px;color:#b9bfc8;text-align:left}.plotRow:hover{background:#262a30}.plotRow.on{background:#3a3220;color:#ffd98a}.luForm{padding:10px 12px;border-bottom:.5px solid var(--line)}.luSlider{display:flex;align-items:center;gap:10px;font-size:11px;color:#9aa1ab}.luSlider input[type=range]{flex:1;min-width:0}.luSlider b{font-weight:600;color:#e9ecf0;min-width:22px;text-align:right}.climatePanel{position:absolute;top:28px;left:32px;width:268px;max-height:calc(100% - 150px);background:#16181cf2;border:.5px solid var(--sys-sep);border-radius:14px;display:none;flex-direction:column;z-index:3;-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);overflow:auto;box-shadow:0 8px 32px rgba(0,0,0,.44)}body.climateMode .climatePanel{display:flex}body.climateMode .stageTitle{display:none}.clForm{padding:10px 13px;border-bottom:.5px solid var(--sys-sep)}.clDateRow{font-size:14px;font-weight:600;margin-bottom:8px}.clRoseWrap{display:flex;gap:10px;padding:11px 13px;border-bottom:.5px solid var(--sys-sep);align-items:center}.clRoseSide{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}.clRoseSide select{background:var(--sys-fill);border:.5px solid var(--sys-sep);color:#e9ecf0;border-radius:8px;padding:5px 7px;font-size:11px}.windRose{width:112px;height:112px;flex:none}.wrRing{fill:none;stroke:rgba(255,255,255,.14);stroke-width:.7}.wrPetal{fill:#4aa3e0;opacity:.75}.wrPetal.wrTop{fill:#0a84ff;opacity:1}.wrN{fill:rgba(235,235,245,.6);font-size:8px;text-anchor:middle}.clTabs{display:flex;gap:5px;padding:9px 13px 4px}.clTabs button{flex:1;font-size:10px;padding:6px 4px;border:.5px solid var(--sys-sep);border-radius:8px;color:#b9bfc8;background:var(--sys-fill)}.clTabs button.on{background:var(--sys-blue);color:#fff;border-color:transparent}.clRampRow{display:flex;align-items:center;gap:7px;padding:4px 13px 8px;font-size:10px;color:#8e949d}.clRamp{flex:1;height:7px;border-radius:4px;background:linear-gradient(90deg,#0d121a,#1c366,#2a7899,#8cb359,#f2cc40,#fff2b8)}.clNote{font-size:10px;line-height:1.7;color:#9aa1ab;padding:0 13px 10px}.plotsFoot{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--line)}.plotsFoot button{flex:1;font-size:10px;border:1px solid var(--line);border-radius:8px;padding:8px 6px;color:#e1e5ea;background:#22262c}.plotsFoot button:hover{background:#333941}.luForm{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 12px;border-bottom:.5px solid var(--sys-sep)}.luForm label{display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--sys-label-2)}.luForm input{width:100%;padding:6px 8px;font-size:12px;border-radius:7px;border:.5px solid var(--sys-sep);background:var(--sys-fill);color:var(--sys-label)}.luForm #luApply{grid-column:1/-1;margin-top:2px;padding:8px;font-size:11px;border-radius:8px;background:var(--sys-blue);color:#fff}.luForm #luApply:hover{background:#3d9bff}.luTotals{display:grid;grid-template-columns:auto auto;gap:3px 10px;padding:9px 13px;font-size:10px;border-bottom:.5px solid var(--sys-sep)}.luTotals span{color:var(--sys-label-2)}.luTotals b{font-weight:600;text-align:right}.plotHeadRow{display:flex;gap:6px;padding:6px 15px 4px;font-size:9px;color:var(--sys-label-3);letter-spacing:.3px}.plotHeadRow span:first-child,.plotRow span:first-child{flex:1}.plotCell{width:46px;text-align:right;flex:none}
 @media(max-width:1150px){aside{width:215px}.inspector{width:235px}.inspectContent{padding:24px 18px}header{padding:0 20px;gap:16px}.nav button{padding:9px 16px}.badge{display:none}.stageTitle{left:24px}.stageTitle h1{font-size:26px}.counter{gap:18px}.layers{right:17px}.layer{font-size:10px}.viewbar button{padding:10px}.report{padding:25px}.statsGrid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:900px){.inspector{position:absolute;right:0;top:76px;bottom:0;width:245px;box-shadow:-12px 0 40px #0001;display:none}.inspector.open{display:flex}aside{width:195px}.headerActions .pill{display:none}.brand{font-size:14px}.edition{font-size:8px}.nav button{padding:9px 12px}.stageTitle h1{font-size:24px}.counter{display:none}.planWrap{grid-template-columns:1fr}.layers{top:130px}.canvasFoot{font-size:9px}.mobileSide{display:inline-block}.stageTitle p{max-width:320px}.reportTop{align-items:flex-start}.reportTop .pill{font-size:10px;padding:8px}}
 @media(max-width:600px){header{height:68px;padding:0 12px;gap:8px}.brand{font-size:12px;letter-spacing:1px}.edition{font-size:7px}.nav{margin-left:auto}.nav button{padding:8px 10px;font-size:11px}.headerActions{display:none}.app{height:calc(100dvh - 68px)}aside{width:152px}.sideHead{padding:20px 13px 15px}.sideHead h2{font-size:17px}.sideHead .small{font-size:10px}.switchTabs{padding:0 8px 10px}.switchTabs button{font-size:10px}.unitRow{padding:10px 5px;gap:6px}.unitRow .symbol{width:21px;height:23px}.unitRow strong{font-size:10px}.unitRow small{font-size:9px}.sideFoot{padding:12px;font-size:9px}.stageTitle{top:23px;left:17px}.stageTitle h1{font-size:21px}.stageTitle p{display:none}.layers{top:100px;right:10px}.layer{font-size:9px;padding:6px 8px}.viewbar{bottom:18px;flex-wrap:wrap;justify-content:center;width:90%;border-radius:12px}.viewbar button{padding:8px;font-size:10px}.canvasFoot{display:none}.explodePanel{bottom:114px;width:90%;padding:12px}.report{padding:20px 15px}.report h1{font-size:23px}.reportTop{display:block}.reportTabs{gap:0;overflow:auto}.reportTabs button{font-size:10px;padding:10px;white-space:nowrap}.reportBody{padding:15px}.statCard{padding:15px}.statsGrid{gap:8px}.inspector{top:68px}.present .stageTitle h1{font-size:28px}.present .stageTitle{left:25px}.present .nav button{padding:8px 9px}.present .brand{font-size:11px}}
@@ -333,7 +333,7 @@ input[type=range]{accent-color:var(--sys-blue)}
 </style>
 </head><body>
 <div class="loader" id="loader"><div class="mark">FORM / ASSEMBLY</div><div class="progress"></div><p id="loadText">正在读取真实 Rhino 几何…</p></div>
-<header><button class="round" id="libraryToggle" aria-label="收起结构单元库" title="收起 / 展开结构单元库" aria-controls="partsSidebar" aria-expanded="true">☰</button><div><div class="brand">FORM <span>/</span> ASSEMBLY</div><div class="edition">LONDON 2100 · STRUCTURE ATLAS</div></div><nav class="nav" aria-label="工作模式"><button class="active" data-mode="overview">总览</button><button data-mode="explode">拆解</button><button data-mode="assembly">装配</button><button data-mode="plots">用地</button><button data-mode="report">报表</button></nav><div class="headerActions"><button class="round" id="helpBtn" title="操作说明">?</button><button class="pill" id="presentBtn">演示模式 ↗</button></div></header>
+<header><button class="round" id="libraryToggle" aria-label="收起结构单元库" title="收起 / 展开结构单元库" aria-controls="partsSidebar" aria-expanded="true">☰</button><div><div class="brand">FORM <span>/</span> ASSEMBLY</div><div class="edition">LONDON 2100 · STRUCTURE ATLAS</div></div><nav class="nav" aria-label="工作模式"><button class="active" data-mode="overview">总览</button><button data-mode="explode">拆解</button><button data-mode="assembly">装配</button><button data-mode="plots">用地</button><button data-mode="climate">环境</button><button data-mode="report">报表</button></nav><div class="headerActions"><button class="round" id="helpBtn" title="操作说明">?</button><button class="pill" id="presentBtn">演示模式 ↗</button></div></header>
 <div class="app"><aside id="partsSidebar" aria-label="结构单元库"><div class="resizeGrip leftGrip" role="separator" tabindex="0" aria-label="调整对象库宽度" aria-orientation="vertical"></div><div class="sideHead"><div class="eyebrow">PARTS LIBRARY</div><div class="sidebarTitleRow"><h2>结构单元库</h2><button type="button" class="libraryClose" id="collapseLibrary" aria-label="收起结构单元库" title="收起左侧面板">〈 收起</button></div><div class="small" id="librarySummary">按道路分割的地块组织</div><input class="search" id="search" placeholder="搜索编号，如 P-15" aria-label="搜索单元"></div><div class="switchTabs"><button class="active" data-filter="parcel">地块</button><button data-filter="connection">连接</button><button data-filter="all">全部</button></div><div class="unitList" id="unitList"></div><div class="sideFoot"><b>2(1).3dm</b> · 原始模型<br>米制 / Rhino 来源网格 · v4.0<br><span id="sideCount"></span></div></aside>
 <main class="stage"><div id="viewport"></div><button type="button" id="restoreLibrary" class="libraryRestore" title="展开结构单元库" aria-label="展开结构单元库" aria-controls="partsSidebar">☰　展开单元库</button><div class="stageTitle"><div class="eyebrow" id="stageEyebrow">01 / THE WHOLE</div><h1 id="stageHeading">从整体，到每一部分。</h1><p id="stageDescription">一件连续结构，沿道路划分，重新认识每个单元。</p><div class="counter"><div><b id="countParcel">24</b><small>道路 / 场地组件</small></div><div><b id="countUnits">20</b><small>地块结构单元</small></div><div><b id="countConnections">30</b><small>跨路连接组</small></div></div></div>
 <div class="layers"><button class="layer" data-layer="structure"><i class="swatch" style="background:#999"></i>灰色结构</button><button class="layer" data-layer="roads"><i class="swatch" style="background:#d3b986"></i>道路</button><button class="layer" data-layer="site"><i class="swatch" style="background:#383a3d"></i>场地</button><button class="layer off" data-layer="labels"><i class="swatch" style="background:#222"></i>编号</button><button class="layer off" data-layer="mono"><i class="swatch" style="background:#bbb"></i>纯白模型</button><button class="layer off" data-layer="edges"><i class="swatch" style="background:#666"></i>曲面线框</button><button class="layer mobileSide" id="infoBtn">单元详情 ↗</button></div>
@@ -3424,6 +3424,7 @@ const PLOT_G=.5,PLOT_MIN=60,PLOT_SIMPLIFY=1,PLOT_CORNER=.52,PLOT_ROUNDS=2;
 const landUse={far:1.8,storeys:6,coverage:.45,waterBuffer:10,streetBand:4,
  structClear:3,parcelWidth:18,minDepth:10,maxDepth:30,minParcel:150,minWidth:8};
 let plotGroup=null,landPlots=[],plotMeshes=[],plotSelection=new Set(),plotHover=null;
+let sunLight=null,skyLight=null,fillLight=null,sunLightHome={};
 let plotRaster=null,landUseTotals=null;
 // --- shared raster helpers --------------------------------------------------
 function traceRings(inside,box,R){
@@ -3948,6 +3949,513 @@ function initPlotsUI(){
  el.querySelector('#plotCsv').onclick=exportPlotsCSV;
  renderPlotPanel();
 }
+// CLIMATE v44 — the real London year, from the EPW the project supplied.
+//
+// GBR_ENG_London-Stansted.AP.036830_TMYx: 51.885 N, 0.235 E, 8,760 hours.
+// Nothing here is a stand-in. The sun is placed by the NOAA solar position
+// algorithm for that latitude and the hour on the slider; how bright it is
+// comes from that hour's direct normal and diffuse horizontal irradiance in
+// the file; the wind rose is counted off the file's own 8,760 wind readings;
+// and the sunlight hours on each lot are marched against the structures'
+// own height field, then weighted by how often London actually has sun at
+// that hour of that month — which is the difference between a geometric
+// figure and a London one.
+const EPW_URL='./london.epw';
+let epw=null,epwPromise=null,climateRaster=null;
+const climate={day:172,hour:13,month:0,particles:true,analysis:'sun',playing:false};
+let climateGroup=null,sunHours=null,windShelter=null,windPoints=null,windState=null;
+function parseEpw(text){
+ const lines=text.split(/\r?\n/);
+ const L=lines[0].split(',');
+ const loc={name:L[1],region:L[2],country:L[3],lat:+L[6],lon:+L[7],tz:+L[8],elev:+L[9]};
+ const H=[];
+ for(let i=8;i<lines.length;i++){
+  const r=lines[i];if(!r||r.length<40)continue;
+  const f=r.split(',');
+  if(f.length<23)continue;
+  H.push({m:+f[1],d:+f[2],h:+f[3],tdb:+f[6],ghi:+f[13],dni:+f[14],dhi:+f[15],
+   wd:+f[20],ws:+f[21],cloud:+f[22]});
+ }
+ // the wind rose, counted the way a wind rose is counted: sixteen sectors,
+ // calms (under 0.5 m/s) kept out of the directional tally
+ const rose=Array.from({length:16},()=>({n:0,bins:[0,0,0,0,0]}));
+ const monthRose=Array.from({length:13},()=>Array.from({length:16},()=>0));
+ let calm=0,wsum=0,wmax=0;
+ for(const x of H){
+  wsum+=x.ws;if(x.ws>wmax)wmax=x.ws;
+  if(x.ws<.5){calm++;continue}
+  const s=(Math.round(x.wd/22.5)%16+16)%16;
+  rose[s].n++;
+  const b=x.ws<2?0:x.ws<4?1:x.ws<6?2:x.ws<8?3:4;
+  rose[s].bins[b]++;
+  monthRose[0][s]++;monthRose[x.m][s]++;
+ }
+ // how often there is real sun, by month and hour: London is not a clear sky
+ const sunFreq=Array.from({length:13},()=>new Float32Array(24));
+ const sunCount=Array.from({length:13},()=>new Float32Array(24));
+ for(const x of H){
+  const h=Math.min(23,Math.max(0,x.h-1));
+  sunCount[x.m][h]++;if(x.dni>120)sunFreq[x.m][h]++;
+ }
+ for(let m=1;m<=12;m++)for(let h=0;h<24;h++)
+  sunFreq[m][h]=sunCount[m][h]?sunFreq[m][h]/sunCount[m][h]:0;
+ const months=[];
+ for(let m=1;m<=12;m++){
+  const set=H.filter(x=>x.m===m);
+  months.push({m,tdb:set.reduce((s,x)=>s+x.tdb,0)/set.length,
+   ws:set.reduce((s,x)=>s+x.ws,0)/set.length,
+   ghi:set.reduce((s,x)=>s+x.ghi,0)/1000});
+ }
+ let top=0;for(let i=1;i<16;i++)if(rose[i].n>rose[top].n)top=i;
+ return {loc,hours:H,rose,monthRose,sunFreq,months,
+  calmPct:calm/H.length*100,meanWind:wsum/H.length,maxWind:wmax,
+  prevailing:top,
+  annual:{ghi:H.reduce((s,x)=>s+x.ghi,0)/1000,dni:H.reduce((s,x)=>s+x.dni,0)/1000,
+   dhi:H.reduce((s,x)=>s+x.dhi,0)/1000}};
+}
+function loadEpw(){
+ if(epw)return Promise.resolve(epw);
+ if(epwPromise)return epwPromise;
+ epwPromise=fetch(EPW_URL,{cache:'force-cache'}).then(r=>{
+  if(!r.ok)throw Error('EPW unavailable: HTTP '+r.status);
+  return r.text();
+ }).then(t=>{epw=parseEpw(t);console.info('EPW loaded',{site:epw.loc,hours:epw.hours.length,
+  annualGHI:Math.round(epw.annual.ghi),meanWind:+epw.meanWind.toFixed(2)});return epw});
+ return epwPromise;
+}
+const DIR16=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+// NOAA solar position. Azimuth is clockwise from north, altitude above the
+// horizon, both in degrees; the hour is local standard time at the file's
+// own time zone, which for this site is UTC.
+function sunPosition(lat,lon,tz,dayOfYear,hour){
+ const rad=Math.PI/180;
+ const g=2*Math.PI/365*(dayOfYear-1+(hour-12)/24);
+ const eq=229.18*(7.5e-5+1.868e-3*Math.cos(g)-3.2077e-2*Math.sin(g)
+  -1.4615e-2*Math.cos(2*g)-4.0849e-2*Math.sin(2*g));
+ const dec=6.918e-3-0.399912*Math.cos(g)+7.0257e-2*Math.sin(g)-6.758e-3*Math.cos(2*g)
+  +9.07e-4*Math.sin(2*g)-2.697e-3*Math.cos(3*g)+1.48e-3*Math.sin(3*g);
+ const offset=eq+4*lon-60*tz;
+ const tst=hour*60+offset;
+ const ha=(tst/4-180)*rad;
+ const la=lat*rad;
+ const cosZ=Math.sin(la)*Math.sin(dec)+Math.cos(la)*Math.cos(dec)*Math.cos(ha);
+ const z=Math.acos(Math.max(-1,Math.min(1,cosZ)));
+ const alt=90-z/rad;
+ let az=Math.acos(Math.max(-1,Math.min(1,
+  -(Math.sin(la)*Math.cos(z)-Math.sin(dec))/(Math.cos(la)*Math.sin(z)||1e-9))))/rad;
+ if(ha>0)az=360-az;
+ return {altitude:alt,azimuth:az,declination:dec/rad};
+}
+// Scene axes: x east, y up, z = -north. A unit vector pointing AT the sun.
+function sunVector(alt,az){
+ const a=alt*Math.PI/180,b=az*Math.PI/180,c=Math.cos(a);
+ return new THREE.Vector3(c*Math.sin(b),Math.sin(a),-c*Math.cos(b));
+}
+// The structures as a height field, so a shadow can be marched instead of
+// ray-cast: 85,000 triangles would have to be tested per sample otherwise.
+// Both the top and the underside are kept, because these structures are
+// elevated and a low sun passes beneath them.
+function buildClimateRaster(){
+ if(climateRaster)return climateRaster;
+ const G=2,X0=-314,Y0=-189,W=Math.ceil(628/G),H=Math.ceil(378/G);
+ const top=new Float32Array(W*H),bot=new Float32Array(W*H).fill(1e9);
+ const sgn=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]);
+ for(const u of model.units){
+  const v=u.mesh.v,t=u.mesh.t;
+  for(let k=0;k<t.length;k+=3){
+   const p=[0,1,2].map(j=>{const i=t[k+j]*3;return[v[i],v[i+1],v[i+2]]});
+   if(Math.abs(sgn(p[0],p[1],p[2]))<.02)continue;
+   const zmax=Math.max(p[0][2],p[1][2],p[2][2]),zmin=Math.min(p[0][2],p[1][2],p[2][2]);
+   const i0=Math.max(0,Math.floor((Math.min(p[0][0],p[1][0],p[2][0])-X0)/G));
+   const i1=Math.min(W-1,Math.ceil((Math.max(p[0][0],p[1][0],p[2][0])-X0)/G));
+   const j0=Math.max(0,Math.floor((Math.min(p[0][1],p[1][1],p[2][1])-Y0)/G));
+   const j1=Math.min(H-1,Math.ceil((Math.max(p[0][1],p[1][1],p[2][1])-Y0)/G));
+   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
+    if(!pointInTriangle2D(X0+(i+.5)*G,Y0+(j+.5)*G,
+      [p[0][0],p[0][1]],[p[1][0],p[1][1]],[p[2][0],p[2][1]]))continue;
+    const id=j*W+i;
+    if(zmax>top[id])top[id]=zmax;
+    if(zmin<bot[id])bot[id]=zmin;
+   }
+  }
+ }
+ climateRaster={G,X0,Y0,W,H,top,bot};
+ return climateRaster;
+}
+// Is the sun visible from (x,y) at eye height? March the plan toward the sun
+// and ask whether the structure occupies the ray's height at each step.
+function sunBlocked(R,x,y,eye,sx,sy,tanAlt){
+ const {G,X0,Y0,W,H,top,bot}=R;
+ const step=G;
+ for(let t=step;t<=260;t+=step){
+  const px=x+sx*t,py=y+sy*t;
+  const i=Math.floor((px-X0)/G),j=Math.floor((py-Y0)/G);
+  if(i<0||j<0||i>=W||j>=H)return false;
+  const id=j*W+i,hTop=top[id];
+  if(hTop<=0)continue;
+  const ray=eye+t*tanAlt;
+  if(ray<hTop&&ray>bot[id]-.5)return true;   // inside the deck
+  if(ray<=bot[id]-.5)continue;               // passes underneath, keep going
+ }
+ return false;
+}
+function lotSamples(lot){
+ const r=lot.outer;
+ let cx=0,cy=0;for(const q of r){cx+=q[0];cy+=q[1]}
+ cx/=r.length;cy/=r.length;
+ const pts=[[cx,cy]];
+ for(let k=0;k<r.length;k+=Math.max(1,Math.floor(r.length/3)))
+  pts.push([(r[k][0]+cx*2)/3,(r[k][1]+cy*2)/3]);
+ return pts.slice(0,4);
+}
+const MONTH_DAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
+const MONTH_MID=[21,52,80,111,141,172,202,233,264,294,325,355];
+// Annual sunlight on every lot, twice: the geometric figure a clear sky would
+// give, and the same hours weighted by how often this EPW actually records
+// direct sun at that hour in that month. For London the second is roughly a
+// third of the first, which is the number that should drive where housing goes.
+function solveSunHours(){
+ if(!epw||!landPlots.length)return null;
+ const R=buildClimateRaster(),rad=Math.PI/180,{lat,lon,tz}=epw.loc;
+ const out=new Map();let best=0;
+ for(const p of landPlots)for(const lot of p.parcels){
+  const pts=lotSamples(lot);
+  let geo=0,real=0;
+  for(let m=0;m<12;m++)for(let h=3;h<=21.01;h+=.5){
+   const s=sunPosition(lat,lon,tz,MONTH_MID[m],h);
+   if(s.altitude<=3)continue;
+   const sx=Math.sin(s.azimuth*rad),sy=Math.cos(s.azimuth*rad),ta=Math.tan(s.altitude*rad);
+   let open=0;
+   for(const q of pts)if(!sunBlocked(R,q[0],q[1],1.5,sx,sy,ta))open++;
+   const f=open/pts.length*.5*MONTH_DAYS[m];
+   geo+=f;real+=f*epw.sunFreq[m+1][Math.min(23,Math.floor(h))];
+  }
+  if(real>best)best=real;
+  out.set(lot.id,{geo,real});
+ }
+ return {map:out,best};
+}
+// Wind exposure: from how much of the rose, by frequency, is this lot open?
+// Measured at 10 m, the height at which the wind matters to a building, and
+// out to 80 m, beyond which a single obstacle stops sheltering.
+function solveWindShelter(monthIdx){
+ if(!epw||!landPlots.length)return null;
+ const R=buildClimateRaster(),rad=Math.PI/180;
+ const rose=monthIdx?epw.monthRose[monthIdx]:epw.monthRose[0];
+ const total=rose.reduce((s,x)=>s+x,0)||1;
+ const out=new Map();
+ for(const p of landPlots)for(const lot of p.parcels){
+  const pts=lotSamples(lot);
+  let open=0;
+  for(let s=0;s<16;s++){
+   const w=rose[s]/total;if(w<=0)continue;
+   const a=s*22.5*rad,ux=Math.sin(a),uy=Math.cos(a);   // wind comes FROM here
+   let clear=0;
+   for(const q of pts){
+    let blocked=false;
+    for(let t=R.G;t<=80;t+=R.G){
+     const i=Math.floor((q[0]+ux*t-R.X0)/R.G),j=Math.floor((q[1]+uy*t-R.Y0)/R.G);
+     if(i<0||j<0||i>=R.W||j>=R.H)break;
+     const id=j*R.W+i;
+     if(R.top[id]>10&&R.bot[id]<10){blocked=true;break}
+    }
+    if(!blocked)clear++;
+   }
+   open+=w*clear/pts.length;
+  }
+  out.set(lot.id,open);
+ }
+ return out;
+}
+// --- the scene ---------------------------------------------------------
+function epwHour(day,hour){
+ if(!epw)return null;
+ const i=Math.min(8759,Math.max(0,Math.round((day-1)*24+hour)));
+ return epw.hours[i]||null;
+}
+// The light is placed by the sun and lit by the file: direct normal drives the
+// key, diffuse horizontal the sky. A London overcast hour therefore looks
+// overcast, instead of casting a crisp shadow it never had.
+function applyClimateLight(){
+ if(!sunLight||!skyLight)return;
+ if(state.mode!=='climate'){
+  sunLight.position.copy(sunLightHome.pos);sunLight.intensity=sunLightHome.key;
+  sunLight.color.set(0xffffff);skyLight.intensity=sunLightHome.sky;
+  if(fillLight)fillLight.intensity=sunLightHome.fill;
+  return;
+ }
+ const s=sunPosition(epw?epw.loc.lat:51.885,epw?epw.loc.lon:.235,epw?epw.loc.tz:0,
+  climate.day,climate.hour);
+ const v=sunVector(Math.max(s.altitude,-5),s.azimuth);
+ sunLight.position.copy(v.clone().multiplyScalar(900));
+ sunLight.target.position.set(0,0,0);sunLight.target.updateMatrixWorld();
+ const h=epwHour(climate.day,climate.hour);
+ const dni=h?h.dni:0,dhi=h?h.dhi:0;
+ const up=Math.max(0,Math.sin(s.altitude*Math.PI/180));
+ sunLight.intensity=s.altitude<=0?0:Math.min(3.4,dni/900*2.9*(.35+.65*up));
+ // low sun is warm, overcast is flat and cool
+ const warm=1-Math.min(1,Math.max(0,s.altitude/28));
+ sunLight.color.setRGB(1,1-warm*.17,1-warm*.34);
+ skyLight.intensity=.55+Math.min(2.1,dhi/190)*(s.altitude>0?1:.25);
+ if(fillLight)fillLight.intensity=.25+Math.min(.9,dhi/320);
+ return {s,h};
+}
+function buildWindParticles(){
+ if(windPoints){climateGroup.remove(windPoints);windPoints.geometry.dispose();windPoints=null}
+ const N=1500,pos=new Float32Array(N*3),col=new Float32Array(N*3);
+ windState=new Float32Array(N*3);                    // x, y, life
+ for(let i=0;i<N;i++){
+  windState[i*3]=-313+Math.random()*626;
+  windState[i*3+1]=-187+Math.random()*374;
+  windState[i*3+2]=Math.random();
+ }
+ const g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+ g.setAttribute('color',new THREE.BufferAttribute(col,3));
+ windPoints=new THREE.Points(g,new THREE.PointsMaterial({size:1.9,vertexColors:true,
+  transparent:true,opacity:.85,depthWrite:false,blending:THREE.AdditiveBlending,
+  sizeAttenuation:true}));
+ windPoints.frustumCulled=false;windPoints.name='风环境粒子';
+ climateGroup.add(windPoints);
+}
+// Diagrammatic, and labelled as such: the particles carry the hour's own
+// direction and speed from the EPW and steer around whatever the structures
+// bring down to within 10 m of the ground. It is a flow picture, not CFD.
+function stepWind(dt){
+ if(!windPoints||!windState||!epw)return;
+ const R=buildClimateRaster();
+ const h=epwHour(climate.day,climate.hour);
+ const dirDeg=h?h.wd:epw.prevailing*22.5,spd=h?Math.max(.6,h.ws):epw.meanWind;
+ const a=dirDeg*Math.PI/180;
+ const ux=-Math.sin(a),uy=-Math.cos(a);              // wind blows TOWARD here
+ const pos=windPoints.geometry.attributes.position.array;
+ const col=windPoints.geometry.attributes.color.array;
+ const N=windState.length/3,deck=buildClimateRaster();
+ for(let i=0;i<N;i++){
+  let x=windState[i*3],y=windState[i*3+1],life=windState[i*3+2];
+  let vx=ux,vy=uy;
+  // steer away from anything standing in the first 10 m of air
+  const probe=(ox,oy)=>{
+   const ii=Math.floor((x+ox-R.X0)/R.G),jj=Math.floor((y+oy-R.Y0)/R.G);
+   if(ii<0||jj<0||ii>=R.W||jj>=R.H)return 0;
+   const id=jj*R.W+ii;return (R.top[id]>4&&R.bot[id]<10)?1:0;
+  };
+  const ahead=probe(ux*8,uy*8);
+  if(ahead){
+   const lx=-uy,ly=ux;
+   const left=probe(lx*8,ly*8),right=probe(-lx*8,-ly*8);
+   const turn=left&&!right?-1:right&&!left?1:(i%2?1:-1);
+   vx=ux+lx*turn*1.5;vy=uy+ly*turn*1.5;
+   const L=Math.hypot(vx,vy)||1;vx/=L;vy/=L;
+  }
+  const v=spd*dt*2.4;
+  x+=vx*v;y+=vy*v;life-=dt*.1;
+  if(life<=0||x<-315||x>315||y<-189||y>189){
+   x=-313+Math.random()*626;y=-187+Math.random()*374;life=.6+Math.random()*.8;
+  }
+  windState[i*3]=x;windState[i*3+1]=y;windState[i*3+2]=life;
+  pos[i*3]=x;pos[i*3+1]=2.2;pos[i*3+2]=-y;
+  const f=Math.min(1,spd/11),t=Math.min(1,life*1.4);
+  col[i*3]=(.35+.65*f)*t;col[i*3+1]=(.75-.2*f)*t;col[i*3+2]=t;
+ }
+ windPoints.geometry.attributes.position.needsUpdate=true;
+ windPoints.geometry.attributes.color.needsUpdate=true;
+}
+// --- the analysis overlay ----------------------------------------------
+let climateLots=[];
+function buildClimateOverlay(){
+ for(const m of climateLots){climateGroup.remove(m);m.geometry.dispose()}
+ climateLots=[];
+ if(!landPlots.length)return;
+ for(const p of landPlots)for(const lot of p.parcels){
+  const sh=new THREE.Shape(lot.outer.map(([x,y])=>new THREE.Vector2(x,y)));
+  const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({
+   color:'#8e99a8',side:THREE.DoubleSide,depthWrite:true,
+   polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}));
+  m.rotation.x=-Math.PI/2;m.position.y=.4;m.userData.lot=lot;
+  climateGroup.add(m);climateLots.push(m);
+ }
+}
+const RAMP=[[.05,.07,.10],[.11,.21,.42],[.16,.47,.60],[.55,.70,.35],[.95,.80,.25],[1,.95,.72]];
+function rampColor(t){
+ t=Math.max(0,Math.min(.999,t));
+ const f=t*(RAMP.length-1),i=Math.floor(f),k=f-i;
+ const a=RAMP[i],b=RAMP[i+1]||RAMP[i];
+ return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k];
+}
+function updateClimateOverlay(){
+ const on=climate.analysis!=='none';
+ for(const m of climateLots){
+  m.visible=on;if(!on)continue;
+  const id=m.userData.lot.id;
+  let t=0;
+  if(climate.analysis==='sun'&&sunHours)t=(sunHours.map.get(id)?.real||0)/(sunHours.best||1);
+  else if(climate.analysis==='wind'&&windShelter)t=windShelter.get(id)||0;
+  const c=rampColor(t);m.material.color.setRGB(c[0],c[1],c[2]);
+ }
+}
+function windRoseSVG(monthIdx){
+ if(!epw)return '';
+ const rose=monthIdx?epw.monthRose[monthIdx]:epw.monthRose[0];
+ const total=rose.reduce((s,x)=>s+x,0)||1;
+ const max=Math.max(...rose)/total;
+ const R=54,cx=62,cy=62;
+ let out=`<svg viewBox="0 0 124 124" class="windRose">`;
+ for(const r of [.25,.5,.75,1])
+  out+=`<circle cx="${cx}" cy="${cy}" r="${(R*r).toFixed(1)}" class="wrRing"/>`;
+ for(let s=0;s<16;s++){
+  const f=rose[s]/total/ (max||1);
+  if(f<=0)continue;
+  const a0=(s*22.5-11.25-90)*Math.PI/180,a1=(s*22.5+11.25-90)*Math.PI/180,rr=R*f;
+  const x0=cx+Math.cos(a0)*rr,y0=cy+Math.sin(a0)*rr;
+  const x1=cx+Math.cos(a1)*rr,y1=cy+Math.sin(a1)*rr;
+  out+=`<path d="M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${rr.toFixed(1)},${rr.toFixed(1)} 0 0 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" class="wrPetal${s===epw.prevailing&&!monthIdx?' wrTop':''}"/>`;
+ }
+ out+=`<text x="${cx}" y="11" class="wrN">N</text></svg>`;
+ return out;
+}
+function renderClimatePanel(){
+ const el=document.querySelector('#climatePanel');if(!el||!epw)return;
+ const s=sunPosition(epw.loc.lat,epw.loc.lon,epw.loc.tz,climate.day,climate.hour);
+ const h=epwHour(climate.day,climate.hour);
+ const d=new Date(Date.UTC(2001,0,climate.day));
+ const hh=Math.floor(climate.hour),mm=Math.round((climate.hour-hh)*60);
+ const dir=h?DIR16[(Math.round(h.wd/22.5)%16+16)%16]:'—';
+ el.querySelector('#clDate').textContent=`${d.getUTCMonth()+1}月${d.getUTCDate()}日 ${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+ el.querySelector('#clRead').innerHTML=
+  `<span>太阳高度</span><b>${s.altitude.toFixed(1)}°</b>`+
+  `<span>方位角</span><b>${s.azimuth.toFixed(0)}°</b>`+
+  `<span>法向直射</span><b>${h?Math.round(h.dni):0} W/m²</b>`+
+  `<span>水平散射</span><b>${h?Math.round(h.dhi):0} W/m²</b>`+
+  `<span>气温</span><b>${h?h.tdb.toFixed(1):'—'} °C</b>`+
+  `<span>风</span><b>${dir} ${h?h.ws.toFixed(1):'—'} m/s</b>`;
+ el.querySelector('#clRose').innerHTML=windRoseSVG(climate.month);
+ const rose=climate.month?epw.monthRose[climate.month]:epw.monthRose[0];
+ const tot=rose.reduce((a,b)=>a+b,0)||1;
+ let top=0;for(let i=1;i<16;i++)if(rose[i]>rose[top])top=i;
+ el.querySelector('#clWind').innerHTML=
+  `<span>主导风向</span><b>${DIR16[top]} · ${(rose[top]/tot*100).toFixed(1)}%</b>`+
+  `<span>年均风速</span><b>${epw.meanWind.toFixed(2)} m/s</b>`+
+  `<span>静风</span><b>${epw.calmPct.toFixed(1)}%</b>`+
+  `<span>年总辐射</span><b>${Math.round(epw.annual.ghi)} kWh/m²</b>`;
+ const note=el.querySelector('#clNote');
+ if(climate.analysis==='sun'&&sunHours){
+  const vals=[...sunHours.map.values()];
+  const geo=vals.reduce((a,b)=>a+b.geo,0)/(vals.length||1);
+  const real=vals.reduce((a,b)=>a+b.real,0)/(vals.length||1);
+  note.textContent=`地块年日照：几何 ${Math.round(geo)} h · 按 EPW 实际有日照的时数 ${Math.round(real)} h`;
+ }else if(climate.analysis==='wind'&&windShelter){
+  const v=[...windShelter.values()];
+  note.textContent=`风暴露度：平均 ${(v.reduce((a,b)=>a+b,0)/(v.length||1)*100).toFixed(0)}% · 越亮越迎风`;
+ }else note.textContent='分析已关闭 · 仍按 EPW 实时驱动日照与风';
+}
+function recomputeClimateAnalysis(){
+ if(!epw)return;
+ if(climate.analysis==='sun'&&!sunHours)sunHours=solveSunHours();
+ if(climate.analysis==='wind')windShelter=solveWindShelter(climate.month);
+ updateClimateOverlay();
+}
+function initClimateUI(){
+ const stage=document.querySelector('.stage');
+ if(!stage||document.querySelector('#climatePanel'))return;
+ const el=document.createElement('div');el.id='climatePanel';el.className='climatePanel';
+ el.innerHTML=`<div class="plotsHead"><div><strong>气候环境</strong>
+   <small id="clSite">读取 EPW…</small></div>
+   <button type="button" id="clPlay">▶ 一天</button></div>
+  <div class="clForm">
+   <div class="clDateRow"><b id="clDate">—</b></div>
+   <label class="luSlider">日期<input id="clDay" type="range" min="1" max="365" step="1" value="${climate.day}"></label>
+   <label class="luSlider">时刻<input id="clHour" type="range" min="3" max="21" step="0.5" value="${climate.hour}"></label>
+  </div>
+  <div class="luTotals" id="clRead"></div>
+  <div class="clRoseWrap"><div id="clRose"></div>
+   <div class="clRoseSide">
+    <select id="clMonth"><option value="0">全年</option>${
+     Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1} 月</option>`).join('')}</select>
+    <div class="luTotals" id="clWind"></div>
+   </div></div>
+  <div class="clTabs">
+   <button type="button" data-an="sun" class="on">日照小时</button>
+   <button type="button" data-an="wind">风暴露</button>
+   <button type="button" data-an="none">关闭</button>
+  </div>
+  <div class="clRampRow"><span>低</span><i class="clRamp"></i><span>高</span></div>
+  <div class="clNote" id="clNote">—</div>
+  <div class="plotsFoot"><button type="button" id="clParticles">风粒子：开</button>
+   <button type="button" id="clCsv">导出 CSV ↓</button></div>`;
+ stage.appendChild(el);
+ const sync=()=>{renderClimatePanel();applyClimateLight();if(renderer?.isSoftware)renderer.lastSignature=''};
+ el.querySelector('#clDay').addEventListener('input',e=>{climate.day=+e.target.value;sync()});
+ el.querySelector('#clHour').addEventListener('input',e=>{climate.hour=+e.target.value;sync()});
+ el.querySelector('#clMonth').addEventListener('change',e=>{
+  climate.month=+e.target.value;
+  if(climate.analysis==='wind'){windShelter=solveWindShelter(climate.month);updateClimateOverlay()}
+  renderClimatePanel();
+ });
+ el.querySelectorAll('[data-an]').forEach(b=>b.onclick=()=>{
+  climate.analysis=b.dataset.an;
+  el.querySelectorAll('[data-an]').forEach(x=>x.classList.toggle('on',x===b));
+  recomputeClimateAnalysis();renderClimatePanel();
+ });
+ el.querySelector('#clPlay').onclick=()=>{
+  climate.playing=!climate.playing;
+  el.querySelector('#clPlay').textContent=climate.playing?'❚❚ 停止':'▶ 一天';
+ };
+ el.querySelector('#clParticles').onclick=()=>{
+  climate.particles=!climate.particles;
+  el.querySelector('#clParticles').textContent='风粒子：'+(climate.particles?'开':'关');
+  if(windPoints)windPoints.visible=climate.particles;
+ };
+ el.querySelector('#clCsv').onclick=exportClimateCSV;
+}
+function exportClimateCSV(){
+ if(!epw||!landPlots.length)return;
+ if(!sunHours)sunHours=solveSunHours();
+ const wind=windShelter||solveWindShelter(0);
+ const o=model.meta?.origin||[0,0,0];
+ const esc=x=>'"'+String(x).replace(/"/g,'""')+'"';
+ const rows=[['子地块','面积 m²','中心 X (Rhino)','中心 Y (Rhino)',
+  '几何年日照 h','EPW 加权年日照 h','风暴露度 %']];
+ for(const p of landPlots)for(const lot of p.parcels){
+  const r=lot.outer;let cx=0,cy=0;for(const q of r){cx+=q[0];cy+=q[1]}
+  cx/=r.length;cy/=r.length;
+  const sh=sunHours.map.get(lot.id)||{geo:0,real:0};
+  rows.push([lot.id,lot.area.toFixed(1),(cx+o[0]).toFixed(2),(cy+o[1]).toFixed(2),
+   Math.round(sh.geo),Math.round(sh.real),Math.round((wind.get(lot.id)||0)*100)]);
+ }
+ download(new Blob(['﻿'+rows.map(r=>r.map(esc).join(',')).join('\r\n')],
+  {type:'text/csv;charset=utf-8'}),'LONDON2100_气候分析.csv');
+ toast(`已导出 ${rows.length-1} 个子地块的日照与风数据`);
+}
+function enterClimateMode(){
+ if(!climateGroup){climateGroup=new THREE.Group();climateGroup.name='气候环境';scene.add(climateGroup)}
+ climateGroup.visible=true;
+ loadEpw().then(()=>{
+  const el=document.querySelector('#climatePanel');
+  if(el)el.querySelector('#clSite').textContent=
+   `${epw.loc.name} · ${epw.loc.lat.toFixed(3)}°N ${epw.loc.lon.toFixed(3)}°E · ${epw.hours.length} h`;
+  if(!landPlots.length){landPlots=solveLandPlots();planLandUse()}
+  buildClimateOverlay();buildWindParticles();
+  if(windPoints)windPoints.visible=climate.particles;
+  recomputeClimateAnalysis();renderClimatePanel();applyClimateLight();
+ }).catch(e=>{
+  console.error('EPW could not be read',e);
+  const el=document.querySelector('#climatePanel');
+  if(el)el.querySelector('#clSite').textContent='EPW 读取失败：'+e.message;
+ });
+}
+function updateClimate(dt){
+ if(!climateGroup)return;
+ climateGroup.visible=state.mode==='climate';
+ if(state.mode!=='climate')return;
+ if(climate.playing){
+  climate.hour+=dt*1.6;
+  if(climate.hour>21){climate.hour=3}
+  const el=document.querySelector('#clHour');if(el)el.value=String(climate.hour);
+  renderClimatePanel();applyClimateLight();
+ }
+ if(climate.particles)stepWind(Math.min(.05,dt));
+}
 // ROAD FURNITURE v34 — signals and street lighting, both positioned from the
 // source rather than scattered. Signals go where the drawing already puts a
 // crossing: a zebra's rungs span the carriageway, so the ENDS of a rung
@@ -4365,7 +4873,7 @@ function buildScene(){
  const w=wrap.clientWidth,h=wrap.clientHeight,aspect=w/h;camera=new THREE.OrthographicCamera(-420*aspect,420*aspect,420,-420,.1,7000);camera.position.set(-550,850,1000);camera.lookAt(0,0,0);
  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,preserveDrawingBuffer:true})}catch(e){renderer=new SoftwareRenderer();console.info('Using Rhino geometry CPU compatibility renderer')};renderer.localClippingEnabled=true;renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(w,h);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;wrap.appendChild(renderer.domElement);
  controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.minZoom=.25;controls.maxZoom=30;controls.maxPolarAngle=Math.PI*.495;controls.autoRotateSpeed=.7;controls.target.set(0,-4,0);
- scene.add(new THREE.HemisphereLight(0xffffff,0xc3c4cf,2.2));const key=new THREE.DirectionalLight(0xffffff,2.7);key.position.set(-300,650,400);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-600,right:600,top:600,bottom:-600,near:1,far:1700});key.shadow.bias=-.0002;key.shadow.normalBias=.15;scene.add(key);const fill=new THREE.DirectionalLight(0xf3f5ff,.9);fill.position.set(300,200,-500);scene.add(fill);
+ skyLight=new THREE.HemisphereLight(0xffffff,0xc3c4cf,2.2);scene.add(skyLight);const key=new THREE.DirectionalLight(0xffffff,2.7);sunLight=key;key.position.set(-300,650,400);key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-600,right:600,top:600,bottom:-600,near:1,far:1700});key.shadow.bias=-.0002;key.shadow.normalBias=.15;scene.add(key);const fill=new THREE.DirectionalLight(0xf3f5ff,.9);fillLight=fill;fill.position.set(300,200,-500);scene.add(fill);sunLightHome={pos:key.position.clone(),key:key.intensity,sky:skyLight.intensity,fill:fill.intensity};
  ground=new THREE.Mesh(new THREE.PlaneGeometry(5000,5000),new THREE.ShadowMaterial({opacity:.09}));ground.rotation.x=-Math.PI/2;ground.position.y=-25.12;ground.receiveShadow=true;scene.add(ground);
  siteMesh=new THREE.Mesh(bufferGeom(siteDisplayOverride||model.site),material('#383a3d'));siteMesh.receiveShadow=true;siteMesh.castShadow=true;scene.add(siteMesh);
  roadsMesh=new THREE.Mesh(bufferGeom(model.roads),material('#e6cfa6'));roadsMesh.receiveShadow=true;scene.add(roadsMesh);
@@ -4502,7 +5010,7 @@ function fitBounds(box,smooth=true){
 function unitBox(u,explode=0){const c=new THREE.Vector3(u.center[0]*(1+explode*.65),u.center[2]+explode*(u.kind==='connection'?65:30),-u.center[1]*(1+explode*.65));return new THREE.Box3().setFromCenterAndSize(c,new THREE.Vector3(u.size[0],u.size[2],u.size[1]))}
 function fitWhole(smooth=true){const b=new THREE.Box3();for(const u of model.units)if(!['assembly','report'].includes(state.mode)||state.assembled.has(u.id))b.union(unitBox(u,state.targetExplode));if(state.layers.site){siteMesh.geometry.computeBoundingBox();b.union(siteMesh.geometry.boundingBox)}fitBounds(b,smooth)}
 function focusSelected(){const u=unitById.get(state.selected),p=parcelById.get(state.selected);if(u)fitBounds(unitBox(u,state.isolated?0:state.targetExplode));else if(p){const b=new THREE.Box3();p.boundary.forEach(([x,y])=>b.expandByPoint(new THREE.Vector3(x,0,-y)));fitBounds(b)}}
-function animate(time){requestAnimationFrame(animate);if(!renderer)return;const dt=Math.min((time-lastTime)/1000,.05);lastTime=time;state.explode+=(state.targetExplode-state.explode)*(matchMedia('(prefers-reduced-motion: reduce)').matches?1:.09);
+function animate(time){requestAnimationFrame(animate);if(!renderer)return;const dt=Math.min((time-lastTime)/1000,.05);lastTime=time;updateClimate(dt);state.explode+=(state.targetExplode-state.explode)*(matchMedia('(prefers-reduced-motion: reduce)').matches?1:.09);
  if(transition){const t=Math.min((performance.now()-transition.start)/(matchMedia('(prefers-reduced-motion: reduce)').matches?1:500),1),e=1-Math.pow(1-t,3);camera.position.lerpVectors(transition.from,transition.to,e);controls.target.lerpVectors(transition.fromTarget,transition.target,e);camera.zoom=THREE.MathUtils.lerp(transition.fromZoom,transition.zoom,e);camera.updateProjectionMatrix();if(t===1)transition=null}
  for(const m of meshes){const u=m.userData.unit;const allowed=(state.mode==='report'||state.layers.structure)&&(!state.isolated||u.id===state.selected)&&(state.mode==='report'?reportGrowth>0:state.mode!=='assembly'||state.assembled.has(u.id));m.userData.scale+=( (allowed?1:0)-m.userData.scale)*.18;m.visible=allowed&&(state.mode!=='report'||(reportFormId?u.id===reportFormId:reportParcel==='all'||u.kind==='parcel'&&model.parcels[u.parcel]?.id===reportParcel));m.scale.setScalar(1);const e=state.isolated?0:state.explode;m.position.set(u.center[0]*e*.65,e*(u.kind==='connection'?65:30),-u.center[1]*e*.65);if(state.mode==='assembly')m.position.y+=(1-m.userData.scale)*60;const growing=state.mode==='report'&&reportGrowth<1;const h=u.minZ+(u.maxZ-u.minZ)*reportGrowth;m.userData.clipHeight=growing?h:null;m.userData.growthPlane.constant=h;m.material.clippingPlanes=growing?[m.userData.growthPlane]:[];m.userData.wire.visible=state.layers.edges&&!growing;
  }
@@ -4541,8 +5049,13 @@ function renderInspector(){const u=unitById.get(state.selected),p=parcelById.get
  $('#inspectContent').innerHTML=html;$('#startExplode')?.addEventListener('click',()=>setMode('explode'));$('#isolateBtn')?.addEventListener('click',isolate);$('#focusBtn')?.addEventListener('click',focusSelected);$('#assembleUnit')?.addEventListener('click',()=>{if(state.mode!=='assembly')setMode('assembly',true);state.assembled.has(u.id)?state.assembled.delete(u.id):state.assembled.add(u.id);state.playing=false;$('#playAssembly').textContent='▶ 自动装配';updateAssemblyUI();renderInspector()});$('#exportObj')?.addEventListener('click',exportOBJ);$$('[data-related]').forEach(b=>b.onclick=()=>select(b.dataset.related));}
 function select(id){state.selected=id;if(state.isolated&&!unitById.has(id))state.isolated=false;renderList();renderInspector();$('#inspectContent').scrollTop=0;applyColors();if(state.isolated)focusSelected();$('#statusBadge').textContent=state.isolated?'单元独看 · '+id:id?'已选中 · '+id:'原始几何 · 全部显示';$('#inspector').classList.toggle('open',!!id)}
 function isolate(){if(!unitById.has(state.selected))return;state.isolated=!state.isolated;state.playing=false;if(state.isolated){focusSelected();if(state.mode==='assembly')state.assembled.add(state.selected)}else fitWhole();renderInspector();$('#statusBadge').textContent=state.isolated?'单元独看 · '+state.selected:'原始几何 · 全部显示'}
-const titles={plots:['04 / THE LAND','道路与结构切分出的用地。','顶视图中由道路、水域与结构围合出的每一块地，可单独选择并导出。'],overview:['01 / THE WHOLE','从整体，到每一部分。','一件连续结构，沿道路划分，重新认识每个单元。'],explode:['02 / THE PARTS','拆开，理解它的关系。','地块单元与跨路连接，组成一件完整的结构。'],assembly:['03 / THE ASSEMBLY','一块一块，回到整体。','逐步回装原始单元，探索未来继续装配的组织方式。']};
-function setMode(mode,keepAssembly=false){reportGrowing=false;state.mode=mode;document.querySelector(mode==='report'?'#reportViewport':'.stage').prepend($('#viewport'));document.body.classList.toggle('reportMode',mode==='report');document.body.classList.toggle('plotsMode',mode==='plots');plotHover=null;state.isolated=false;state.playing=false;$('#playAssembly').textContent='▶ 自动装配';$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));$('#report').style.display=mode==='report'?'block':'none';$('#explodePanel').style.display=['explode','assembly'].includes(mode)?'block':'none';$('#assemblyActions').style.display=mode==='assembly'?'flex':'none';state.targetExplode=mode==='explode'?.45:0;if(titles[mode]){$('#stageEyebrow').textContent=titles[mode][0];$('#stageHeading').textContent=titles[mode][1];$('#stageDescription').textContent=titles[mode][2]}
+const titles={climate:['05 / THE CLIMATE','伦敦的真实一年。','日照与风均由 EPW 气象年逐时驱动，阴影按太阳位置实时计算。'],plots:['04 / THE LAND','道路与结构切分出的用地。','顶视图中由道路、水域与结构围合出的每一块地，可单独选择并导出。'],overview:['01 / THE WHOLE','从整体，到每一部分。','一件连续结构，沿道路划分，重新认识每个单元。'],explode:['02 / THE PARTS','拆开，理解它的关系。','地块单元与跨路连接，组成一件完整的结构。'],assembly:['03 / THE ASSEMBLY','一块一块，回到整体。','逐步回装原始单元，探索未来继续装配的组织方式。']};
+function setMode(mode,keepAssembly=false){reportGrowing=false;state.mode=mode;document.querySelector(mode==='report'?'#reportViewport':'.stage').prepend($('#viewport'));document.body.classList.toggle('reportMode',mode==='report');document.body.classList.toggle('plotsMode',mode==='plots');document.body.classList.toggle('climateMode',mode==='climate');plotHover=null;state.isolated=false;state.playing=false;$('#playAssembly').textContent='▶ 自动装配';$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));$('#report').style.display=mode==='report'?'block':'none';$('#explodePanel').style.display=['explode','assembly'].includes(mode)?'block':'none';$('#assemblyActions').style.display=mode==='assembly'?'flex':'none';state.targetExplode=mode==='explode'?.45:0;if(titles[mode]){$('#stageEyebrow').textContent=titles[mode][0];$('#stageHeading').textContent=titles[mode][1];$('#stageDescription').textContent=titles[mode][2]}
+ if(mode==='climate'){
+  state.explode=0;state.targetExplode=0;transition=null;controls.autoRotate=false;
+  enterClimateMode();fitWhole();$('#statusBadge').textContent='气候环境 · EPW';
+ }
+ if(mode!=='climate')applyClimateLight();
  if(mode==='plots'){// The cut is read in plan, so the view starts in plan; planting and traffic
   // would sit on top of the plots and are stood down while the mode is open.
   state.explode=0;state.targetExplode=0;transition=null;controls.autoRotate=false;
@@ -4622,7 +5135,7 @@ async function init(){try{
  }
  if(siteDisplayOverride&&rebuildParcelsFromRoads())WATER_PARCELS=new Set();
  for(const u of model.units)unitById.set(u.id,u);for(const p of model.parcels)parcelById.set(p.id,p);parcelUnits=model.units.filter(u=>u.kind==='parcel');connectionUnits=model.units.filter(u=>u.kind==='connection');edgeUnits=model.units.filter(u=>u.kind==='edge');assemblyOrder=[...parcelUnits,...connectionUnits,...edgeUnits];maxHeight=Math.max(0,...model.units.map(u=>u.maxZ));state.assembled=new Set(model.units.map(u=>u.id));try{const saved=JSON.parse(localStorage.getItem('formAssemblyV2'));if(Array.isArray(saved))state.assembled=new Set(saved.filter(id=>unitById.has(id)))}catch(e){}
- $('#countParcel').textContent=model.parcels.length;$('#countUnits').textContent=parcelUnits.length;$('#countConnections').textContent=connectionUnits.length;$('#librarySummary').textContent=`${model.parcels.length} 个地块 · ${model.units.length} 个结构分组`;buildScene(); initLandscapeUI();initWaterUI();initRoadDesignUI();initRoadVehicleUI();initPlotsUI();renderList();renderInspector();applyColors();
+ $('#countParcel').textContent=model.parcels.length;$('#countUnits').textContent=parcelUnits.length;$('#countConnections').textContent=connectionUnits.length;$('#librarySummary').textContent=`${model.parcels.length} 个地块 · ${model.units.length} 个结构分组`;buildScene(); initLandscapeUI();initWaterUI();initRoadDesignUI();initRoadVehicleUI();initPlotsUI();initClimateUI();renderList();renderInspector();applyColors();
  $$('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$$('[data-filter]').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;$$('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));renderList()});$('#search').oninput=renderList;
  $$('[data-layer]').forEach(b=>b.onclick=()=>{const key=b.dataset.layer;state.layers[key]=!state.layers[key];b.classList.toggle('off',!state.layers[key]);applyColors()});$$('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;$$('[data-view]').forEach(x=>x.classList.toggle('active',x===b));state.isolated?focusSelected():fitWhole()});$$('[data-report]').forEach(b=>b.onclick=()=>{state.report=b.dataset.report;renderReport()});
  $('#mainSlider').oninput=e=>{if(state.mode==='explode'){state.targetExplode=e.target.value/100;$('#sliderValue').textContent=e.target.value+'%';fitWhole()}else{state.playing=false;$('#playAssembly').textContent='▶ 自动装配';applyAssemblyCount(Math.round(e.target.value/100*model.units.length))}};
