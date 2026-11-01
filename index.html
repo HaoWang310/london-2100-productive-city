@@ -4204,7 +4204,7 @@ function applyClimateLight(){
 }
 function buildWindParticles(){
  if(windPoints){climateGroup.remove(windPoints);windPoints.geometry.dispose();windPoints=null}
- const N=1200,pos=new Float32Array(N*6),col=new Float32Array(N*6);
+ const N=800,pos=new Float32Array(N*6),col=new Float32Array(N*6);
  windState=new Float32Array(N*3);                    // x, y, life
  for(let i=0;i<N;i++){
   windState[i*3]=-313+Math.random()*626;
@@ -4217,7 +4217,7 @@ function buildWindParticles(){
  // streaks, not dots: a segment drawn along the hour's own direction reads as
  // flow, and fading it from head to tail says which way the air is going.
  windPoints=new THREE.LineSegments(g,new THREE.LineBasicMaterial({vertexColors:true,
-  transparent:true,opacity:.8,depthWrite:false,blending:THREE.AdditiveBlending}));
+  transparent:true,opacity:.45,depthWrite:false,blending:THREE.AdditiveBlending}));
  windPoints.frustumCulled=false;windPoints.name='风环境粒子';
  climateGroup.add(windPoints);
 }
@@ -4257,7 +4257,7 @@ function stepWind(dt){
    x=-313+Math.random()*626;y=-187+Math.random()*374;life=.6+Math.random()*.8;
   }
   windState[i*3]=x;windState[i*3+1]=y;windState[i*3+2]=life;
-  const tail=Math.min(16,2.3*spd),o=i*6;
+  const tail=Math.min(9,1.2*spd),o=i*6;
   pos[o]=x;pos[o+1]=2.2;pos[o+2]=-y;
   pos[o+3]=x-vx*tail;pos[o+4]=2.2;pos[o+5]=-(y-vy*tail);
   const f=Math.min(1,spd/11),t=Math.min(1,life*1.4);
