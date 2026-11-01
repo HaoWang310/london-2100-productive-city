@@ -4495,13 +4495,21 @@ function updateShadowMask(force){
  shadowPlane.visible=true;
  const rad=Math.PI/180,sx=Math.sin(s.azimuth*rad),sy=Math.cos(s.azimuth*rad),
   ta=Math.tan(s.altitude*rad);
+ // Both halves are painted, not just the dark one: the plan underneath runs
+ // from near-black tarmac to white deck, and a dark wash alone disappears on
+ // the dark half. Shade cool, sun warm, and the contrast carries the reading
+ // whatever it falls on.
  const raw=shadowRaw.getContext('2d'),img=raw.createImageData(R.W,R.H),d=img.data;
+ const AS=Math.round(A*.92),AL=Math.round(A*.38);
  for(let j=0;j<R.H;j++)for(let i=0;i<R.W;i++){
   const id=j*R.W+i;
   if(R.top[id]>1.6&&R.bot[id]<1.6)continue;        // a column, not its shadow
-  if(!sunBlocked(R,R.X0+(i+.5)*R.G,R.Y0+(j+.5)*R.G,SHADOW_EYE,sx,sy,ta))continue;
   const o=((R.H-1-j)*R.W+i)*4;                      // the texture runs the other way up
-  d[o]=5;d[o+1]=8;d[o+2]=13;d[o+3]=A;
+  if(sunBlocked(R,R.X0+(i+.5)*R.G,R.Y0+(j+.5)*R.G,SHADOW_EYE,sx,sy,ta)){
+   d[o]=12;d[o+1]=22;d[o+2]=44;d[o+3]=AS;
+  }else{
+   d[o]=255;d[o+1]=243;d[o+2]=206;d[o+3]=AL;
+  }
  }
  raw.putImageData(img,0,0);
  const ctx=shadowCanvas.getContext('2d');

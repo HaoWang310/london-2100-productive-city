@@ -368,7 +368,8 @@ assert(html.includes('function windRoseSVG(monthIdx){'), 'The wind rose is missi
 // The plan is a flat drawing of unlit sheets, so a shadow map has nothing to
 // darken: the cast shadow is painted from the same marching the hours use.
 assert(html.includes('function updateShadowMask(force){'), 'The drawn cast shadow is missing');
-assert(html.includes("if(!sunBlocked(R,R.X0+(i+.5)*R.G,R.Y0+(j+.5)*R.G,SHADOW_EYE,sx,sy,ta))continue;"), 'The shadow must be marched with the same test that counts the hours');
+assert(html.includes("if(sunBlocked(R,R.X0+(i+.5)*R.G,R.Y0+(j+.5)*R.G,SHADOW_EYE,sx,sy,ta)){"), 'The shadow must be marched with the same test that counts the hours');
+assert(html.includes('const AS=Math.round(A*.92),AL=Math.round(A*.38);'), 'Sun and shade are both painted, so the contrast reads on a dark plan');
 assert(html.includes('function shadowStrength(h){'), 'Shadow density must follow the hour\'s beam fraction');
 assert(html.includes('return Math.max(0,Math.min(.5,h.dni/(h.dni+h.dhi*2.2+40)*.74));'), 'An overcast hour must cast almost no shadow');
 assert(html.includes('shadowPlane.position.set(R.X0+R.W*R.G/2,1.5,-(R.Y0+R.H*R.G/2));'), 'The shadow sheet must sit over the plan graphics and under the decks');
