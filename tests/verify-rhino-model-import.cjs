@@ -187,6 +187,14 @@ assert(html.includes('g.visible=landscapeConfig.enabled&&allView&&(showAll||ids.
  assert(embedded.units.every(u => u.mesh.t.every(i => i * 3 + 2 < u.mesh.v.length)),
   'Trim left an index pointing outside the vertex list');
 }
+// NAVIGATOR WATER v36 — the water belongs to no parcel since the re-cut, so the
+// navigator has to read it from the same footprint the 3D water is built from.
+assert(html.includes('function overviewWaterFootprint(){'), 'Navigator water footprint is missing');
+assert(html.includes("svg.innerHTML=overviewWaterPath()+model.parcels.map("), 'Water must be drawn under the parcels');
+assert(html.includes("const all=model.parcels.flatMap(p=>p.boundary).concat(overviewWaterFootprint().flat());"), 'Navigator extent must cover the water');
+assert(html.includes(".formOverviewWater{fill:#2c5f7a;"), 'Navigator water style is missing');
+assert(html.includes("pointer-events:none;vector-effect:non-scaling-stroke}.formOverviewWater") || html.includes(".formOverviewWater{fill:#2c5f7a;stroke:#2c5f7a;stroke-width:.7;pointer-events:none"), 'Navigator water must not swallow parcel clicks');
+assert(html.includes("const water=overviewWaterFootprint();const pts=model.parcels"), 'All-site thumbnail must draw the same water');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

@@ -93,7 +93,7 @@ body{background:var(--bg);color:var(--ink)}header{height:54px;padding:0 16px;gap
 .formOverviewParcel:hover,.formOverviewParcel.hovered,.formOverviewParcel:focus{fill:#8c9baa;stroke:#f6f8fa;stroke-width:2.4;outline:none}
 .formOverviewParcel.selected{fill:#edf0f2;stroke:#fff;stroke-width:2.5}
 .formOverviewParcel.linked{fill:#a1abb9;stroke:#e4e8ed;stroke-width:2.2}
-.formOverviewMarker{fill:#f7f8fa;stroke:#202329;stroke-width:2;pointer-events:none;vector-effect:non-scaling-stroke}
+.formOverviewMarker{fill:#f7f8fa;stroke:#202329;stroke-width:2;pointer-events:none;vector-effect:non-scaling-stroke}.formOverviewWater{fill:#2c5f7a;stroke:#2c5f7a;stroke-width:.7;pointer-events:none;vector-effect:non-scaling-stroke}
 .formOverviewFooter{border-top:1px solid #383d44;padding:6px 10px;display:flex;justify-content:space-between;gap:8px;align-items:center}
 .formOverviewFooter span{font-size:10px;color:#b5beca;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .formOverviewFooter button{padding:4px 8px;font-size:10px;color:#e1e5ea;background:#272b31;border:1px solid #454a53;border-radius:6px;flex-shrink:0}
@@ -3738,13 +3738,28 @@ function installFormResizers(){
  window.addEventListener('resize',()=>{if(map.style.width||map.style.height)clampMapPosition()});
 }
 
+// NAVIGATOR WATER v36 — the navigator drew parcels only. Once the parcels were re-cut
+// against the 2.3dm roads the water was excluded from all of them, so the
+// lagoon and the feeder channels read as empty background. Draw the same
+// footprint the 3D water is built from, under the parcels and behind the
+// clicks, so the navigator shows the site rather than only its plots.
+function overviewWaterFootprint(){
+ try{return nativeRecessedChannel().triangles||[]}catch(e){return []}
+}
+function overviewWaterPath(){
+ const tris=overviewWaterFootprint();if(!tris.length)return '';
+ // One path, one subpath per source triangle. The hairline stroke in the
+ // matching colour closes the anti-aliasing seams between adjacent triangles.
+ const d=tris.map(t=>'M'+t.map(q=>q[0].toFixed(1)+','+(-q[1]).toFixed(1)).join('L')+'Z').join('');
+ return `<path class="formOverviewWater" d="${d}"><title>水域 · 由真实下沉几何读出</title></path>`;
+}
 function buildFormOverview(){
  const svg=$('#formOverviewSVG');if(!svg)return;
- const all=model.parcels.flatMap(p=>p.boundary);
+ const all=model.parcels.flatMap(p=>p.boundary).concat(overviewWaterFootprint().flat());
  const x0=Math.min(...all.map(p=>p[0])),x1=Math.max(...all.map(p=>p[0]));
  const y0=Math.min(...all.map(p=>p[1])),y1=Math.max(...all.map(p=>p[1]));
  const m=15;svg.setAttribute('viewBox',`${x0-m} ${-y1-m} ${x1-x0+2*m} ${y1-y0+2*m}`);
- svg.innerHTML=model.parcels.map(p=>`<polygon class="formOverviewParcel" data-parcel="${p.id}" tabindex="0" role="button" aria-label="在 3D 预览中查看 ${p.id} 地块" points="${p.boundary.map(([x,y])=>`${x},${-y}`).join(' ')}"><title>${p.id}${WATER_PARCELS.has(p.id)?' · 水域':''} · 点击查看真实地块 Form</title></polygon>`).join('')+'<g id="overviewMarkers" pointer-events="none"></g>';
+ svg.innerHTML=overviewWaterPath()+model.parcels.map(p=>`<polygon class="formOverviewParcel" data-parcel="${p.id}" tabindex="0" role="button" aria-label="在 3D 预览中查看 ${p.id} 地块" points="${p.boundary.map(([x,y])=>`${x},${-y}`).join(' ')}"><title>${p.id}${WATER_PARCELS.has(p.id)?' · 水域':''} · 点击查看真实地块 Form</title></polygon>`).join('')+'<g id="overviewMarkers" pointer-events="none"></g>';
  const status=$('#formOverviewStatus');
  const setHover=(id)=>{svg.querySelectorAll('.formOverviewParcel').forEach(p=>p.classList.toggle('hovered',p.dataset.parcel===id));if(id)status.textContent=`${id} · 点击查看结构`;else updateFormOverview()};
  svg.querySelectorAll('.formOverviewParcel').forEach(el=>{
@@ -3795,7 +3810,7 @@ function reportLibraryItems(){
 }
 function drawAllFormThumbnails(){
  $$('#formGrid .formCard canvas').forEach(c=>{
- const i=reportLibraryItems().find(x=>x.id===c.dataset.id);if(i){if(i.type==='parcelAll'){const ctx=c.getContext('2d');c.width=220;c.height=144;ctx.fillStyle='#1b1f25';ctx.fillRect(0,0,220,144);const pts=model.parcels.flatMap(p=>p.boundary);const b=[Math.min(...pts.map(p=>p[0])),Math.min(...pts.map(p=>p[1])),Math.max(...pts.map(p=>p[0])),Math.max(...pts.map(p=>p[1]))];for(const p of model.parcels){ctx.beginPath();p.boundary.forEach(([x,y],k)=>{let xx=16+(x-b[0])/(b[2]-b[0])*188,yy=15+(b[3]-y)/(b[3]-b[1])*116;k?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy)});ctx.closePath();ctx.fillStyle=WATER_PARCELS.has(p.id)?'#315f78':'#343942';ctx.fill();ctx.strokeStyle=WATER_PARCELS.has(p.id)?'#89bfd8':'#9da5ae';ctx.lineWidth=1;ctx.stroke()}}else formThumbnail(c,i)}
+ const i=reportLibraryItems().find(x=>x.id===c.dataset.id);if(i){if(i.type==='parcelAll'){const ctx=c.getContext('2d');c.width=220;c.height=144;ctx.fillStyle='#1b1f25';ctx.fillRect(0,0,220,144);const water=overviewWaterFootprint();const pts=model.parcels.flatMap(p=>p.boundary).concat(water.flat());const b=[Math.min(...pts.map(p=>p[0])),Math.min(...pts.map(p=>p[1])),Math.max(...pts.map(p=>p[0])),Math.max(...pts.map(p=>p[1]))];const px=([x,y])=>[16+(x-b[0])/(b[2]-b[0])*188,15+(b[3]-y)/(b[3]-b[1])*116];if(water.length){ctx.fillStyle='#2c5f7a';ctx.strokeStyle='#2c5f7a';ctx.lineWidth=1;for(const tri of water){ctx.beginPath();tri.forEach((q,k)=>{const[xx,yy]=px(q);k?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy)});ctx.closePath();ctx.fill();ctx.stroke()}}for(const p of model.parcels){ctx.beginPath();p.boundary.forEach(([x,y],k)=>{let xx=16+(x-b[0])/(b[2]-b[0])*188,yy=15+(b[3]-y)/(b[3]-b[1])*116;k?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy)});ctx.closePath();ctx.fillStyle=WATER_PARCELS.has(p.id)?'#315f78':'#343942';ctx.fill();ctx.strokeStyle=WATER_PARCELS.has(p.id)?'#89bfd8':'#9da5ae';ctx.lineWidth=1;ctx.stroke()}}else formThumbnail(c,i)}
  });
 }
 function renderFormLibrary(){
