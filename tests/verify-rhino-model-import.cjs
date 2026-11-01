@@ -250,7 +250,7 @@ assert(html.includes('for(const tri of water.triangles)paint(tri,2,1);'), 'Water
 assert(html.includes("if(Math.abs(sgn(p[0],p[1],p[2]))<.02)continue;      // seen edge on, no footprint"), 'Structure footprints must be cut out of the land');
 // The same simplified outline serves the view, the area and the DXF.
 assert(html.includes('const rdp=(pts,eps)=>{'), 'Plot outlines must be simplified once');
-assert(html.includes("out.push('0','LWPOLYLINE','8','用地_'+p.id,"), 'DXF export is missing');
+assert(html.includes("out.push('0','LWPOLYLINE','8','PLOT_'+p.id,"), 'DXF export is missing');
 assert(html.includes("(x+o[0]).toFixed(3),'20',(y+o[1]).toFixed(3)"), 'DXF must carry Rhino world coordinates');
 assert(html.includes('function exportPlotsCSV(){'), 'Plot schedule export is missing');
 assert(html.includes("if(state.mode==='plots'){const lp=plotAt(e);"), 'Plots must be selectable in the view');

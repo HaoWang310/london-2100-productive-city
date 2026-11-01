@@ -3470,7 +3470,9 @@ function exportPlotsDXF(){
             '0','SECTION','2','ENTITIES'];
  for(const p of list){
   for(const ring of [p.outer,...p.holes]){
-   out.push('0','LWPOLYLINE','8','用地_'+p.id,'100','AcDbEntity','100','AcDbPolyline',
+   // ASCII layer names: the file carries no TABLES section, so the reader has to
+   // create the layer, and a non-ASCII name is where that goes wrong.
+   out.push('0','LWPOLYLINE','8','PLOT_'+p.id,'100','AcDbEntity','100','AcDbPolyline',
             '90',String(ring.length),'70','1');
    for(const [x,y] of ring)out.push('10',(x+o[0]).toFixed(3),'20',(y+o[1]).toFixed(3));
   }
