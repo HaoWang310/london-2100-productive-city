@@ -133,7 +133,13 @@ assert(importer.includes('f.bold=beside>=2;'), 'Zebra rungs are not told apart f
 assert(html.includes('const wd=lw[seg]||.16,'), 'Markings are not drawn at their classified width');
 // A centre line painted straight through a zebra is the marking a real road
 // never has, so lane work is clipped against the crossing zones.
-assert(html.includes('const inCrossing=(x,y)=>zones.some(z=>{'), 'Lane work is not clipped at the crossings');
+assert(html.includes('const inCrossing=(x,y)=>{'), 'Lane work is not clipped at the crossings');
+// Nor across the middle of an intersection, where the source draws turning
+// curves that read as a stray line on open asphalt.
+assert(html.includes('for(const b of boxes)if(Math.hypot(x-b.cx,y-b.cy)<b.r)return !onIsland(x,y);'), 'Lane work must be cleared out of the junction box');
+assert(html.includes('r:Math.min(n.r+3,Math.max(n.r,nearest-1))'), 'The junction box must never reach past its crossings');
+// An island outline is the island's kerb, not a lane marking.
+assert(html.includes('const onIsland=(x,y)=>{'), 'Island outlines must survive the junction clip');
 assert(html.includes("ribbon(roadLineOverride.v,roadLineOverride.w||[],true);"), 'Source lane work must be clipped');
 assert(html.includes("ribbon(roadCrossingOverride.v,roadCrossingOverride.w,false);"), 'Crossing bars must not clip themselves');
 assert(html.includes('if(atSiteEdge(i,j))continue;'), 'Median flood must not seed from the site boundary');

@@ -3240,11 +3240,22 @@ function completeCrossings(){
   }
  }
  setZ();
+ // --- 4. the junction box --------------------------------------------------
+ // Lane work does not run across the middle of an intersection; the source
+ // draws turning curves there that read as a stray line on open asphalt. The
+ // box is the largest circle that fits inside the carriageway at the junction,
+ // never reaching past the crossings that mark the junction's edge.
+ const boxes=nodes.map(n=>{
+  let nearest=Infinity;
+  for(const z of zones){const d=Math.hypot(z.cx-n.cx,z.cy-n.cy);if(d<nearest)nearest=d}
+  return {cx:n.cx,cy:n.cy,r:Math.min(n.r+3,Math.max(n.r,nearest-1))};
+ }).filter(b=>b.r>0);
  return {v:out.v,w:out.w,
   report:{sourceCrossings:rows.length,barLength:+BAR.toFixed(2),barWidth:+WID.toFixed(2),
    pitch:+PITCH.toFixed(2),junctions:groups.length,barsToKerb:added,
-   newCrossings:placed.length,barsAdded:out.w.length},
-  zones};
+   newCrossings:placed.length,barsAdded:out.w.length,
+   junctionBoxes:boxes.length},
+  zones,boxes};
 }
 // ROAD FURNITURE v34 — signals and street lighting, both positioned from the
 // source rather than scattered. Signals go where the drawing already puts a
@@ -3696,11 +3707,24 @@ function buildScene(){
    // zebra is the one marking a real road never has. The zones come from the
    // crossings themselves, so a line breaks exactly where the bars are.
    const zones=roadCrossingOverride?.zones||[];
-   const inCrossing=(x,y)=>zones.some(z=>{
-    const dx=x-z.cx,dy=y-z.cy;
-    const du=dx*z.ux+dy*z.uy;if(du<-z.half||du>z.half)return false;
-    const dp=dx*z.px+dy*z.py;return dp>=z.from&&dp<=z.to;
-   });
+   const boxes=roadCrossingOverride?.boxes||[];
+   // An island keeps its outline wherever it reaches: that line is the kerb of
+   // the island, not a lane marking, and erasing it leaves the planting
+   // floating on the carriageway.
+   const onIsland=(x,y)=>{
+    if(typeof medianLookup!=='function'||!medianLookup)return false;
+    for(const [dx,dy] of [[0,0],[.6,0],[-.6,0],[0,.6],[0,-.6]])if(medianLookup(x+dx,y+dy))return true;
+    return false;
+   };
+   const inCrossing=(x,y)=>{
+    for(const z of zones){
+     const dx=x-z.cx,dy=y-z.cy;
+     const du=dx*z.ux+dy*z.uy;if(du<-z.half||du>z.half)continue;
+     const dp=dx*z.px+dy*z.py;if(dp>=z.from&&dp<=z.to)return true;
+    }
+    for(const b of boxes)if(Math.hypot(x-b.cx,y-b.cy)<b.r)return !onIsland(x,y);
+    return false;
+   };
    const quad=(ax,ay,az,bx,by,bz,wd)=>{
     const dx=bx-ax,dy=by-ay,d=Math.hypot(dx,dy);
     if(d<1e-6)return;
