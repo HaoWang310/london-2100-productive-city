@@ -301,9 +301,17 @@ assert(html.includes('--sys-blue:#0a84ff;'), 'The system accent is missing');
 for (const sel of ['.layer,.viewbar,.explodePanel,.badge,.label,.tooltip,.toast,.plotsPanel,.formOverview{'])
  assert(html.includes(sel), 'Floating chrome must be a material, not a white card: ' + sel);
 // Black ground in the land mode, picked plots in the same accent as the UI.
-assert(html.includes("const base=flat(p,'#07080a',.82,.34);"), 'Land plots must read black');
-assert(html.includes("flat(g,'#30d158',.3,.38)")&&html.includes("flat(b,'#e8ebf0',.92,.42)"), 'Green and building areas must be drawn');
-assert(html.includes("m.material.color.set(on?'#0a84ff':hot?'#1d2026':'#07080a');"), 'Plot selection must use the system accent');
+assert(html.includes("const base=flat(p,'#0b0d10',.34,1);"), 'Land plots must read black');
+// Transparent sheets write no depth, so three.js sorts them by distance, and
+// three near-coplanar layers sort unstably off plan: the plot's own ground
+// came out over its parcels as soon as the view was rotated.
+assert(html.includes('color,side:THREE.DoubleSide,depthWrite:true,depthTest:true,'), 'The plot layers must write depth');
+assert(html.includes('m.rotation.x=-Math.PI/2;m.position.y=y;m.renderOrder=order;return m;'), 'The plot layers need an explicit order');
+// Open then close: the first takes the spikes off, the second fills the bites
+// the depth contour and a structure's ragged plan edge leave in its side.
+assert(html.includes("if(use[c]!==1&&grow[c]!==INF&&edgeD[c]===INF){use[c]=1;built+=G*G}"), 'The building band must be closed as well as opened');
+assert(html.includes("flat(g,'#2f4a33',.38,2)")&&html.includes("flat(b,'#e3e7ec',.42,3)"), 'Green and building areas must be drawn');
+assert(html.includes("m.material.color.set(on?'#0a84ff':hot?'#1d2026':'#0b0d10');"), 'Plot selection must use the system accent');
 // The coverage control reads a percentage, so its clamp is in percent too.
 // Clamped against .05 and .9 the typed 45 became 0.9, then /100 gave a 0.9%
 // cap that bound before every other setting and froze the whole plan.

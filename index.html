@@ -3776,6 +3776,27 @@ function planLandUse(){
    for(let m=0;m<tail;m++){const c=q[m];
     if(use[c]===1&&grow[c]===INF){use[c]=-1;built-=G*G}
     edgeD[c]=INF;grow[c]=INF;}
+   // Then close it. The depth contour and the ragged plan edge of a structure
+   // leave the band bitten into along one side, and those bites come through
+   // the cut as notches in a plot. Grow the band by R and shrink it back by R
+   // within the plot's own developable ground: a bite narrower than 2R fills,
+   // the outline does not move, and nothing can spill onto the street band or
+   // into the water setback because the growth is confined to `free`.
+   let h4=0,t4=0;
+   for(let m=0;m<tail;m++){const c=q[m];if(use[c]===1){grow[c]=0;cells[t4++]=c}}
+   while(h4<t4){const c=cells[h4++],nd=grow[c]+1;if(nd>R)continue;
+    for(const o of [c-1,c+1,c-W,c+W]){
+     if(o<0||o>=N||comp[o]!==id||!free[o]||grow[o]<=nd)continue;grow[o]=nd;cells[t4++]=o}}
+   // erode the grown set back by R, measured from everything it does not hold
+   h4=0;let t5=0;
+   for(let m=0;m<tail;m++){const c=q[m];if(grow[c]===INF)continue;
+    if([c-1,c+1,c-W,c+W].some(o=>o<0||o>=N||grow[o]===INF)){edgeD[c]=0;cells[t5++]=c}}
+   while(h4<t5){const c=cells[h4++],nd=edgeD[c]+1;if(nd>R)continue;
+    for(const o of [c-1,c+1,c-W,c+W]){
+     if(o<0||o>=N||grow[o]===INF||edgeD[o]<=nd)continue;edgeD[o]=nd;cells[t5++]=o}}
+   for(let m=0;m<tail;m++){const c=q[m];
+    if(use[c]!==1&&grow[c]!==INF&&edgeD[c]===INF){use[c]=1;built+=G*G}
+    edgeD[c]=INF;grow[c]=INF;}
   }
   // Split the band across the street: the cut runs at one parcel width along
   // the frontage, so every plot keeps a face on the road.
@@ -3923,16 +3944,22 @@ function buildLandPlots(){
  if(!landPlots.length)landPlots=solveLandPlots();
  planLandUse();
  plotMeshes=[];
- const flat=(rings,color,opacity,y)=>{
+ // Flat layers a few centimetres apart, and OPAQUE. Transparent ones write no
+ // depth, so three.js has to sort them by distance, and at a grazing angle
+ // three near-coplanar sheets sort unstably: the plot's own black ground was
+ // coming out on top of its parcels as soon as the view left plan. Writing
+ // depth lets the buffer settle it from any angle, so the colours below are
+ // the ones the blend used to produce.
+ const flat=(rings,color,y,order)=>{
   const sh=new THREE.Shape(rings.outer.map(([x,y2])=>new THREE.Vector2(x,y2)));
   for(const h of rings.holes||[])sh.holes.push(new THREE.Path(h.map(([x,y2])=>new THREE.Vector2(x,y2))));
   const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({
-   color,side:THREE.DoubleSide,transparent:true,opacity,depthWrite:false,
+   color,side:THREE.DoubleSide,depthWrite:true,depthTest:true,
    polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}));
-  m.rotation.x=-Math.PI/2;m.position.y=y;return m;
+  m.rotation.x=-Math.PI/2;m.position.y=y;m.renderOrder=order;return m;
  };
  for(const p of landPlots){
-  const base=flat(p,'#07080a',.82,.34);
+  const base=flat(p,'#0b0d10',.34,1);
   base.userData={plot:p};
   const pts=p.outer.map(([x,y])=>new THREE.Vector3(x,.37,-y));pts.push(pts[0].clone());
   const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
@@ -3940,11 +3967,11 @@ function buildLandPlots(){
   base.userData.line=line;base.userData.parts=[];
   plotGroup.add(base);plotGroup.add(line);plotMeshes.push(base);
   for(const g of p.green){
-   const m=flat(g,'#30d158',.3,.38);m.userData.kind='green';
+   const m=flat(g,'#2f4a33',.38,2);m.userData.kind='green';
    plotGroup.add(m);base.userData.parts.push(m);
   }
   for(const b of p.parcels){
-   const m=flat(b,'#e8ebf0',.92,.42);m.userData.kind='build';
+   const m=flat(b,'#e3e7ec',.42,3);m.userData.kind='build';
    plotGroup.add(m);base.userData.parts.push(m);
    const q=b.outer.map(([x,y])=>new THREE.Vector3(x,.44,-y));q.push(q[0].clone());
    const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(q),
@@ -3963,8 +3990,8 @@ function updateLandPlots(){
   const on=plotSelection.has(m.userData.plot.id),hot=plotHover===m.userData.plot.id;
   // Black ground, systemBlue for what is picked — the selection colour the
   // rest of the interface uses, so the plan reads the same way the UI does.
-  m.material.color.set(on?'#0a84ff':hot?'#1d2026':'#07080a');
-  m.material.opacity=on?.72:hot?.86:.82;
+  m.material.color.set(on?'#0a84ff':hot?'#1d2026':'#0b0d10');
+  // opaque now, so the state is carried by colour alone
   m.userData.line.material.color.set(on?0x9fd0ff:0xffffff);
   m.userData.line.material.opacity=on?.95:.5;
   for(const part of m.userData.parts)part.material.opacity=
