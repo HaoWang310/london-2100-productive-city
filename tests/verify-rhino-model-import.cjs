@@ -269,7 +269,10 @@ assert(html.includes('const dWater=bfs(k=>k===3,ground);'), 'The three setback b
 // which way it faces. Without it the arc length runs straight round a corner
 // and one parcel came out as a chevron sitting on two streets at once.
 assert(html.includes('d2[o]=nd;srcRoad[o]=srcRoad[c];qq[t7++]=o;'), 'The road distance must carry its source');
-assert(html.includes('const b=sec*4096+Math.max(0,Math.min(n-1,Math.floor(sAl[c]*G/step)));'), 'A parcel may run along a street but not turn a corner');
+assert(html.includes('for(let t=0;t<8;t++)remap.set(k2*8+t,(h[t]>=h[8]*.25?t:dom)*4096+k2);'), 'A parcel may run along a street but not turn a corner');
+// Quantising the facing outright split every curve at a sector line and the
+// site fell from 1.74 to 1.15 as the fragments failed the size tests.
+assert(html.includes('const hist=new Map();'), 'A slice must only divide where it genuinely faces two ways');
 // A structure's plan edge is a curved form cut by a half-metre grid, so it is
 // nibbled all along, and a clearance measured off it came through the
 // subdivision as a staircase down one side of a plot.

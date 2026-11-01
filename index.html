@@ -3861,15 +3861,34 @@ function planLandUse(){
    const n=Math.max(1,Math.round(span/landUse.parcelWidth));
    const step=span/n;
    const bucket=new Map();
+   // Which way each cell faces, in eighths of a turn. A plot may run along a
+   // street but it may not turn a corner, so the facing goes into the key as
+   // well as the position along the frontage. Quantising it outright split
+   // every curve the moment it crossed a sector line, and the site fell from
+   // 1.74 to 1.15 as the fragments failed the size tests; so a slice is only
+   // divided when it genuinely faces two ways — a minority sector has to hold
+   // a quarter of the slice before it is given a plot of its own.
+   const faceOf=c=>{
+    const i=c%W,j=(c-i)/W,sc=srcRoad[c];
+    if(sc<0)return 0;
+    const sx=sc%W,sy=(sc-sx)/W;
+    return (Math.floor((Math.atan2(j-sy,i-sx)+Math.PI)/(2*Math.PI)*8)%8+8)%8;
+   };
+   const slice=c=>Math.max(0,Math.min(n-1,Math.floor(sAl[c]*G/step)));
+   const hist=new Map();
+   for(const c of strip){
+    const k2=slice(c);let h=hist.get(k2);
+    if(!h){h=new Int32Array(9);hist.set(k2,h)}
+    h[faceOf(c)]++;h[8]++;
+   }
+   const remap=new Map();
+   for(const [k2,h] of hist){
+    let dom=0;for(let t=1;t<8;t++)if(h[t]>h[dom])dom=t;
+    for(let t=0;t<8;t++)remap.set(k2*8+t,(h[t]>=h[8]*.25?t:dom)*4096+k2);
+   }
    for(const c of strip){
     const i=c%W,j=(c-i)/W;
-    // Which way the cell faces, in eighths of a turn, goes into the key with
-    // the position along the frontage: a plot may run along a street but it
-    // may not turn a corner, so the chevron becomes two plots, one per street.
-    const sc=srcRoad[c],sx=sc<0?i:sc%W,sy=sc<0?j:(sc-sc%W)/W;
-    const face=Math.atan2(j-sy,i-sx);
-    const sec=(Math.floor((face+Math.PI)/(2*Math.PI)*8)%8+8)%8;
-    const b=sec*4096+Math.max(0,Math.min(n-1,Math.floor(sAl[c]*G/step)));
+    const b=remap.get(slice(c)*8+faceOf(c));
     use[c]=2+b;
     if(!bucket.has(b))bucket.set(b,{n:0,box:[W,H,0,0]});
     const e=bucket.get(b);e.n++;
