@@ -398,6 +398,12 @@ assert(html.includes('const LAMP_H=7.2,LAMP_CLEAR=.6,LAMP_MIN=3.2;'), 'The lamp 
 assert(html.includes('const soffit=soffitAt(px,py);'), 'Lamps must be tested against the soffit above them');
 assert(html.includes('if(h<LAMP_MIN){lampsSkipped++;continue}'), 'A lamp with no headroom must not be placed at all');
 assert(html.includes('lamps,lampsShortened,lampsSkipped'), 'The furniture report must say how many lamps the decks changed');
+// Assembly grows out of the ground on the report's clipping plane; it used to
+// drop each unit in from 60 m overhead.
+assert(html.includes('const growEase=slowMo?1:Math.min(1,dt*8);'), 'The assembly growth easing is missing');
+assert(html.includes("const grow=state.mode==='report'?reportGrowth:state.mode==='assembly'?m.userData.scale:1;"), 'Assembly must drive the same growth progress as the report');
+assert(!html.includes("m.position.y+=(1-m.userData.scale)*60"), 'The old drop-in from overhead is still there');
+assert(html.includes('m.userData.growthPlane.constant=h+m.position.y;'), 'The clipping plane is world space and must carry the explode offset');
 assert(html.includes('<button data-mode="climate">环境</button>'), 'The climate mode is not in the nav');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
