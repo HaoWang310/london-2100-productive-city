@@ -451,6 +451,32 @@ assert(html.includes('if(Sw<.2&&Sg<.5)g=Math.min(1,g+LAND_W.gShade);'), 'The dee
 // and the subdivision must still be pure geometry
 assert(!/function planLandUse\(\)[\s\S]{0,900}(siteAz|landField|sunHours)/.test(html), 'The subdivision started reading the climate; that is a later step');
 assert(html.includes('<button data-mode="climate">环境</button>'), 'The climate mode is not in the nav');
+
+// REDUCED SCENE — isolate hides the site, the roads, the ground, the markings,
+// the cars, the labels and every tree outside the selection. That is a lot of
+// scene to remove on a gesture, and the only signal it was on, #statusBadge, is
+// hidden outright by the v2 stylesheet. The result was indistinguishable from a
+// broken render: a black stage with the water still floating over it.
+assert(!/addEventListener\('dblclick',e=>\{if\(state\.mode==='report'\)return;const id=pick\(e\);if\(id\)\{select\(id\);isolate\(\)\}\}\)/.test(html),
+ 'Double-click isolates again; it should only frame the unit');
+assert(html.includes("const id=pick(e);if(id){select(id);focusSelected()}"),
+ 'Double-click no longer frames the selected unit');
+assert(html.includes('else if(state.isolated)exitIsolate();else select(null)'),
+ 'Clicking empty ground must leave isolate, not do nothing');
+assert(!/waterGroup\.visible=.*hasChannel/.test(html),
+ 'Isolate hides the ground but keeps the water, so the site reads as destroyed');
+assert(html.includes('function sceneReduction()') && html.includes('function updateIsolateBar()'),
+ 'Nothing tells the user the scene is reduced');
+assert(html.includes('id="isoBar"') && html.includes('id="isoBarExit"'),
+ 'The reduced-scene banner or its exit button is missing');
+assert(html.includes('controls.update();updateCompass();updateIsolateBar();'),
+ 'The banner is not refreshed with the frame, so it can go stale');
+assert(html.includes("$('#isoBarExit').onclick=restoreWholeScene;"),
+ 'The exit button is not wired');
+assert(/function restoreWholeScene\(\)\{[\s\S]{0,260}state\.layers\.site=true/.test(html),
+ 'Restoring must also turn the hidden layers back on');
+assert(!html.includes('双击单元独看'),
+ 'The hint still advertises the old double-click behaviour');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');
