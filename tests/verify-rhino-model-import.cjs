@@ -431,7 +431,13 @@ assert(html.includes('const USE_COLOR=[[14,17,22],[226,146,52],[198,214,74],[42,
 assert(html.includes("id=\"luLegend\""), 'Three colours without a legend say nothing');
 assert(html.includes('fieldTex.colorSpace=THREE.SRGBColorSpace;'), 'An untagged canvas texture is read as linear and will not match its legend');
 assert(html.includes('const a=Math.round((cat?246:218)'), 'A categorical map has no reason to be translucent');
-assert(html.includes("fieldTex.magFilter=cat?THREE.NearestFilter:THREE.LinearFilter;"), 'Categories must not be interpolated');
+// The picture is drawn four times finer than the field is computed: the sun
+// march is what costs, the canvas is not, so the blockiness was paid for nothing.
+assert(html.includes('const FIELD_G=8,FIELD_SUB=4,'), 'The field is painted at its own coarse resolution again');
+assert(html.includes('fieldCanvas.width=F.W*FIELD_SUB;'), 'The canvas dropped back to the field resolution');
+assert(html.includes('return wsum>0?acc/wsum:0;'), 'Interpolation must be weighted by the ground mask or every edge darkens');
+assert(html.includes('const groundAt=(x,y)=>{'), 'The mask must be read at the 0.5 m raster, where the kerb really is');
+assert(html.includes('k=top<=0?0:top===sb?1:top===sa?2:3;'), 'Use boundaries must come from the interpolated scores');
 assert(html.includes('try{await loadEpw()}'), 'The fields must load the weather file themselves');
 assert(html.includes('function buildLandFields()'), 'The field builder is missing');
 assert(html.includes('function scoreLandFields()'), 'The three scores are missing');

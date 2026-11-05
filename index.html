@@ -3868,7 +3868,7 @@ function togglePlot(id,additive){
 // this field decides WHERE things go, while compliance (BRE APSH, the 2 h on
 // 21 March) stays exact and per lot. Every azimuth goes through siteAz(), so
 // turning the compass turns all of it.
-const FIELD_G=8,FIELD_AGRI_BUFFER=15,FIELD_WATER_BUFFER=10,FIELD_ACC_R=60,FIELD_WET_R=80,FIELD_BUILD_MAX_DR=80,FIELD_DECK_MIN=6;
+const FIELD_G=8,FIELD_SUB=4,FIELD_AGRI_BUFFER=15,FIELD_WATER_BUFFER=10,FIELD_ACC_R=60,FIELD_WET_R=80,FIELD_BUILD_MAX_DR=80,FIELD_DECK_MIN=6;
 let landField=null;
 function buildLandFields(){
  if(landField)return landField;
@@ -4059,7 +4059,12 @@ let landView='plan';
 function buildFieldPlane(){
  if(fieldPlane)return fieldPlane;
  const F=landField;if(!F)return null;
- fieldCanvas=document.createElement('canvas');fieldCanvas.width=F.W;fieldCanvas.height=F.H;
+ // The canvas is drawn four times finer than the field is computed. The cost
+ // of the field is the sun march; the cost of the picture is not, so the
+ // blockiness was paid for nothing. Same world extent either way, so the plane
+ // below does not change.
+ fieldCanvas=document.createElement('canvas');
+ fieldCanvas.width=F.W*FIELD_SUB;fieldCanvas.height=F.H*FIELD_SUB;
  fieldTex=new THREE.CanvasTexture(fieldCanvas);
  // Tag it sRGB. Untagged, three.js reads the canvas as LINEAR and converts it
  // to sRGB on the way out, which lifts the mid-tones hard: measured, the amber
@@ -4082,22 +4087,65 @@ function paintField(){
  if(key===fieldKey)return;
  fieldKey=key;
  const cat=landView==='use';
- fieldTex.magFilter=cat?THREE.NearestFilter:THREE.LinearFilter;
- fieldTex.needsUpdate=true;
- const img=fieldCanvas.getContext('2d').createImageData(F.W,F.H),d=img.data;
- const pick=id=>landView==='winter'?Math.min(1,F.sw[id]/F.swCeil)
-  :landView==='grow'?Math.min(1,F.sg[id]/F.sgCeil)
-  :landView==='build'?F.sb[id]:landView==='agri'?F.sa[id]:F.sg3[id];
- for(let j=0;j<F.H;j++)for(let i=0;i<F.W;i++){
-  const id=j*F.W+i,o=((F.H-1-j)*F.W+i)*4;        // the texture runs the other way up
-  if(!F.ground[id]||F.cov[id]<=0){d[o+3]=0;continue}
-  const a=Math.round((cat?246:218)*Math.min(1,F.cov[id]*1.15));
+ fieldTex.magFilter=THREE.LinearFilter;
+ const R=plotRaster,CR=buildClimateRaster();
+ const CW=F.W*FIELD_SUB,CH=F.H*FIELD_SUB,sg=F.G/FIELD_SUB;
+ const img=fieldCanvas.getContext('2d').createImageData(CW,CH),d=img.data;
+ // Bilinear, but weighted by the ground mask: a plain interpolation pulls the
+ // value toward the zero sitting in the road cells and darkens every edge.
+ const samp=(arr,x,y)=>{
+  const u=(x-F.X0)/F.G-.5,v=(y-F.Y0)/F.G-.5;
+  const i0=Math.floor(u),j0=Math.floor(v),fx=u-i0,fy=v-j0;
+  let acc=0,wsum=0;
+  for(let b=0;b<2;b++)for(let a=0;a<2;a++){
+   const i=Math.max(0,Math.min(F.W-1,i0+a)),j=Math.max(0,Math.min(F.H-1,j0+b));
+   const id=j*F.W+i;if(!F.ground[id])continue;
+   const w=(a?fx:1-fx)*(b?fy:1-fy);
+   acc+=arr[id]*w;wsum+=w;
+  }
+  return wsum>0?acc/wsum:0;
+ };
+ // The mask is read at the 0.5 m raster, where the road edge really is, so the
+ // staircase along every kerb goes away without the field getting any finer.
+ const groundAt=(x,y)=>{
+  const i=Math.floor((x-R.X0)/R.G),j=Math.floor((y-R.Y0)/R.G);
+  if(i<0||j<0||i>=R.W||j>=R.H)return 0;
+  const k=R.klass[j*R.W+i];
+  if(k===1)return 1;
+  if(k!==5)return 0;
+  const ci=Math.floor((x-CR.X0)/CR.G),cj=Math.floor((y-CR.Y0)/CR.G);
+  if(ci<0||cj<0||ci>=CR.W||cj>=CR.H)return 0;
+  const cid=cj*CR.W+ci;
+  return (CR.top[cid]>.2&&CR.bot[cid]<1e8&&CR.bot[cid]>=FIELD_DECK_MIN)?1:0;
+ };
+ for(let b=0;b<CH;b++)for(let a=0;a<CW;a++){
+  const x=F.X0+(a+.5)*sg,y=F.Y0+(b+.5)*sg;
+  const o=((CH-1-b)*CW+a)*4;                      // the texture runs the other way up
+  // four taps across the 2 m pixel, so the kerb gets an edge instead of a step
+  let hit=0;
+  for(let q=0;q<2;q++)for(let r=0;r<2;r++)hit+=groundAt(x+(q-.5)*sg/2,y+(r-.5)*sg/2);
+  if(!hit){d[o+3]=0;continue}
+  const alpha=Math.round((cat?246:218)*(hit/4));
   if(cat){
-   const c=USE_COLOR[F.use[id]]||USE_COLOR[0];
-   d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=F.use[id]?a:0;
+   // argmax of the INTERPOLATED scores, so a boundary between two uses is a
+   // line where they cross and not the edge of an 8 m square
+   const wet=samp(F.dw,x,y);
+   let k;
+   if(wet<FIELD_WATER_BUFFER)k=3;
+   else{
+    const sb=samp(F.sb,x,y),sa=samp(F.sa,x,y),sgn=samp(F.sg3,x,y),top=Math.max(sb,sa,sgn);
+    k=top<=0?0:top===sb?1:top===sa?2:3;
+   }
+   if(!k){d[o+3]=0;continue}
+   const c=USE_COLOR[k];
+   d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=alpha;
   }else{
-   const c=rampColor(pick(id));
-   d[o]=c[0]*255;d[o+1]=c[1]*255;d[o+2]=c[2]*255;d[o+3]=a;
+   const t=landView==='winter'?samp(F.sw,x,y)/F.swCeil
+    :landView==='grow'?samp(F.sg,x,y)/F.sgCeil
+    :landView==='build'?samp(F.sb,x,y)
+    :landView==='agri'?samp(F.sa,x,y):samp(F.sg3,x,y);
+   const c=rampColor(Math.min(1,t));
+   d[o]=c[0]*255;d[o+1]=c[1]*255;d[o+2]=c[2]*255;d[o+3]=alpha;
   }
  }
  fieldCanvas.getContext('2d').putImageData(img,0,0);
