@@ -4109,6 +4109,8 @@ function setNorthOffset(deg){
  if(typeof climateGroup!=='undefined'&&climateGroup){
   recomputeClimateAnalysis();renderClimatePanel();applyClimateLight();updateShadowMask(true);
  }
+ const box=document.querySelector('#cpDeg');
+ if(box&&document.activeElement!==box)box.value=northOffset.toFixed(1);
  if(renderer?.isSoftware)renderer.lastSignature='';
  return northOffset;
 }
@@ -4119,9 +4121,12 @@ function northSceneDir(){
  return new THREE.Vector3(Math.sin(t),0,-Math.cos(t));
 }
 // Where north points on the screen, clockwise from straight up. The cameras are
-// orthographic, so one angle is right for the whole viewport. Measured: in
-// 俯视 this comes out 0 and east 90 with exactly 90 between them, which is the
-// 上北下南左西右东 the plan is read by; in 轴测 north lands at 338.
+// orthographic, so one angle is right for the whole viewport. NDC has to be
+// taken to PIXELS first: ndc x spans the width and ndc y the height, so an
+// angle read off ndc alone is wrong on any viewport that is not square — it
+// put 轴测 at -22 when the真 figure is -42.6. Measured after the conversion:
+// 俯视 gives north 0 and east 90 with exactly 90 between them, which is the
+// 上北下南左西右东 a plan is read by; 轴测 gives -42.6.
 function compassAngle(){
  if(!camera||!renderer?.domElement)return 0;
  const W=renderer.domElement.clientWidth||1,H=renderer.domElement.clientHeight||1;

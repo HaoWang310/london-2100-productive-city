@@ -421,6 +421,7 @@ assert(html.includes('function compassAngle()'), 'The compass angle is missing')
 assert(html.includes('function initCompass()'), 'The compass is missing');
 assert(html.includes('controls.update();updateCompass();'), 'The compass does not follow the camera');
 assert(html.includes("localStorage.setItem('london2100.northOffset'"), 'The north offset is not kept between visits');
+assert(html.includes("if(box&&document.activeElement!==box)box.value=northOffset.toFixed(1);"), 'The compass field can drift out of step with the frame');
 assert(html.includes('<button data-mode="climate">环境</button>'), 'The climate mode is not in the nav');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
