@@ -404,6 +404,23 @@ assert(html.includes('const growEase=slowMo?1:Math.min(1,dt*8);'), 'The assembly
 assert(html.includes("const grow=state.mode==='report'?reportGrowth:state.mode==='assembly'?m.userData.scale:1;"), 'Assembly must drive the same growth progress as the report');
 assert(!html.includes("m.position.y+=(1-m.userData.scale)*60"), 'The old drop-in from overhead is still there');
 assert(html.includes('m.userData.growthPlane.constant=h+m.position.y;'), 'The clipping plane is world space and must carry the explode offset');
+// NORTH — the model's +y is north by default, but the assumption is a number
+// now. Every azimuth that becomes a direction on the ground goes through
+// siteAz(); a sixth site added later that skips it would tilt part of the
+// analysis while nothing on screen looked wrong, so they are pinned here.
+assert(html.includes('function siteAz(trueAz){return trueAz-northOffset}'), 'The north frame is missing');
+assert(html.includes('b=siteAz(az)*Math.PI/180'), 'sunVector bypasses the north frame');
+assert(html.includes('const sa=siteAz(s.azimuth)*rad;'), 'The annual sunlight count bypasses the north frame');
+assert(html.includes('const a=siteAz(sct*22.5)*rad'), 'The wind sectors bypass the north frame');
+assert(html.includes('const a=siteAz(dirDeg)*Math.PI/180;'), 'The wind particles bypass the north frame');
+assert(html.includes('sxa=siteAz(s.azimuth)*rad'), 'The cast shadow bypasses the north frame');
+assert(!/Math\.sin\(s\.azimuth\*rad\)/.test(html), 'A raw azimuth conversion is back');
+assert(!/const a=dirDeg\*Math\.PI\/180;/.test(html), 'The wind direction is used raw again');
+// the dial turns with the camera, because 上北下南 only holds in the plan view
+assert(html.includes('function compassAngle()'), 'The compass angle is missing');
+assert(html.includes('function initCompass()'), 'The compass is missing');
+assert(html.includes('controls.update();updateCompass();'), 'The compass does not follow the camera');
+assert(html.includes("localStorage.setItem('london2100.northOffset'"), 'The north offset is not kept between visits');
 assert(html.includes('<button data-mode="climate">环境</button>'), 'The climate mode is not in the nav');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');

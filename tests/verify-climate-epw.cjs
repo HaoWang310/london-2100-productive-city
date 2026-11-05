@@ -125,6 +125,28 @@ assert.ok(api.LAWSON[0].v<v5,'an exposed lot graded as comfortable for sitting â
 let cat=0;while(cat<api.LAWSON.length-1&&v5>api.LAWSON[cat].v)cat++;
 out.lawson={fullyExposedV5:v5,grade:api.LAWSON[cat].k};
 
+// ------------------------------------------------------ the north frame
+// Rotating the model's north must rotate every direction on the ground by the
+// same amount and nothing else. Lifted and exercised rather than read.
+const north=new Function(`let northOffset=0;
+ ${lift('siteAz')}
+ function setN(d){northOffset=((d%360)+540)%360-180;return northOffset}
+ function dir(az){const b=siteAz(az)*Math.PI/180;return [Math.sin(b),-Math.cos(b)]}
+ return {siteAz,setN,dir,get off(){return northOffset}};`)();
+assert.strictEqual(north.siteAz(137),137,'with no offset the site frame IS the true frame');
+north.setN(30);
+assert.strictEqual(north.siteAz(0),-30,'true north must land 30 west of the model axis');
+assert.strictEqual(north.siteAz(180),150,'a southern sun must swing with the frame');
+// a 30 degree offset turns the noon sun vector by exactly 30 degrees
+north.setN(0);const noon0=north.dir(180);
+north.setN(30);const noon30=north.dir(180);
+const turn=Math.acos(Math.max(-1,Math.min(1,noon0[0]*noon30[0]+noon0[1]*noon30[1])))*180/Math.PI;
+assert.ok(Math.abs(turn-30)<1e-6,'the sun direction turned '+turn.toFixed(3)+' degrees, not 30');
+assert.strictEqual(north.setN(540),-180,'the offset must fold into [-180, 180)');
+assert.strictEqual(north.setN(-190),170,'a negative offset must fold too');
+north.setN(0);
+out.north={noOffsetIsIdentity:true,turnsWithOffset:+turn.toFixed(3)};
+
 // ------------------------------------------- the wiring, checked as source
 const must=[
  ['climateBeam(',              'the clear-sky / EPW beam switch'],
