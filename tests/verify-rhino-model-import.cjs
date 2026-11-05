@@ -426,6 +426,10 @@ assert(html.includes("if(box&&document.activeElement!==box)box.value=northOffset
 // the subdivision: the plots are still cut by geometry alone, and these fields
 // only say what the ground is good for.
 assert(html.includes('const FIELD_G=8'), 'The suitability field grid is missing');
+assert(html.includes('cov[id]=hit/16;'), 'Without sub-cell coverage the overlay washes over the roads and the river');
+assert(html.includes('const USE_COLOR=[[14,17,22],[224,149,60],[168,201,63],[63,143,92]];'), 'Building and green space must not share a colour');
+assert(html.includes("fieldTex.magFilter=cat?THREE.NearestFilter:THREE.LinearFilter;"), 'Categories must not be interpolated');
+assert(html.includes('try{await loadEpw()}'), 'The fields must load the weather file themselves');
 assert(html.includes('function buildLandFields()'), 'The field builder is missing');
 assert(html.includes('function scoreLandFields()'), 'The three scores are missing');
 assert(html.includes('ground[id]=(klass[id]===1||(klass[id]===5&&hc[id]>=FIELD_DECK_MIN))?1:0;'), 'Under-deck ground must count as buildable ground');
