@@ -475,6 +475,8 @@ assert(html.includes("$('#isoBarExit').onclick=restoreWholeScene;"),
  'The exit button is not wired');
 assert(/function restoreWholeScene\(\)\{[\s\S]{0,260}state\.layers\.site=true/.test(html),
  'Restoring must also turn the hidden layers back on');
+assert(/function restoreWholeScene\(\)[\s\S]{0,520}select\(null\);updateIsolateBar\(\)/.test(html),
+ 'Restoring keeps the selection, so the planting stays trimmed to one parcel');
 assert(!html.includes('双击单元独看'),
  'The hint still advertises the old double-click behaviour');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');

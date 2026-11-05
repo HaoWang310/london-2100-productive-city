@@ -5802,7 +5802,9 @@ function exitIsolate(){if(!state.isolated)return;state.isolated=false;renderInsp
 function restoreWholeScene(){
  state.isolated=false;state.layers.site=true;state.layers.roads=true;state.layers.structure=true;
  $$('[data-layer]').forEach(b=>{if(['site','roads','structure'].includes(b.dataset.layer))b.classList.remove('off')});
- applyColors();renderInspector();updateIsolateBar();fitWhole();if(renderer?.isSoftware)renderer.lastSignature='';
+ // A live selection still trims the planting to its own parcel, so leaving it
+ // set would hand back a site with 1 of 32 tree groups and call that complete.
+ select(null);updateIsolateBar();fitWhole();if(renderer?.isSoftware)renderer.lastSignature='';
 }
 function isolate(){if(!unitById.has(state.selected))return;state.isolated=!state.isolated;state.playing=false;if(state.isolated){focusSelected();if(state.mode==='assembly')state.assembled.add(state.selected)}else fitWhole();renderInspector();$('#statusBadge').textContent=state.isolated?'单元独看 · '+state.selected:'原始几何 · 全部显示'}
 const titles={climate:['05 / THE CLIMATE','伦敦的真实一年。','日照与风均由 EPW 气象年逐时驱动，阴影按太阳位置实时计算。'],plots:['04 / THE LAND','道路与结构切分出的用地。','顶视图中由道路、水域与结构围合出的每一块地，可单独选择并导出。'],overview:['01 / THE WHOLE','从整体，到每一部分。','一件连续结构，沿道路划分，重新认识每个单元。'],explode:['02 / THE PARTS','拆开，理解它的关系。','地块单元与跨路连接，组成一件完整的结构。'],assembly:['03 / THE ASSEMBLY','一块一块，回到整体。','逐步回装原始单元，探索未来继续装配的组织方式。']};
