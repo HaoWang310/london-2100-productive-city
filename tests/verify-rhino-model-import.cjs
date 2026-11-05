@@ -430,7 +430,7 @@ assert(html.includes('cov[id]=hit/16;'), 'Without sub-cell coverage the overlay 
 assert(html.includes('const USE_COLOR=[[14,17,22],[226,146,52],[198,214,74],[42,112,82]];'), 'Building and green space must not share a colour');
 assert(html.includes("id=\"luLegend\""), 'Three colours without a legend say nothing');
 assert(html.includes('fieldTex.colorSpace=THREE.SRGBColorSpace;'), 'An untagged canvas texture is read as linear and will not match its legend');
-assert(html.includes('const a=Math.round((cat?246:218)'), 'A categorical map has no reason to be translucent');
+assert(html.includes('const alpha=Math.round((cat?246:218)*(hit/4));'), 'A categorical map has no reason to be translucent');
 // The picture is drawn four times finer than the field is computed: the sun
 // march is what costs, the canvas is not, so the blockiness was paid for nothing.
 assert(html.includes('const FIELD_G=8,FIELD_SUB=4,'), 'The field is painted at its own coarse resolution again');
