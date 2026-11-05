@@ -3823,6 +3823,8 @@ function buildLandPlots(keepPlots){
 function updateLandPlots(){
  if(!plotGroup)return;
  plotGroup.visible=state.mode==='plots';
+ const field=landView!=='plan'&&!!landField;
+ if(fieldPlane)fieldPlane.visible=field&&plotGroup.visible;
  for(const m of plotMeshes){
   const on=plotSelection.has(m.userData.plot.id),hot=plotHover===m.userData.plot.id;
   // Black ground, systemBlue for what is picked — the selection colour the
@@ -3832,8 +3834,13 @@ function updateLandPlots(){
   m.userData.line.material.opacity=on?1:.55;
   // The lots cover the plot now, so the state has to be carried by THEM: the
   // plot's own ground is no longer visible to colour.
+  // The lots cover the ground, so a field drawn over them would be read through
+  // two layers of colour. Every lot steps aside, fill and outline alike; the
+  // PLOT outline is not among the parts and stays, which is what the field has
+  // to be read against.
   for(const part of m.userData.parts){
-   if(part.userData.kind!=='build')continue;
+   part.visible=!field;
+   if(field||part.userData.kind!=='build')continue;
    part.material.color.set(on?'#0a84ff':hot?'#aab6c4':'#8e99a8');
   }
  }
@@ -3853,6 +3860,225 @@ function togglePlot(id,additive){
  renderPlotPanel();updateLandPlots();
  if(renderer?.isSoftware)renderer.lastSignature='';
 }
+
+// SUITABILITY FIELDS v47 — the first half of the sun-driven land logic. It does
+// not touch the subdivision: it answers what each part of the ground is GOOD
+// FOR, which the subdivision will later be shaped by. Everything sits on one
+// 8 m grid, because a sun hour costs a march and 0.5 m would be 950,000 cells;
+// this field decides WHERE things go, while compliance (BRE APSH, the 2 h on
+// 21 March) stays exact and per lot. Every azimuth goes through siteAz(), so
+// turning the compass turns all of it.
+const FIELD_G=8,FIELD_AGRI_BUFFER=15,FIELD_WATER_BUFFER=10,FIELD_ACC_R=60,FIELD_WET_R=80,FIELD_BUILD_MAX_DR=80,FIELD_DECK_MIN=6;
+let landField=null;
+function buildLandFields(){
+ if(landField)return landField;
+ const R=plotRaster;if(!R||!epw)return null;
+ const CR=buildClimateRaster(),rad=Math.PI/180,{lat,lon,tz}=epw.loc;
+ const G=FIELD_G,X0=R.X0,Y0=R.Y0;
+ const W=Math.ceil(R.W*R.G/G),H=Math.ceil(R.H*R.G/G),N=W*H;
+ const px=id=>X0+((id%W)+.5)*G, py=id=>Y0+(Math.floor(id/W)+.5)*G;
+ const klass=new Uint8Array(N),hc=new Float32Array(N),ground=new Uint8Array(N);
+ for(let id=0;id<N;id++){
+  const x=px(id),y=py(id);
+  const i=Math.floor((x-R.X0)/R.G),j=Math.floor((y-R.Y0)/R.G);
+  klass[id]=(i<0||j<0||i>=R.W||j>=R.H)?0:R.klass[j*R.W+i];
+  const ci=Math.floor((x-CR.X0)/CR.G),cj=Math.floor((y-CR.Y0)/CR.G);
+  const cid=cj*CR.W+ci;
+  hc[id]=(ci>=0&&cj>=0&&ci<CR.W&&cj<CR.H&&CR.top[cid]>.2&&CR.bot[cid]<1e8)?CR.bot[cid]:Infinity;
+  // Rule one in field form: ground under a deck is ground, as long as there is
+  // headroom. Measured, that is 94.9% of what the plan projection threw away.
+  ground[id]=(klass[id]===1||(klass[id]===5&&hc[id]>=FIELD_DECK_MIN))?1:0;
+ }
+ // Chamfer distance, two sweeps, 1 and sqrt(2): a four-neighbour flood would
+ // report Manhattan distance and overstate every diagonal by up to 41%.
+ const chamfer=test=>{
+  const d=new Float32Array(N);
+  for(let id=0;id<N;id++)d[id]=test(id)?0:1e9;
+  const a=G,b=G*1.4142135624;
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++){const id=j*W+i;let v=d[id];
+   if(i>0)v=Math.min(v,d[id-1]+a);
+   if(j>0)v=Math.min(v,d[id-W]+a);
+   if(i>0&&j>0)v=Math.min(v,d[id-W-1]+b);
+   if(i<W-1&&j>0)v=Math.min(v,d[id-W+1]+b);
+   d[id]=v;}
+  for(let j=H-1;j>=0;j--)for(let i=W-1;i>=0;i--){const id=j*W+i;let v=d[id];
+   if(i<W-1)v=Math.min(v,d[id+1]+a);
+   if(j<H-1)v=Math.min(v,d[id+W]+a);
+   if(i<W-1&&j<H-1)v=Math.min(v,d[id+W+1]+b);
+   if(i>0&&j<H-1)v=Math.min(v,d[id+W-1]+b);
+   d[id]=v;}
+  return d;
+ };
+ const dr=chamfer(id=>klass[id]===4), dw=chamfer(id=>klass[id]===3);
+ // The street tangent is perpendicular to the gradient of the distance to the
+ // carriageway, so no road centreline has to be skeletonised. Orientation is
+ // 180-periodic, so it is averaged as a DOUBLE angle: averaging the angle
+ // itself explodes where it wraps past north.
+ const th=new Float32Array(N),rho=new Float32Array(N);
+ {
+  const c2=new Float32Array(N),s2=new Float32Array(N);
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++){
+   const id=j*W+i;
+   const gx=(dr[j*W+Math.min(W-1,i+1)]-dr[j*W+Math.max(0,i-1)]);
+   const gy=(dr[Math.min(H-1,j+1)*W+i]-dr[Math.max(0,j-1)*W+i]);
+   const L=Math.hypot(gx,gy);
+   if(L<1e-6){c2[id]=0;s2[id]=0;continue}
+   const t=Math.atan2(gx,-gy);           // tangent = gradient turned 90 degrees
+   c2[id]=Math.cos(2*t);s2[id]=Math.sin(2*t);
+  }
+  const rad8=1;                           // 8 m cells, so one ring is 8 m
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++){
+   let cc=0,ss=0,n=0;
+   for(let dj=-rad8;dj<=rad8;dj++)for(let di=-rad8;di<=rad8;di++){
+    const ni=i+di,nj=j+dj;if(ni<0||nj<0||ni>=W||nj>=H)continue;
+    const nid=nj*W+ni;cc+=c2[nid];ss+=s2[nid];n++;
+   }
+   const id=j*W+i;
+   th[id]=Math.atan2(ss,cc)/2;
+   rho[id]=n?Math.hypot(cc,ss)/n:0;
+  }
+ }
+ // Seasonal sunlight. The weighting is the same one the annual count uses, so
+ // an unobstructed cell reads the file's own hours for that season.
+ const season=(months,mid,days,h0,h1)=>{
+  const f=new Float32Array(N);let ceil=0;
+  for(const m of months)for(let h=h0;h<=h1+.001;h+=.5){
+   const s=sunPosition(lat,lon,tz,mid[m],h);
+   if(s.altitude<=3)continue;
+   const w=.5*days[m]*epw.sunFreq[m+1][Math.min(23,Math.floor(h))];
+   if(w<=0)continue;
+   ceil+=w;
+   const sa=siteAz(s.azimuth)*rad,sx=Math.sin(sa),sy=Math.cos(sa),ta=Math.tan(s.altitude*rad);
+   for(let id=0;id<N;id++)if(ground[id]&&!sunBlocked(CR,px(id),py(id),1.5,sx,sy,ta))f[id]+=w;
+  }
+  return {f,ceil:ceil||1};
+ };
+ const MID={0:21,1:52,3:111,4:141,5:172,6:202,7:233,8:264,11:355};
+ const DAY={0:31,1:28,3:30,4:31,5:30,6:31,7:31,8:30,11:31};
+ const win=season([11,0,1],MID,DAY,7,17), gro=season([3,4,5,6,7,8],MID,DAY,4,20);
+ // Winter wind exposure, the same sixteen-sector shelter the Lawson grading
+ // uses, but weighted by the WINTER rose: that is the season a home is judged on.
+ const expo=new Float32Array(N);
+ {
+  const wr=new Array(16).fill(0);
+  for(const m of [12,1,2])for(let s=0;s<16;s++)wr[s]+=epw.monthRose[m][s];
+  const tot=wr.reduce((a,b)=>a+b,0)||1;
+  for(let id=0;id<N;id++){
+   if(!ground[id])continue;
+   const x=px(id),y=py(id);let open=0;
+   for(let sc=0;sc<16;sc++){
+    const w=wr[sc]/tot;if(w<=0)continue;
+    const a=siteAz(sc*22.5)*rad,ux=Math.sin(a),uy=Math.cos(a);
+    let near=0;
+    for(let t=CR.G;t<=90;t+=CR.G){
+     const i=Math.floor((x+ux*t-CR.X0)/CR.G),j=Math.floor((y+uy*t-CR.Y0)/CR.G);
+     if(i<0||j<0||i>=CR.W||j>=CR.H)break;
+     const cid=j*CR.W+i;
+     if(CR.top[cid]>8&&CR.bot[cid]<12){near=1-t/90;break}
+    }
+    open+=w*(1-near*.62);
+   }
+   expo[id]=open;
+  }
+ }
+ landField={G,X0,Y0,W,H,N,px,py,klass,hc,ground,dr,dw,th,rho,
+  sw:win.f,swCeil:win.ceil,sg:gro.f,sgCeil:gro.ceil,expo};
+ scoreLandFields();
+ return landField;
+}
+
+// The three scores. They share the factors and disagree on the signs — which is
+// the whole reason there are three maps and not one. Measured on this site,
+// winter sun spreads the lots 21-fold while the annual figure spreads them 2.8,
+// and winter and growing-season sun correlate only 0.59, so the two seasons
+// genuinely point at different ground. The WEIGHTS are a design judgement, not
+// a derivation; the gates are not.
+const LAND_W={bSun:.55,bShl:.25,bAcc:.20, aSun:.60,aWet:.25,aShl:.15,
+ gWet:.35,gShl:.25,gSun:.20,gAcc:.20,gShade:.30};
+let landUseMix=null;
+function scoreLandFields(){
+ const F=landField;if(!F)return null;
+ const N=F.N,sb=new Float32Array(N),sa=new Float32Array(N),sg=new Float32Array(N),use=new Uint8Array(N);
+ const area=F.G*F.G;
+ const tally={build:0,agri:0,green:0,ground:0};
+ for(let id=0;id<N;id++){
+  if(!F.ground[id])continue;
+  tally.ground+=area;
+  const Sw=Math.min(1,F.sw[id]/F.swCeil), Sg=Math.min(1,F.sg[id]/F.sgCeil);
+  const Shl=Math.max(0,Math.min(1,(1-F.expo[id])/.62));
+  const Acc=1-Math.min(1,F.dr[id]/FIELD_ACC_R);
+  const Wet=1-Math.min(1,F.dw[id]/FIELD_WET_R);
+  const deckOK=!isFinite(F.hc[id])||F.hc[id]>=FIELD_DECK_MIN;
+  const b=(F.dr[id]<=FIELD_BUILD_MAX_DR&&F.dw[id]>=FIELD_WATER_BUFFER&&deckOK)
+   ?LAND_W.bSun*Sw+LAND_W.bShl*Shl+LAND_W.bAcc*Acc:0;
+  const a=(F.dr[id]>=FIELD_AGRI_BUFFER&&!isFinite(F.hc[id]))
+   ?LAND_W.aSun*Sg+LAND_W.aWet*Wet+LAND_W.aShl*Shl:0;
+  let g=LAND_W.gWet*Wet+LAND_W.gShl*Shl+LAND_W.gSun*Sg+LAND_W.gAcc*Acc;
+  // the deep shade is a resource, not a loss: nothing else wants it and it has
+  // a roof over it, which is what a market or a wet-weather yard needs
+  if(Sw<.2&&Sg<.5)g=Math.min(1,g+LAND_W.gShade);
+  sb[id]=b;sa[id]=a;sg[id]=g;
+  // the waterside strip is reserved before anything is scored against it
+  if(F.dw[id]<FIELD_WATER_BUFFER){use[id]=3;tally.green+=area;continue}
+  const top=Math.max(b,a,g);
+  if(top<=0){use[id]=0;continue}
+  use[id]=top===b?1:top===a?2:3;
+  tally[top===b?'build':top===a?'agri':'green']+=area;
+ }
+ F.sb=sb;F.sa=sa;F.sg3=sg;F.use=use;
+ landUseMix={...tally,
+  buildPct:tally.ground?tally.build/tally.ground*100:0,
+  agriPct:tally.ground?tally.agri/tally.ground*100:0,
+  greenPct:tally.ground?tally.green/tally.ground*100:0};
+ console.info('Land suitability fields',landUseMix);
+ return landUseMix;
+}
+// --- the overlay ---------------------------------------------------------
+// One canvas at field resolution over the plan, the same trick the cast shadow
+// uses. Linear filtering, because this IS a field and crisp 8 m squares would
+// claim a precision it does not have.
+let fieldCanvas=null,fieldTex=null,fieldPlane=null,fieldKey='';
+const LAND_VIEWS={plan:'划分',winter:'冬季日照',grow:'生长季日照',build:'建筑适宜',agri:'农业适宜',green:'绿地适宜',use:'用途分配'};
+const USE_COLOR=[[14,17,22],[10,132,255],[95,191,122],[74,163,224]];
+let landView='plan';
+function buildFieldPlane(){
+ if(fieldPlane)return fieldPlane;
+ const F=landField;if(!F)return null;
+ fieldCanvas=document.createElement('canvas');fieldCanvas.width=F.W;fieldCanvas.height=F.H;
+ fieldTex=new THREE.CanvasTexture(fieldCanvas);
+ fieldTex.minFilter=THREE.LinearFilter;fieldTex.magFilter=THREE.LinearFilter;
+ fieldTex.generateMipmaps=false;
+ const g=new THREE.PlaneGeometry(F.W*F.G,F.H*F.G);g.rotateX(-Math.PI/2);
+ fieldPlane=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:fieldTex,transparent:true,
+  depthWrite:false,polygonOffset:true,polygonOffsetFactor:-6,polygonOffsetUnits:-6}));
+ fieldPlane.position.set(F.X0+F.W*F.G/2,.52,-(F.Y0+F.H*F.G/2));
+ fieldPlane.renderOrder=9;fieldPlane.name='用地适宜性场';
+ plotGroup.add(fieldPlane);
+ return fieldPlane;
+}
+function paintField(){
+ const F=landField;if(!F||!buildFieldPlane())return;
+ const key=landView+'/'+northOffset.toFixed(1);
+ if(key===fieldKey)return;
+ fieldKey=key;
+ const img=fieldCanvas.getContext('2d').createImageData(F.W,F.H),d=img.data;
+ const pick=id=>landView==='winter'?Math.min(1,F.sw[id]/F.swCeil)
+  :landView==='grow'?Math.min(1,F.sg[id]/F.sgCeil)
+  :landView==='build'?F.sb[id]:landView==='agri'?F.sa[id]:F.sg3[id];
+ for(let j=0;j<F.H;j++)for(let i=0;i<F.W;i++){
+  const id=j*F.W+i,o=((F.H-1-j)*F.W+i)*4;        // the texture runs the other way up
+  if(!F.ground[id]){d[o+3]=0;continue}
+  if(landView==='use'){
+   const c=USE_COLOR[F.use[id]]||USE_COLOR[0];
+   d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=F.use[id]?205:0;
+  }else{
+   const c=rampColor(pick(id));
+   d[o]=c[0]*255;d[o+1]=c[1]*255;d[o+2]=c[2]*255;d[o+3]=215;
+  }
+ }
+ fieldCanvas.getContext('2d').putImageData(img,0,0);
+ fieldTex.needsUpdate=true;
+}
 function renderPlotPanel(){
  const body=document.querySelector('#plotList');if(!body)return;
  const sel=[...plotSelection];
@@ -3864,7 +4090,9 @@ function renderPlotPanel(){
   `<span>子地块</span><b>${T.lots||0}</b>`+
   `<span>平均面积</span><b>${fmt(Math.round(T.average||0))} m²</b>`+
   `<span>未细分</span><b>${T.undivided||0} 块</b>`+
-  `<span>随机值</span><b>${T.seed||0}</b>`;
+  `<span>随机值</span><b>${T.seed||0}</b>`+
+  (landUseMix?`<span>建筑 / 农业 / 绿地</span><b>${landUseMix.buildPct.toFixed(0)} / ${landUseMix.agriPct.toFixed(0)} / ${landUseMix.greenPct.toFixed(0)} %</b>`+
+   `<span>可建设地面</span><b>${fmt(Math.round(landUseMix.ground))} m²</b>`:'');
  document.querySelector('#plotChosen').textContent=sel.length
   ?`已选 ${sel.length} 块 · ${fmt(Math.round(chosen.reduce((s,p)=>s+p.area,0)))} m²`
   :`拖动随机值可换一套划分 · 点击地块选中`;
@@ -3936,6 +4164,8 @@ function initPlotsUI(){
  el.innerHTML=`<div class="plotsHead"><div><strong>用地划分</strong><small id="plotSummary">—</small></div>
    <button type="button" id="plotClear">清除选择</button></div>
   <div class="luForm">
+   <label class="luSlider">显示<select id="luView">${Object.entries(LAND_VIEWS).map(([k,v])=>
+     `<option value="${k}"${k===landView?' selected':''}>${v}</option>`).join('')}</select></label>
    <label class="luSlider">随机<input id="luSeed" type="range" min="1" max="60" step="1" value="${lotSeed}">
     <b id="luSeedVal">${lotSeed}</b></label>
    <label class="luSlider">大小<input id="luSize" type="range" min="250" max="2500" step="50" value="${lotTarget}">
@@ -3949,6 +4179,21 @@ function initPlotsUI(){
    <button type="button" id="plotCsv">导出 CSV ↓</button></div>`;
  stage.appendChild(el);
  el.querySelector('#plotClear').onclick=()=>{plotSelection.clear();renderPlotPanel();updateLandPlots()};
+ const view=el.querySelector('#luView');
+ if(view)view.addEventListener('change',()=>{
+  const want=view.value;
+  if(want!=='plan'&&!landField){
+   toast('正在计算日照与适宜性场…');
+   // let the toast paint before the march blocks the thread
+   setTimeout(()=>{landView=want;buildLandFields();paintField();
+    renderPlotPanel();updateLandPlots();
+    if(renderer?.isSoftware)renderer.lastSignature='';},40);
+   return;
+  }
+  landView=want;if(want!=='plan')paintField();
+  renderPlotPanel();updateLandPlots();
+  if(renderer?.isSoftware)renderer.lastSignature='';
+ });
  const seed=el.querySelector('#luSeed');
  // Live while dragging: the subdivision is polygon work, a few milliseconds,
  // so there is nothing to wait for and no apply button to press.
@@ -4106,6 +4351,7 @@ function setNorthOffset(deg){
  try{localStorage.setItem('london2100.northOffset',String(d))}catch(e){}
  // every cached answer was measured in the old frame
  sunHours=null;windShelter=null;shadowKey='';sunPathDay=-1;
+ landField=null;landUseMix=null;fieldKey='';
  if(typeof climateGroup!=='undefined'&&climateGroup){
   recomputeClimateAnalysis();renderClimatePanel();applyClimateLight();updateShadowMask(true);
  }

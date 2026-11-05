@@ -422,6 +422,21 @@ assert(html.includes('function initCompass()'), 'The compass is missing');
 assert(html.includes('controls.update();updateCompass();'), 'The compass does not follow the camera');
 assert(html.includes("localStorage.setItem('london2100.northOffset'"), 'The north offset is not kept between visits');
 assert(html.includes("if(box&&document.activeElement!==box)box.value=northOffset.toFixed(1);"), 'The compass field can drift out of step with the frame');
+// SUITABILITY FIELDS — the sun-driven half of the land logic. It must stay OFF
+// the subdivision: the plots are still cut by geometry alone, and these fields
+// only say what the ground is good for.
+assert(html.includes('const FIELD_G=8'), 'The suitability field grid is missing');
+assert(html.includes('function buildLandFields()'), 'The field builder is missing');
+assert(html.includes('function scoreLandFields()'), 'The three scores are missing');
+assert(html.includes('ground[id]=(klass[id]===1||(klass[id]===5&&hc[id]>=FIELD_DECK_MIN))?1:0;'), 'Under-deck ground must count as buildable ground');
+assert(html.includes('const sa=siteAz(s.azimuth)*rad,sx=Math.sin(sa)'), 'The seasonal sun field bypasses the north frame');
+assert(html.includes('siteAz(sc*22.5)*rad'), 'The winter shelter bypasses the north frame');
+assert(html.includes('landField=null;landUseMix=null;fieldKey=\'\';'), 'Turning the compass must invalidate the fields');
+// the scores share factors and disagree on signs — that is why there are three
+assert(/aSun:\.60,aWet:\.25/.test(html), 'The agriculture score lost its weights');
+assert(html.includes('if(Sw<.2&&Sg<.5)g=Math.min(1,g+LAND_W.gShade);'), 'The deep-shade bonus is missing');
+// and the subdivision must still be pure geometry
+assert(!/function planLandUse\(\)[\s\S]{0,900}(siteAz|landField|sunHours)/.test(html), 'The subdivision started reading the climate; that is a later step');
 assert(html.includes('<button data-mode="climate">环境</button>'), 'The climate mode is not in the nav');
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
