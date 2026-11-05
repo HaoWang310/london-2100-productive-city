@@ -4061,6 +4061,11 @@ function buildFieldPlane(){
  const F=landField;if(!F)return null;
  fieldCanvas=document.createElement('canvas');fieldCanvas.width=F.W;fieldCanvas.height=F.H;
  fieldTex=new THREE.CanvasTexture(fieldCanvas);
+ // Tag it sRGB. Untagged, three.js reads the canvas as LINEAR and converts it
+ // to sRGB on the way out, which lifts the mid-tones hard: measured, the amber
+ // rgb(226,146,52) reached the screen as rgb(222,206,161) and no longer matched
+ // its own legend swatch.
+ fieldTex.colorSpace=THREE.SRGBColorSpace;
  fieldTex.minFilter=THREE.LinearFilter;fieldTex.magFilter=THREE.LinearFilter;
  fieldTex.generateMipmaps=false;
  const g=new THREE.PlaneGeometry(F.W*F.G,F.H*F.G);g.rotateX(-Math.PI/2);
