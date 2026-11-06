@@ -161,11 +161,18 @@ async function parseFile(file,onProgress){
  // each one into segments here and move it with the same alignment shift.
  const lineParts=[];
  const names={site:0,roads:0,structure:0};
+ // Every layer is logged under the name the file gives it, matched or not.
+ // Unmatched layers are dropped silently by design, which makes a new layer
+ // (buildings, towers) look like a decode failure. The report says otherwise.
+ const layerLog=new Map();
+ const logFor=n=>{let r=layerLog.get(n);if(!r){r={name:n,objects:0,meshed:0,unmeshed:0,group:null,types:{}};layerLog.set(n,r)}return r};
  for(let i=0;i<objects.count;i++){
   if(i%20===0)onProgress("解析 Rhino 几何 "+(i+1)+" / "+objects.count);
   const ob=objects.get(i),attr=ob.attributes(),geom=ob.geometry();
   const layer=layers.get(attr.layerIndex);
   const name=basename(layer&&layer.name).toLowerCase();
+  const log=logFor(name||"(unnamed)");log.objects++;
+  {const t=(geom&&geom.constructor&&geom.constructor.name)||"unknown";log.types[t]=(log.types[t]||0)+1}
   if(name==="default"&&geom&&typeof geom.pointAt==="function"&&geom.domain){
    const d=geom.domain,kind=(geom.constructor&&geom.constructor.name)||"";
    const n=kind==="LineCurve"?2:kind==="PolylineCurve"?Math.max(2,geom.pointCount||2):24;
@@ -177,14 +184,16 @@ async function parseFile(file,onProgress){
    // Store the sampled polyline itself. Pushing endpoint PAIRS here shares
    // each interior point between two segments, and the alignment shift below
    // then lands on it twice, throwing the line off the site entirely.
-   if(pts.length>1)lineParts.push(pts);
+   if(pts.length>1){lineParts.push(pts);log.group="lines";log.meshed++}
    continue;
   }
   const group=/road|道路/.test(name)?"roads":/site|场地/.test(name)?"site":/struct|结构/.test(name)?"structure":null;
+  log.group=group;
   if(!group)continue;
   names[group]++;
   const pieces=getMeshes(geom,R);
-  if(!pieces.length){unresolved.push({layer:name,type:geom.constructor&&geom.constructor.name||"unknown",index:i});continue}
+  if(!pieces.length){log.unmeshed++;unresolved.push({layer:name,type:geom.constructor&&geom.constructor.name||"unknown",index:i});continue}
+  log.meshed++;
   const merged=newMesh();
   for(const mesh of pieces)append(merged,mesh);
   if(group==="roads")roadParts.push(merged);
@@ -243,6 +252,7 @@ async function parseFile(file,onProgress){
  }
  const siteGeo=meshInfo(site),roadGeo=meshInfo(roads);
  const counts={site:siteParts.length,road:roadParts.length,structure:structureParts.length,unresolved:unresolved.length,originalObjects:objects.count};
+ const layerSummary=[...layerLog.values()].sort((a,b)=>b.objects-a.objects);
  // Classify the line work so the app can draw it at a believable weight.
  // A zebra rung is a short straight curve with other short straight curves
  // running PARALLEL BESIDE it; a dash of a lane line is short and straight
@@ -285,6 +295,7 @@ async function parseFile(file,onProgress){
   origin,alignedToSiteFrame:true,roadLineSegments:lines.v.length/6,
   roadLineBold:lines.w.filter(w=>w>.3).length,
   warnings:["地块为独立场地组件的边界近似，尚未完成道路减场地布尔运算","跨路关系按几何距离初判；非施工拆分方案",...unresolved.slice(0,10).map(x=>"Unmeshed: "+x.layer+" / "+x.type)],
+  layers:layerSummary,
   siteArea:siteGeo.projection||siteGeo.area,roadArea:roadGeo.projection||roadGeo.area,
   sourceArea:totalArea,areaError:0,counts
  }};
@@ -294,10 +305,36 @@ async function parseFile(file,onProgress){
 // used, so every visitor sees the same verified repository asset.
 const PUBLISHED_SOURCE="./2.3dm";
 let publishedTask=null;
-function controls(){ /* Public presentation: no import or restore dialog. */ }
+// The import dialog stays off for ordinary visitors, so everyone still sees the
+// same verified repository asset. ?import=1 opens it for whoever asked for it;
+// the upload lives in that one browser's IndexedDB and reaches nobody else.
+const IMPORT_MODE=/[?&]import=1(?:&|$)/.test(location.search);
+let activeMeta=null;
+function setStatus(text){const el=document.getElementById("loadText");if(el)el.textContent=text}
+async function readUpload(){
+ if(!IMPORT_MODE)return null;
+ let saved=null;
+ try{saved=await database("get")}catch(e){console.warn("Local upload store unreadable",e);return null}
+ if(!saved||!saved.bytes||saved.bytes.byteLength<10240)return null;
+ const file=new File([saved.bytes],saved.name||"uploaded.3dm",{type:"application/octet-stream"});
+ const parsed=await parseFile(file,setStatus);
+ parsed.meta.source=(saved.name||"uploaded.3dm")+" \u00b7 \u672c\u5730\u4e0a\u4f20\uff08\u4ec5\u672c\u6d4f\u89c8\u5668\uff09";
+ parsed.meta.localUpload=true;
+ return parsed;
+}
 async function getSavedModel(){
  if(publishedTask)return publishedTask;
  publishedTask=(async()=>{
+  if(IMPORT_MODE){
+   try{
+    const mine=await readUpload();
+    if(mine){activeMeta=mine.meta;return mine}
+   }catch(e){
+    // A bad upload must never strand the page on a blank screen.
+    console.error("Local upload failed to parse; falling back to the published source",e);
+    window.__importError=e.message||String(e);
+   }
+  }
   const response=await fetch(PUBLISHED_SOURCE,{cache:"no-cache"});
   if(!response.ok){
    if(response.status!==404)console.warn("Published Rhino source HTTP",response.status);
@@ -312,12 +349,89 @@ async function getSavedModel(){
   });
   parsed.meta.source="2.3dm · GitHub Pages public default";
   parsed.meta.publishedDefault=true;
+  activeMeta=parsed.meta;
   return parsed;
  })().catch(error=>{
   console.error("Published 2.3dm failed validation",error);
   throw error;
  });
  return publishedTask;
+}
+
+function esc(t){return String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function reportHTML(meta){
+ const rows=(meta&&meta.layers)||[];
+ if(!rows.length)return '<div style="color:#9aa1ab">没有图层信息</div>';
+ const GROUP={site:["场地","#8cb359"],roads:["道路","#4aa3e0"],structure:["结构","#e9ecf0"],lines:["划线","#d9c79a"]};
+ return '<table style="border-collapse:collapse;width:100%;font-size:11px">'+rows.map(r=>{
+  const g=GROUP[r.group]||null;
+  const tag=g?'<span style="color:'+g[1]+'">'+g[0]+'</span>'
+            :'<span style="color:#e08a3c">未接入</span>';
+  const warn=r.unmeshed?'<span style="color:#e05a4a"> ⚠ '+r.unmeshed+' 无网格</span>':'';
+  return '<tr><td style="padding:3px 8px 3px 0;color:#e9ecf0">'+esc(r.name)+'</td>'
+   +'<td style="padding:3px 8px 3px 0;white-space:nowrap">'+tag+'</td>'
+   +'<td style="padding:3px 8px 3px 0;text-align:right;color:#9aa1ab">'+r.objects+'</td>'
+   +'<td style="padding:3px 0;color:#7e848d">'+esc(Object.keys(r.types).join("/"))+warn+'</td></tr>';
+ }).join('')+'</table>';
+}
+function controls(){
+ if(!IMPORT_MODE)return;
+ const box=document.createElement("div");
+ box.id="rhinoImportPanel";
+ box.style.cssText="position:fixed;left:16px;bottom:16px;z-index:60;width:460px;max-width:calc(100vw - 32px);"
+  +"max-height:62vh;overflow:auto;background:#16181cf2;border:.5px solid #3a3f47;border-radius:14px;"
+  +"padding:13px 15px;font:12px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;color:#e9ecf0;"
+  +"-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);"
+  +"box-shadow:0 8px 32px rgba(0,0,0,.5)";
+ const src=(activeMeta&&activeMeta.source)||"未知";
+ const local=!!(activeMeta&&activeMeta.localUpload);
+ box.innerHTML=
+  '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px">'
+  +'<strong style="font-size:13px">Rhino 模型导入</strong>'
+  +'<button id="riClose" style="border:0;background:transparent;color:#9aa1ab;cursor:pointer;font-size:16px;line-height:1">×</button></div>'
+  +'<div style="font-size:11px;color:'+(local?"#ffd98a":"#9aa1ab")+';margin-bottom:10px">当前源：'+esc(src)+'</div>'
+  +'<input type="file" id="riFile" accept=".3dm" style="width:100%;font-size:11px;color:#c8ced7;margin-bottom:9px">'
+  +'<div id="riMsg" style="font-size:11px;color:#9aa1ab;margin-bottom:9px;line-height:1.7">'
+  +'选一个 .3dm。解析后会先列出文件里的所有图层，确认无误再应用。</div>'
+  +'<div id="riReport" style="margin-bottom:10px"></div>'
+  +'<div style="display:flex;gap:7px">'
+  +'<button id="riApply" disabled style="flex:1;padding:8px;border:0;border-radius:8px;background:#0a84ff;color:#fff;cursor:pointer;opacity:.4">应用并重载</button>'
+  +'<button id="riReset" style="padding:8px 12px;border:.5px solid #3a3f47;border-radius:8px;background:transparent;color:#c8ced7;cursor:pointer">恢复发布版</button>'
+  +'</div>';
+ document.body.appendChild(box);
+ const msg=box.querySelector("#riMsg"),report=box.querySelector("#riReport"),apply=box.querySelector("#riApply");
+ if(activeMeta)report.innerHTML=reportHTML(activeMeta);
+ if(window.__importError)msg.innerHTML='<span style="color:#e05a4a">上次上传解析失败，已回退到发布版：'+esc(window.__importError)+'</span>';
+ box.querySelector("#riClose").onclick=()=>box.remove();
+ let pending=null;
+ box.querySelector("#riFile").onchange=async e=>{
+  const file=e.target.files&&e.target.files[0];if(!file)return;
+  pending=null;apply.disabled=true;apply.style.opacity=".4";report.innerHTML="";
+  msg.textContent="解析中…";
+  try{
+   const bytes=await file.arrayBuffer();
+   const parsed=await parseFile(new File([bytes],file.name),t=>{msg.textContent=t});
+   pending={name:file.name,bytes};
+   report.innerHTML=reportHTML(parsed.meta);
+   const c=parsed.meta.counts||{};
+   msg.innerHTML='解析成功：场地 '+(c.site|0)+' · 道路 '+(c.road|0)+' · 结构 '+(c.structure|0)
+    +(c.unresolved?' · <span style="color:#e05a4a">无网格 '+c.unresolved+'</span>':'')
+    +'<br><span style="color:#7e848d">标为「未接入」的图层现在会被丢弃；把这份报告给我，我按它们的真实名字接入。</span>';
+   apply.disabled=false;apply.style.opacity="1";
+  }catch(err){
+   msg.innerHTML='<span style="color:#e05a4a">解析失败：'+esc(err.message||err)+'</span>';
+  }
+ };
+ apply.onclick=async()=>{
+  if(!pending)return;
+  apply.disabled=true;msg.textContent="保存中…";
+  try{await database("put",{name:pending.name,bytes:pending.bytes,savedAt:Date.now()});location.reload()}
+  catch(err){msg.innerHTML='<span style="color:#e05a4a">保存失败：'+esc(err.message||err)+'</span>';apply.disabled=false}
+ };
+ box.querySelector("#riReset").onclick=async()=>{
+  try{await database("delete")}catch(e){}
+  location.reload();
+ };
 }
 window.latestModelBridge={getSavedModel,controls,parseFile};
 })();

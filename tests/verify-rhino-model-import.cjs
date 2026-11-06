@@ -129,7 +129,9 @@ assert(html.includes('const n=Math.max(1,Math.round(len/SHORE_STEP));'), 'Long s
 // ROAD LINES v31 — the source carries its own division lines on the Default layer.
 assert(importer.includes('if(name===\"default\"&&geom&&typeof geom.pointAt===\"function\"&&geom.domain){'), 'Default-layer curves are not sampled');
 assert(importer.includes('roadLineSegments:lines.v.length/6,'), 'Road line count is not reported');
-assert(importer.includes('if(pts.length>1)lineParts.push(pts);'), 'Line points must be stored once per curve, not per segment endpoint');
+assert(/if\(pts\.length>1\)\{?lineParts\.push\(pts\)/.test(importer)
+ && (importer.match(/lineParts\.push\(/g)||[]).length===1,
+ 'Line points must be stored once per curve, not per segment endpoint');
 assert(html.includes('roadLineOverride=importedModel.lines?.v?.length?importedModel.lines:null;'), 'Road lines are not applied');
 assert(html.includes("lines.name='2.3dm Default 图层划线';"), 'Road lines are not drawn');
 // WebGL ignores line width, so markings are ribbons sized by the importer.
@@ -479,6 +481,23 @@ assert(/function restoreWholeScene\(\)[\s\S]{0,520}select\(null\);updateIsolateB
  'Restoring keeps the selection, so the planting stays trimmed to one parcel');
 assert(!html.includes('双击单元独看'),
  'The hint still advertises the old double-click behaviour');
+// IMPORT WINDOW — the dialog is gated so ordinary visitors still get the one
+// verified repository asset, and the parser now reports every layer it saw
+// under the name the file gives it. An unmatched layer (buildings, towers) is
+// dropped by design, which is indistinguishable from a decode failure unless
+// the report says so.
+const loader=fs.readFileSync('latest-model-loader.js','utf8');
+assert(/const IMPORT_MODE=\/\[\?&\]import=1/.test(loader), 'The import dialog is no longer gated behind ?import=1');
+assert(loader.includes('function controls(){\n if(!IMPORT_MODE)return;'), 'controls() must stay closed for ordinary visitors');
+assert(loader.includes('const layerLog=new Map();'), 'The per-layer report is missing');
+assert(loader.includes('layers:layerSummary,'), 'The layer report never reaches meta');
+assert(loader.includes('log.group=group;\n  if(!group)continue;'), 'Unmatched layers must be logged before they are skipped');
+assert(loader.includes('async function readUpload()'), 'The local upload path is missing');
+assert(/readUpload[\s\S]{0,900}localUpload=true/.test(loader), 'An upload must be marked as local so the panel can say so');
+assert(loader.includes('await database("put",{name:pending.name'), 'The upload is never saved');
+assert(loader.includes('await database("delete")'), 'There is no way back to the published source');
+assert(loader.includes('const PUBLISHED_SOURCE="./2.3dm";'), 'The published source is no longer authoritative');
+
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');
