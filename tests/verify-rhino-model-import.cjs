@@ -496,6 +496,16 @@ assert(loader.includes('async function readUpload()'), 'The local upload path is
 assert(/readUpload[\s\S]{0,900}localUpload=true/.test(loader), 'An upload must be marked as local so the panel can say so');
 assert(loader.includes('await database("put",{name:pending.name'), 'The upload is never saved');
 assert(loader.includes('await database("delete")'), 'There is no way back to the published source');
+// The build container cannot install rhino3dm (npm, pypi and every CDN are
+// blocked), so the only decoder available is a browser that can reach them.
+// The export hands the decoded model back, which is what lets a 155MB source
+// be baked without ever going near GitHub's 100MB per-file limit.
+assert(loader.includes('id="riExport"'), 'The parsed-model export button is missing');
+assert(/xport\.onclick=async\(\)=>\{[\s\S]{0,200}pendingParsed/.test(loader), 'Export is not wired to the parsed model');
+assert(loader.includes('new CompressionStream("gzip")'), 'The export is not compressed');
+assert(loader.includes('ArrayBuffer.isView(v)?Array.from(v)'), 'Typed arrays would serialise as objects and lose the geometry');
+assert(/Math\.round\(v\*1000\)\/1000/.test(loader), 'Coordinate rounding is gone; the payload doubles');
+assert(/pending=\{name:file\.name,bytes\};pendingParsed=parsed;/.test(loader), 'The parsed model is not retained for export');
 assert(loader.includes('const PUBLISHED_SOURCE="./2.3dm";'), 'The published source is no longer authoritative');
 
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');

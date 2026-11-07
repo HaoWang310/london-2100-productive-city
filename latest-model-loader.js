@@ -396,31 +396,65 @@ function controls(){
   +'<div id="riReport" style="margin-bottom:10px"></div>'
   +'<div style="display:flex;gap:7px">'
   +'<button id="riApply" disabled style="flex:1;padding:8px;border:0;border-radius:8px;background:#0a84ff;color:#fff;cursor:pointer;opacity:.4">应用并重载</button>'
+  +'<button id="riExport" disabled style="flex:1;padding:8px;border:.5px solid #0a84ff;border-radius:8px;background:transparent;color:#6cb6ff;cursor:pointer;opacity:.4">导出解析结果</button>'
   +'<button id="riReset" style="padding:8px 12px;border:.5px solid #3a3f47;border-radius:8px;background:transparent;color:#c8ced7;cursor:pointer">恢复发布版</button>'
   +'</div>';
  document.body.appendChild(box);
- const msg=box.querySelector("#riMsg"),report=box.querySelector("#riReport"),apply=box.querySelector("#riApply");
+ const msg=box.querySelector("#riMsg"),report=box.querySelector("#riReport"),apply=box.querySelector("#riApply"),xport=box.querySelector("#riExport");
  if(activeMeta)report.innerHTML=reportHTML(activeMeta);
  if(window.__importError)msg.innerHTML='<span style="color:#e05a4a">上次上传解析失败，已回退到发布版：'+esc(window.__importError)+'</span>';
  box.querySelector("#riClose").onclick=()=>box.remove();
- let pending=null;
+ let pending=null,pendingParsed=null;
  box.querySelector("#riFile").onchange=async e=>{
   const file=e.target.files&&e.target.files[0];if(!file)return;
-  pending=null;apply.disabled=true;apply.style.opacity=".4";report.innerHTML="";
+  pending=null;pendingParsed=null;apply.disabled=true;apply.style.opacity=".4";
+  xport.disabled=true;xport.style.opacity=".4";report.innerHTML="";
   msg.textContent="解析中…";
   try{
    const bytes=await file.arrayBuffer();
    const parsed=await parseFile(new File([bytes],file.name),t=>{msg.textContent=t});
-   pending={name:file.name,bytes};
+   pending={name:file.name,bytes};pendingParsed=parsed;
    report.innerHTML=reportHTML(parsed.meta);
    const c=parsed.meta.counts||{};
    msg.innerHTML='解析成功：场地 '+(c.site|0)+' · 道路 '+(c.road|0)+' · 结构 '+(c.structure|0)
     +(c.unresolved?' · <span style="color:#e05a4a">无网格 '+c.unresolved+'</span>':'')
     +'<br><span style="color:#7e848d">标为「未接入」的图层现在会被丢弃；把这份报告给我，我按它们的真实名字接入。</span>';
    apply.disabled=false;apply.style.opacity="1";
+   xport.disabled=false;xport.style.opacity="1";
   }catch(err){
    msg.innerHTML='<span style="color:#e05a4a">解析失败：'+esc(err.message||err)+'</span>';
   }
+ };
+ // The build container cannot install rhino3dm -- npm, pypi and the CDNs are all
+ // blocked -- so the decode has to happen in a browser that can reach them. This
+ // hands the decoded model back so it can be baked without the .3dm ever having
+ // to fit under GitHub's 100MB per-file limit.
+ xport.onclick=async()=>{
+  if(!pendingParsed)return;
+  xport.disabled=true;msg.textContent="序列化中…";
+  try{
+   // millimetre precision is ample here and roughly halves the payload
+   const json=JSON.stringify(pendingParsed,(k,v)=>
+     ArrayBuffer.isView(v)?Array.from(v):typeof v==="number"?Math.round(v*1000)/1000:v);
+   const raw=new Blob([json]).size;
+   let blob,ext;
+   if(typeof CompressionStream==="function"){
+    blob=await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"))).blob();
+    ext=".json.gz";
+   }else{blob=new Blob([json],{type:"application/json"});ext=".json"}
+   const a=document.createElement("a");
+   a.href=URL.createObjectURL(blob);
+   a.download=((pending&&pending.name)||"model").replace(/\.3dm$/i,"")+"-parsed"+ext;
+   document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(a.href),30000);
+   const mb=n=>(n/1048576).toFixed(1)+" MB";
+   msg.innerHTML="导出完成："+esc(a.download)+"<br>"
+    +'<span style="color:#7e848d">JSON '+mb(raw)+" → 压缩后 "+mb(blob.size)
+    +"。把这个文件发给我，3dm 不用传 GitHub。</span>";
+  }catch(err){
+   msg.innerHTML='<span style="color:#e05a4a">导出失败：'+esc(err.message||err)+'</span>';
+  }
+  xport.disabled=false;
  };
  apply.onclick=async()=>{
   if(!pending)return;
