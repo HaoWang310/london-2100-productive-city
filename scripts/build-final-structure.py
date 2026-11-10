@@ -27,7 +27,8 @@ PLATE_MIN_Z = 10.0   # plates below this sit on the ground, not on the deck
 TOWER_MIN_TOP = 100.0  # the west-side mid-rises top out at 33m; the towers at 259 and 327
 TOWER_CLUSTER_R = 25.0 # plates of one tower share a plan position
 TOWER_FOOT_BUFFER = 4.0  # the two towers are 9.8m apart, so stay well inside that
-REMAINDER_MIN_VOLUME = 20.0  # provisional; the run prints the distribution to check it against
+REMAINDER_MIN_VOLUME = 1.0   # measured: 69 bodies carry 100.0% of the leftover volume,
+                             # the other 729 are numerically zero. The cut is not a judgement.
 FLAT = 1e-6          # a part with no thickness cannot take part in a solid boolean
 
 old = json.loads(gzip.decompress(base64.b64decode(
