@@ -542,6 +542,26 @@ assert(/Math\.round\(v\*1000\)\/1000/.test(loader), 'Coordinate rounding is gone
 assert(/pending=\{name:file\.name,bytes\};pendingParsed=parsed;/.test(loader), 'The parsed model is not retained for export');
 assert(loader.includes('const PUBLISHED_SOURCE="./2.3dm";'), 'The published source is no longer authoritative');
 
+// FINAL MODEL IN THE APP — buildings, the two towers, the plots held for future
+// buildings, and the farmland. Fetched rather than embedded: 1.02MB of geometry
+// would be ~1.4MB of base64 inside index.html.
+assert(fs.existsSync('data/app-extras.json.gz'), 'The app extras bundle is missing');
+assert(fs.existsSync('data/final-model-parsed.json.gz'), 'The decoded source model is missing');
+assert(fs.existsSync('scripts/build-app-extras.py'), 'The extras build script is missing');
+assert(html.includes("fetchExtras('./data/app-extras.json.gz')"), 'The app never loads the extras');
+assert(/raw\[0\]===0x1f&&raw\[1\]===0x8b/.test(html),
+ 'Decide gzip by magic bytes: Pages may or may not expand .gz, and Content-Encoding lies both ways');
+assert(html.includes('updateExtrasVisibility()}'), 'Extras visibility is not driven by applyColors');
+const layerState = html.slice(html.indexOf('layers:{'), html.indexOf('layers:{') + 220);
+for (const k of ['towers','buildings','plots','agri']) {
+  assert(html.includes('data-layer="' + k + '"'), 'Missing layer toggle: ' + k);
+  assert(layerState.includes(k + ':true'), 'Missing layer state: ' + k);
+}
+assert(/if\(extrasGroup\)for\(const g of extrasGroup\.children\)if\(g\.visible\)b\.expandByObject\(g\)/.test(html),
+ 'The 327m towers must be in the overview fit box, or they are cut off at the top');
+assert(/catch\(e\)\{console\.warn\('Final-model extras unavailable/.test(html),
+ 'A missing extras bundle must not take the rest of the scene down with it');
+
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
 assert(asset.length>10240, 'Default Rhino file appears incomplete');

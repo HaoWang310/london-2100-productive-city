@@ -343,7 +343,7 @@ input[type=range]{accent-color:var(--sys-blue)}
 <header><button class="round" id="libraryToggle" aria-label="收起结构单元库" title="收起 / 展开结构单元库" aria-controls="partsSidebar" aria-expanded="true">☰</button><div><div class="brand">FORM <span>/</span> ASSEMBLY</div><div class="edition">LONDON 2100 · STRUCTURE ATLAS</div></div><nav class="nav" aria-label="工作模式"><button class="active" data-mode="overview">总览</button><button data-mode="explode">拆解</button><button data-mode="assembly">装配</button><button data-mode="plots">用地</button><button data-mode="climate">环境</button><button data-mode="report">报表</button></nav><div class="headerActions"><button class="round" id="helpBtn" title="操作说明">?</button><button class="pill" id="presentBtn">演示模式 ↗</button></div></header>
 <div class="app"><aside id="partsSidebar" aria-label="结构单元库"><div class="resizeGrip leftGrip" role="separator" tabindex="0" aria-label="调整对象库宽度" aria-orientation="vertical"></div><div class="sideHead"><div class="eyebrow">PARTS LIBRARY</div><div class="sidebarTitleRow"><h2>结构单元库</h2><button type="button" class="libraryClose" id="collapseLibrary" aria-label="收起结构单元库" title="收起左侧面板">〈 收起</button></div><div class="small" id="librarySummary">按道路分割的地块组织</div><input class="search" id="search" placeholder="搜索编号，如 P-15" aria-label="搜索单元"></div><div class="switchTabs"><button class="active" data-filter="parcel">地块</button><button data-filter="connection">连接</button><button data-filter="all">全部</button></div><div class="unitList" id="unitList"></div><div class="sideFoot"><b>2(1).3dm</b> · 原始模型<br>米制 / Rhino 来源网格 · v4.0<br><span id="sideCount"></span></div></aside>
 <main class="stage"><div id="viewport"></div><button type="button" id="restoreLibrary" class="libraryRestore" title="展开结构单元库" aria-label="展开结构单元库" aria-controls="partsSidebar">☰　展开单元库</button><div class="stageTitle"><div class="eyebrow" id="stageEyebrow">01 / THE WHOLE</div><h1 id="stageHeading">从整体，到每一部分。</h1><p id="stageDescription">一件连续结构，沿道路划分，重新认识每个单元。</p><div class="counter"><div><b id="countParcel">24</b><small>道路 / 场地组件</small></div><div><b id="countUnits">20</b><small>地块结构单元</small></div><div><b id="countConnections">30</b><small>跨路连接组</small></div></div></div>
-<div class="layers"><button class="layer" data-layer="structure"><i class="swatch" style="background:#999"></i>灰色结构</button><button class="layer" data-layer="roads"><i class="swatch" style="background:#d3b986"></i>道路</button><button class="layer" data-layer="site"><i class="swatch" style="background:#383a3d"></i>场地</button><button class="layer off" data-layer="labels"><i class="swatch" style="background:#222"></i>编号</button><button class="layer off" data-layer="mono"><i class="swatch" style="background:#bbb"></i>纯白模型</button><button class="layer off" data-layer="edges"><i class="swatch" style="background:#666"></i>曲面线框</button><button class="layer mobileSide" id="infoBtn">单元详情 ↗</button></div>
+<div class="layers"><button class="layer" data-layer="structure"><i class="swatch" style="background:#999"></i>灰色结构</button><button class="layer" data-layer="roads"><i class="swatch" style="background:#d3b986"></i>道路</button><button class="layer" data-layer="site"><i class="swatch" style="background:#383a3d"></i>场地</button><button class="layer off" data-layer="labels"><i class="swatch" style="background:#222"></i>编号</button><button class="layer off" data-layer="mono"><i class="swatch" style="background:#bbb"></i>纯白模型</button><button class="layer off" data-layer="edges"><i class="swatch" style="background:#666"></i>曲面线框</button><button class="layer" data-layer="towers"><i class="swatch" style="background:#cfd6de"></i>垂直农业塔</button><button class="layer" data-layer="buildings"><i class="swatch" style="background:#9aa3ad"></i>建筑</button><button class="layer" data-layer="plots"><i class="swatch" style="background:#e29234"></i>地块</button><button class="layer" data-layer="agri"><i class="swatch" style="background:#4a9d5f"></i>农田绿化</button><button class="layer mobileSide" id="infoBtn">单元详情 ↗</button></div>
 <div class="labels" id="labels"></div><div class="tooltip" id="tooltip"></div><div class="canvasFoot">拖动旋转 · 滚轮缩放 · 右键平移 · 双击对准单元</div><div class="badge" id="statusBadge">原始几何 · 全部显示</div><div class="isoBar" id="isoBar" role="status" hidden><span id="isoBarText"></span><button type="button" id="isoBarExit">恢复完整显示</button></div>
 <div class="explodePanel" id="explodePanel"><div class="sliderHead"><b id="sliderLabel">拆解距离</b><span id="sliderValue">45%</span></div><input id="mainSlider" type="range" min="0" max="100" value="45" aria-label="拆解距离或装配进度"><div class="assemblyActions" id="assemblyActions"><button id="playAssembly">▶ 自动装配</button><button id="clearAssembly">清空</button><button id="fullAssembly">完整回装</button><button id="undoAssembly" disabled>撤销</button><button id="saveAssembly">保存清单</button></div></div>
 <div class="viewbar"><button class="active" data-view="iso">轴测</button><button data-view="top">俯视</button><button data-view="front">立面</button><div class="separator"></div><button id="rotateBtn">自动旋转</button><button id="resetBtn">复位</button><button id="snapshotBtn" title="导出当前视角 PNG">截取视图 ↗</button></div>
@@ -1856,7 +1856,7 @@ class SoftwareRenderer{
 </script><script src="./latest-model-loader.js?v=20261031-road-detail-v33"></script><script>'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const fmt=(n,d=0)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
-const state={mode:'overview',filter:'parcel',selected:null,isolated:false,explode:0,targetExplode:0,view:'iso',report:'summary',layers:{site:true,roads:true,structure:true,labels:false,mono:false,edges:false},assembled:new Set(),playing:false,presentation:false};
+const state={mode:'overview',filter:'parcel',selected:null,isolated:false,explode:0,targetExplode:0,view:'iso',report:'summary',layers:{site:true,roads:true,structure:true,labels:false,mono:false,edges:false,towers:true,buildings:true,plots:true,agri:true},assembled:new Set(),playing:false,presentation:false};
 let model,lowModel,scene,camera,renderer,controls,siteMesh,roadsMesh,ground,parcelGroup,unitGroup,decorationGroup,meshes=[],parcelMeshes=[],labelItems=[],lastTime=0,playAccum=0,transition=null,hoverId=null,lastPointer=null;
 // The published Rhino file may replace ONLY the rendered site; all existing functional model data stays intact.
 let siteDisplayOverride=null, roadsDisplayOverride=null, roadLineOverride=null;
@@ -1869,6 +1869,65 @@ function toast(msg){$('#toast').textContent=msg;$('#toast').classList.add('show'
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000)}
 function bufferGeom(m){const g=new THREE.BufferGeometry(),p=new Float32Array(m.v.length);for(let i=0;i<p.length;i+=3){p[i]=m.v[i];p[i+1]=m.v[i+2];p[i+2]=-m.v[i+1]}g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setIndex(m.t);if(m.n){const n=new Float32Array(m.n.length);for(let i=0;i<n.length;i+=3){n[i]=m.n[i];n[i+1]=m.n[i+2];n[i+2]=-m.n[i+1]}g.setAttribute('normal',new THREE.BufferAttribute(n,3))}else g.computeVertexNormals();g.computeBoundingSphere();return g}
 function material(color){return new THREE.MeshStandardMaterial({color,roughness:.79,metalness:.05,side:THREE.DoubleSide})}
+// FINAL MODEL EXTRAS — buildings, the two vertical farming towers, the plots
+// that are held for future buildings, and the farmland. Fetched rather than
+// embedded: 1.02MB of geometry would be ~1.4MB of base64 inside this file.
+let extrasGroup=null,extrasData=null,extrasTask=null;
+const EXTRAS_COLOR={towers:'#cfd6de',buildings:'#9aa3ad',plots:'#e29234',agri:'#4a9d5f'};
+const EXTRAS_KEYS=['towers','buildings','plots','agri'];
+async function fetchExtras(url){
+ const res=await fetch(url,{cache:'no-cache'});
+ if(!res.ok)throw new Error('HTTP '+res.status);
+ const raw=new Uint8Array(await res.arrayBuffer());
+ // Pages may or may not expand .gz for us, so go by the magic bytes rather
+ // than by Content-Encoding, which lies in both directions.
+ const gz=raw.length>2&&raw[0]===0x1f&&raw[1]===0x8b;
+ if(!gz)return JSON.parse(new TextDecoder().decode(raw));
+ if(typeof DecompressionStream!=='function')throw new Error('gzip 未解压且此浏览器不支持 DecompressionStream');
+ const out=await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+ return JSON.parse(new TextDecoder().decode(out));
+}
+function loadAppExtras(){
+ if(extrasTask)return extrasTask;
+ extrasTask=(async()=>{
+  let data;
+  try{data=await fetchExtras('./data/app-extras.json.gz')}
+  catch(e){console.warn('Final-model extras unavailable; the rest of the scene is unaffected',e);return null}
+  extrasData=data;
+  extrasGroup=new THREE.Group();extrasGroup.name='最终模型 · 建筑/塔/地块/农田';
+  const build=(items,key)=>{
+   const g=new THREE.Group();g.name=key;
+   for(const e of items){
+    const m=new THREE.Mesh(bufferGeom(e.mesh),material(EXTRAS_COLOR[key]));
+    m.castShadow=key==='towers'||key==='buildings';
+    m.receiveShadow=true;
+    m.userData.extra=Object.assign({group:key},e);
+    delete m.userData.extra.mesh;
+    g.add(m);
+   }
+   extrasGroup.add(g);
+  };
+  build(data.towers.flatMap(t=>t.plates.map(p=>Object.assign({tower:t.id},p))),'towers');
+  build(data.buildings,'buildings');
+  build(data.plots,'plots');
+  build(data.agri,'agri');
+  scene.add(extrasGroup);
+  applyColors();
+  if(renderer?.isSoftware)renderer.lastSignature='';
+  return extrasGroup;
+ })();
+ return extrasTask;
+}
+function updateExtrasVisibility(){
+ if(!extrasGroup)return;
+ // Plots and farmland lie flat on the site, so they go when the site does.
+ const field=state.mode==='plots';
+ for(const g of extrasGroup.children){
+  const on=state.layers[g.name]&&!state.isolated&&state.mode!=='report';
+  g.visible=!!on&&(g.name==='towers'||g.name==='buildings'||state.layers.site||field);
+ }
+ extrasGroup.visible=extrasGroup.children.some(g=>g.visible);
+}
 // FORM GEOMETRY v35 — loose edge-wall fins on the structure Forms.
 // Several Rhino render meshes carry a strip of a slab's vertical edge wall that
 // runs on past the top and bottom surfaces it belongs to: a free-standing
@@ -5726,7 +5785,7 @@ function buildScene(){
 function resize(){if(!renderer)return;const el=$('#viewport'),w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;const half=420;camera.left=-half*w/h;camera.right=half*w/h;camera.top=half;camera.bottom=-half;camera.updateProjectionMatrix();renderer.setSize(w,h)}
 function pick(e){const rect=renderer.domElement.getBoundingClientRect();mouse.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(mouse,camera);const visible=meshes.filter(m=>m.visible&&state.layers.structure);const hits=raycaster.intersectObjects(visible,false);if(hits.length)return hits[0].object.userData.id;if(state.layers.site&&!state.isolated){const p=raycaster.intersectObjects(parcelMeshes,false);if(p.length)return p[0].object.userData.id}return null}
 function pointerMove(e){if(e.buttons)return;const id=pick(e);if(id!==hoverId){hoverId=id;applyColors()}const tip=$('#tooltip');if(id){const r=$('#viewport').getBoundingClientRect();tip.style.display='block';tip.style.left=Math.min(e.clientX-r.left+14,r.width-120)+'px';tip.style.top=e.clientY-r.top+12+'px';tip.textContent=id+(unitById.has(id)?' · 结构单元':' · 未覆盖地块');renderer.domElement.style.cursor='pointer'}else{tip.style.display='none';renderer.domElement.style.cursor='grab'}}
-function applyColors(){for(const m of meshes){const id=m.userData.id;m.material.color.set(id===state.selected?'#f4f5f7':id===hoverId?'#e6e8ed':state.layers.mono?'#d1d1d3':'#b7b9bd');m.userData.wire.visible=state.layers.edges}siteMesh.material.color.set(state.layers.mono?'#e5e5e7':'#383a3d');roadsMesh.material.color.set(state.layers.mono?'#f8f8f9':roadDesignConfig.enabled?'#42474d':'#e6cfa6');for(const m of parcelMeshes){const active=m.userData.id===state.selected;m.material.opacity=active?.18:0;m.userData.line.visible=active||state.layers.labels;m.userData.line.material.opacity=active?1:.32}updateRoadVehicleVisibility();updateRoadDesignVisibility()}
+function applyColors(){for(const m of meshes){const id=m.userData.id;m.material.color.set(id===state.selected?'#f4f5f7':id===hoverId?'#e6e8ed':state.layers.mono?'#d1d1d3':'#b7b9bd');m.userData.wire.visible=state.layers.edges}siteMesh.material.color.set(state.layers.mono?'#e5e5e7':'#383a3d');roadsMesh.material.color.set(state.layers.mono?'#f8f8f9':roadDesignConfig.enabled?'#42474d':'#e6cfa6');for(const m of parcelMeshes){const active=m.userData.id===state.selected;m.material.opacity=active?.18:0;m.userData.line.visible=active||state.layers.labels;m.userData.line.material.opacity=active?1:.32}updateRoadVehicleVisibility();updateRoadDesignVisibility();updateExtrasVisibility()}
 function viewDirection(){return state.view==='top'?new THREE.Vector3(0,1100,.01):state.view==='front'?new THREE.Vector3(0,150,1200):new THREE.Vector3(-550,850,1000)}
 function goCamera(center,span,instant=false){const aspect=$('#viewport').clientWidth/$('#viewport').clientHeight;const z=Math.min(840/Math.max(span[1],50),840*aspect/Math.max(span[0],50))*.72;const target=new THREE.Vector3(...center);const pos=target.clone().add(viewDirection());if(instant){camera.position.copy(pos);controls.target.copy(target);camera.zoom=z;camera.updateProjectionMatrix();controls.update()}else transition={from:camera.position.clone(),to:pos,fromTarget:controls.target.clone(),target,fromZoom:camera.zoom,zoom:z,start:performance.now()}}
 function fitBounds(box,smooth=true){
@@ -5735,7 +5794,11 @@ function fitBounds(box,smooth=true){
  goCamera(center.toArray(),[width,height],!smooth);
 }
 function unitBox(u,explode=0){const c=new THREE.Vector3(u.center[0]*(1+explode*.65),u.center[2]+explode*(u.kind==='connection'?65:30),-u.center[1]*(1+explode*.65));return new THREE.Box3().setFromCenterAndSize(c,new THREE.Vector3(u.size[0],u.size[2],u.size[1]))}
-function fitWhole(smooth=true){const b=new THREE.Box3();for(const u of model.units)if(!['assembly','report'].includes(state.mode)||state.assembled.has(u.id))b.union(unitBox(u,state.targetExplode));if(state.layers.site){siteMesh.geometry.computeBoundingBox();b.union(siteMesh.geometry.boundingBox)}fitBounds(b,smooth)}
+function fitWhole(smooth=true){const b=new THREE.Box3();for(const u of model.units)if(!['assembly','report'].includes(state.mode)||state.assembled.has(u.id))b.union(unitBox(u,state.targetExplode));if(state.layers.site){siteMesh.geometry.computeBoundingBox();b.union(siteMesh.geometry.boundingBox)}
+ // The towers reach 327m where the deck stopped at 22, so a box built from the
+ // structure alone frames the overview with both of them cut off at the top.
+ if(extrasGroup)for(const g of extrasGroup.children)if(g.visible)b.expandByObject(g);
+ fitBounds(b,smooth)}
 function focusSelected(){const u=unitById.get(state.selected),p=parcelById.get(state.selected);if(u)fitBounds(unitBox(u,state.isolated?0:state.targetExplode));else if(p){const b=new THREE.Box3();p.boundary.forEach(([x,y])=>b.expandByPoint(new THREE.Vector3(x,0,-y)));fitBounds(b)}}
 function animate(time){requestAnimationFrame(animate);if(!renderer)return;const dt=Math.min((time-lastTime)/1000,.05);lastTime=time;updateClimate(dt);state.explode+=(state.targetExplode-state.explode)*(matchMedia('(prefers-reduced-motion: reduce)').matches?1:.09);
  if(transition){const t=Math.min((performance.now()-transition.start)/(matchMedia('(prefers-reduced-motion: reduce)').matches?1:500),1),e=1-Math.pow(1-t,3);camera.position.lerpVectors(transition.from,transition.to,e);controls.target.lerpVectors(transition.fromTarget,transition.target,e);camera.zoom=THREE.MathUtils.lerp(transition.fromZoom,transition.zoom,e);camera.updateProjectionMatrix();if(t===1)transition=null}
@@ -5902,7 +5965,8 @@ async function init(){try{
  $('#snapshotBtn').onclick=()=>{renderer.render(scene,camera);renderer.domElement.toBlob(b=>{if(b)download(b,'FORM_'+(state.selected||state.mode)+'.png')});toast('当前三维视图已导出')};$('#presentBtn').onclick=togglePresentation;$('#helpBtn').onclick=()=>$('#helpModal').style.display='flex';$('#closeHelp').onclick=()=>$('#helpModal').style.display='none';$('#helpModal').onclick=e=>{if(e.target===$('#helpModal'))$('#helpModal').style.display='none'};
  $('#prevUnit').onclick=()=>stepSelection(-1);$('#nextUnit').onclick=()=>stepSelection(1);$('#csvBtn').onclick=exportCSV;$('#printBtn').onclick=()=>window.print();$('#playAssembly').onclick=()=>{if(state.assembled.size===model.units.length){state.assembled.clear();updateAssemblyUI()}state.playing=!state.playing;$('#playAssembly').textContent=state.playing?'Ⅱ 暂停':'▶ 自动装配'};$('#clearAssembly').onclick=()=>{state.playing=false;$('#playAssembly').textContent='▶ 自动装配';applyAssemblyCount(0)};$('#fullAssembly').onclick=()=>{state.playing=false;$('#playAssembly').textContent='▶ 自动装配';applyAssemblyCount(model.units.length)};$('#saveAssembly').onclick=exportManifest;$('#infoBtn').onclick=()=>$('#inspector').classList.toggle('open');
  document.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA'].includes(e.target.tagName))return;if(e.key==='Escape'){$('#helpModal').style.display='none';$('#inspector').classList.remove('open');if(state.isolated){state.isolated=false;fitWhole();renderInspector()}else if(state.presentation)togglePresentation();else select(null)}if(e.key==='ArrowRight'){e.preventDefault();stepSelection(1)}if(e.key==='ArrowLeft'){e.preventDefault();stepSelection(-1)}if(e.code==='Space'){e.preventDefault();$('#rotateBtn').click()}});
- initReportPreview();$('#loader').style.display='none';window.FORM={model,state,select,setMode,isolate,renderReport,meshes,assemblyOrder};window.latestModelBridge?.controls();
+ initReportPreview();$('#loader').style.display='none';window.FORM={model,state,select,setMode,isolate,renderReport,meshes,assemblyOrder,loadAppExtras,get extras(){return extrasData},get extrasGroup(){return extrasGroup}};window.latestModelBridge?.controls();// Loaded after the first paint: 1MB of geometry must not hold up the scene.
+ loadAppExtras();
  }catch(err){console.error(err);$('#loadText').textContent='无法加载：'+err.message+'。请使用近期版本 Chrome / Edge 打开。';$('#loader .progress').style.display='none'}}
 init().then(setupWorkspace);
 
