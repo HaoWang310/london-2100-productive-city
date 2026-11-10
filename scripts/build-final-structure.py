@@ -41,17 +41,31 @@ def report(tag, m):
           % (tag, len(m.vertices), len(m.faces), int((counts == 1).sum()),
              int((counts > 2).sum()), m.is_volume, m.is_watertight), flush=True)
 
+def weld(v, t, tol=WELD):
+    """Stitch a per-face Brep render mesh by snapping vertices to a tol grid.
+
+    trimesh's own process=True is not used for this: it also drops duplicate
+    faces, and where two parts of this structure touch face to face that opens
+    real holes -- measured on S-02, it turned a closed shell into 58 boundary
+    edges. Snapping alone closes it with none.
+    """
+    key = np.round(v / tol).astype(np.int64)
+    _, first, inv = np.unique(key, axis=0, return_index=True, return_inverse=True)
+    vv = v[first]
+    tt = inv[t]
+    keep = (tt[:, 0] != tt[:, 1]) & (tt[:, 1] != tt[:, 2]) & (tt[:, 0] != tt[:, 2])
+    return vv, tt[keep]
+
 def heal(v, t, name):
-    """Weld the per-face render mesh, then repair until it is a volume."""
-    m = trimesh.Trimesh(v, t, process=True, validate=True)   # merges duplicate vertices
+    """Weld first, then repair only if the welded shell is still not a volume."""
+    vv, tt = weld(v, t)
+    m = trimesh.Trimesh(vv, tt, process=False)
     report('welded', m)
-    if m.is_volume:
-        return m
-    trimesh.repair.fix_normals(m, multibody=True)
-    trimesh.repair.fix_winding(m)
-    trimesh.repair.fix_inversion(m, multibody=True)
-    m.remove_degenerate_faces(); m.remove_duplicate_faces(); m.remove_unreferenced_vertices()
-    report('repaired', m)
+    if not m.is_volume:
+        trimesh.repair.fix_winding(m)
+        trimesh.repair.fix_inversion(m, multibody=True)
+        trimesh.repair.fix_normals(m, multibody=True)
+        report('repaired', m)
     if m.is_volume:
         return m
     # Last resort: let the Boolean kernel re-derive a manifold from the shell.
@@ -59,12 +73,12 @@ def heal(v, t, name):
     # mesh non-manifold -- a small local error in exchange for a usable solid.
     try:
         man = mf.Manifold(mf.Mesh(np.float32(m.vertices), np.uint32(m.faces)))
-        if man.status() == mf.Error.NoError:
-            mm = man.to_mesh()
-            m = trimesh.Trimesh(mm.vert_properties[:, :3], mm.tri_verts, process=False)
-            report('kernel-rebuilt', m)
-            if m.is_volume:
-                return m
+        print('   kernel status: %s' % (man.status(),), flush=True)
+        mm = man.to_mesh()
+        m2 = trimesh.Trimesh(mm.vert_properties[:, :3], mm.tri_verts, process=False)
+        report('kernel-rebuilt', m2)
+        if m2.is_volume:
+            return m2
     except Exception as exc:
         print('   kernel rebuild failed: %r' % (exc,), flush=True)
     raise SystemExit('%s could not be made into a solid; fix it in Rhino' % name)
@@ -114,7 +128,7 @@ result = {'meta': {
     'origin': src['meta']['origin'],
     'weldTolerance': WELD,
     'skippedFlat': [u['id'] for u in src['units']
-                    if (np.asarray(u['mesh']['v']).reshape(-1, 3)[:, 2].ptp()) < FLAT],
+                    if np.ptp(np.asarray(u['mesh']['v']).reshape(-1, 3)[:, 2]) < FLAT],
 }, 'whole': {'id': '全部结构 · 最终模型', 'kind': 'whole',
              'mesh': pack(source), 'topology': stats(source)}, 'units': []}
 
