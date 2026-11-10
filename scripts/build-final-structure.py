@@ -21,6 +21,11 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / 'data/final-model-parsed.json.gz'
 OUT = ROOT / 'data/final-structure-solids.json.gz'
 WELD = 1e-4          # 0.1 mm: Brep render meshes are per-face and unstitched
+PLATE_MAX_T = 2.0    # thicker than this and it is not a floor plate
+PLATE_MIN_Z = 10.0   # plates below this sit on the ground, not on the deck
+TOWER_MIN_TOP = 100.0  # the west-side mid-rises top out at 33m; the towers at 259 and 327
+TOWER_CLUSTER_R = 25.0 # plates of one tower share a plan position
+TOWER_FOOT_BUFFER = 4.0  # the two towers are 9.8m apart, so stay well inside that
 FLAT = 1e-6          # a part with no thickness cannot take part in a solid boolean
 
 old = json.loads(gzip.decompress(base64.b64decode(
@@ -115,6 +120,61 @@ print('union: V=%d T=%d volume=%.1f' % (len(source.vertices), len(source.faces),
 def pack(m):
     return {'v': m.vertices.reshape(-1).tolist(), 't': m.faces.reshape(-1).tolist()}
 
+def xy_union(meshes):
+    """Union of the plan footprints of a set of {'v','t'} meshes."""
+    polys = []
+    for mesh in meshes:
+        v = np.asarray(mesh['v']).reshape(-1, 3)
+        f = np.asarray(mesh['t']).reshape(-1, 3)
+        for tri in f:
+            poly = Polygon(v[tri, :2])
+            if poly.area > 1e-8:
+                polys.append(poly)
+    return unary_union(polys)
+
+def cut_region(poly, remaining_mf, zmin, zmax):
+    """Intersect the remaining solid with a plan region; returns (piece, rest)."""
+    polygons = list(poly.geoms) if poly.geom_type == 'MultiPolygon' else [poly]
+    contours = []
+    for p in polygons:
+        if p.area < 1e-7:
+            continue
+        contours.append(np.array(p.exterior.coords)[:-1])
+        contours.extend(np.array(r.coords)[:-1] for r in p.interiors)
+    if not contours:
+        return None, remaining_mf
+    cutter = mf.CrossSection(contours, mf.FillRule.EvenOdd).extrude(
+        zmax - zmin + 4).translate([0, 0, zmin - 2])
+    cut = remaining_mf ^ cutter
+    assert cut.status() == mf.Error.NoError
+    return from_mf(cut), remaining_mf - cutter
+
+def tower_clusters():
+    """The two towers, as clusters of floor plates sharing a plan position.
+
+    Selecting on height alone is not enough: the west-side blocks also sit on
+    the deck, but they top out at 33m against the towers' 259m and 327m.
+    """
+    plates = [e for e in src['extras']['building']
+              if e['height'] <= PLATE_MAX_T and e['minZ'] >= PLATE_MIN_Z]
+    par = list(range(len(plates)))
+    def find(a):
+        while par[a] != a:
+            par[a] = par[par[a]]; a = par[a]
+        return a
+    for i in range(len(plates)):
+        for j in range(i + 1, len(plates)):
+            if (abs(plates[i]['center'][0] - plates[j]['center'][0]) < TOWER_CLUSTER_R
+                    and abs(plates[i]['center'][1] - plates[j]['center'][1]) < TOWER_CLUSTER_R):
+                a, b = find(i), find(j)
+                if a != b:
+                    par[a] = b
+    groups = {}
+    for i in range(len(plates)):
+        groups.setdefault(find(i), []).append(plates[i])
+    towers = [c for c in groups.values() if max(e['maxZ'] for e in c) > TOWER_MIN_TOP]
+    return sorted(towers, key=lambda c: -max(e['maxZ'] for e in c))
+
 def stats(m):
     counts = np.bincount(m.edges_unique_inverse)
     return {'closed': bool(m.is_watertight), 'boundaryEdges': int((counts == 1).sum()),
@@ -144,33 +204,40 @@ for u in sorted(old['units'], key=lambda u: u['id']):
     if claimed is not None:
         poly = poly.difference(claimed)
     claimed = poly if claimed is None else unary_union([claimed, poly])
-    polygons = list(poly.geoms) if poly.geom_type == 'MultiPolygon' else [poly]
-    contours = []
-    for p in polygons:
-        if p.area < 1e-7:
-            continue
-        contours.append(np.array(p.exterior.coords)[:-1])
-        contours.extend(np.array(r.coords)[:-1] for r in p.interiors)
-    if not contours:
+    solid, remaining_mf = cut_region(poly, remaining_mf, zmin, zmax)
+    if solid is None or solid.is_empty or solid.volume <= 0:
         continue
-    cutter = mf.CrossSection(contours, mf.FillRule.EvenOdd).extrude(zmax - zmin + 4).translate([0, 0, zmin - 2])
-    cut = remaining_mf ^ cutter
-    assert cut.status() == mf.Error.NoError
-    solid = from_mf(cut)
-    if solid.is_empty:
-        continue
-    remaining_mf = remaining_mf - cutter
     entry = {k: val for k, val in u.items() if k != 'mesh'}
     entry.update(mesh=pack(solid), topology=stats(solid))
     result['units'].append(entry)
     print('%-8s faces=%-7d volume=%.3f' % (u['id'], len(solid.faces), solid.volume), flush=True)
 
-# Everything outside the legacy masks -- the parts that now rise with the towers.
+# What the legacy masks never covered is the structure that now rises with the
+# towers -- 37.6% of the whole on the first run, which as one lump would appear
+# in the assembly as a single enormous piece. Split it by which tower owns it,
+# using the towers' own floor-plate footprints rather than an invented radius.
+towers = tower_clusters()
+print('\ntowers found: %d' % len(towers), flush=True)
+for n, cluster in enumerate(towers, 1):
+    foot = xy_union([e['mesh'] for e in cluster]).buffer(TOWER_FOOT_BUFFER)
+    piece, remaining_mf = cut_region(foot, remaining_mf, zmin, zmax)
+    top = max(e['maxZ'] for e in cluster)
+    if piece is None or piece.is_empty or piece.volume <= 0:
+        print('T-%02d  no structure claimed' % n, flush=True)
+        continue
+    result['units'].append({'id': 'T-%02d 塔%d 结构' % (n, n), 'kind': 'tower',
+                            'plates': len(cluster), 'towerTop': round(top, 2),
+                            'mesh': pack(piece), 'topology': stats(piece)})
+    print('T-%02d  plates=%-4d top=%7.1f  faces=%-7d volume=%.3f'
+          % (n, len(cluster), top, len(piece.faces), piece.volume), flush=True)
+
 remaining = from_mf(remaining_mf)
-if not remaining.is_empty:
-    result['units'].append({'id': 'R-新增及未分配区域', 'kind': 'remainder',
+if not remaining.is_empty and remaining.volume > 0:
+    bodies = remaining.split(only_watertight=False)
+    result['units'].append({'id': 'R-其他新增区域', 'kind': 'remainder',
+                            'bodies': len(bodies),
                             'mesh': pack(remaining), 'topology': stats(remaining)})
-    print('remainder volume=%.3f' % remaining.volume, flush=True)
+    print('R     bodies=%-4d volume=%.3f' % (len(bodies), remaining.volume), flush=True)
 
 result['meta']['emptyLegacyGroups'] = [u['id'] for u in old['units']
                                        if u['id'] not in {p['id'] for p in result['units']}]
