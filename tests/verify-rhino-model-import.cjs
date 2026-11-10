@@ -501,6 +501,25 @@ assert(loader.includes('await database("delete")'), 'There is no way back to the
 // The export hands the decoded model back, which is what lets a 155MB source
 // be baked without ever going near GitHub's 100MB per-file limit.
 assert(loader.includes('id="riExport"'), 'The parsed-model export button is missing');
+// LAYER CATEGORIES — the real file carries 建筑楼板 (304 objects), 農田/农田 (84),
+// 地块 (35) and, once exported, the towers. Three regexes used to drop all of
+// them silently. "建筑参考面 (building reference surfaces)" is NOT a building,
+// so the building test demands 楼板/floor rather than bare "building".
+assert(loader.includes('/塔|tower/.test(name)?"tower"'), 'Towers are not classified');
+assert(loader.includes('/建筑楼板|buildings?\\s*floor/.test(name)?"building"'), 'Buildings are not classified');
+assert(loader.includes('/农田|农业|farmland|farming|agri/.test(name)?"agri"'), 'Farmland is not classified');
+assert(loader.includes('/地块|plots?/.test(name)?"plots"'), 'Hand-drawn plots are not classified');
+assert(!/\/building\/\.test\(name\)/.test(loader), '"building" alone would swallow 建筑参考面');
+assert(loader.includes('else extraParts[group].push({layer:name,mesh:merged});'),
+ 'Extra groups are not collected');
+assert(loader.includes('for(const g of EXTRA_GROUPS)for(const e of extraParts[g])translate(e.mesh);'),
+ 'Extras must take the site shift or they land somewhere else');
+assert(/const m=\{site,roads,lines,parcels,units,extras,meta:\{/.test(loader),
+ 'Extras never reach the model, so the export would drop them');
+assert(/extras\[g\]=extraParts\[g\]\.map[\s\S]{0,400}boundary:polygonBoundary\(e\.mesh\)/.test(loader),
+ 'Each extra needs its own footprint for the land-use maths');
+assert(/minZ:info\.min\[2\],maxZ:info\.max\[2\],height:info\.size\[2\]/.test(loader),
+ 'Heights must survive; the FAR calculation needs them');
 assert(/xport\.onclick=async\(\)=>\{[\s\S]{0,200}pendingParsed/.test(loader), 'Export is not wired to the parsed model');
 assert(loader.includes('new CompressionStream("gzip")'), 'The export is not compressed');
 assert(loader.includes('ArrayBuffer.isView(v)?Array.from(v)'), 'Typed arrays would serialise as objects and lose the geometry');

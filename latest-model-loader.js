@@ -155,12 +155,16 @@ async function parseFile(file,onProgress){
  if(!doc)throw Error("Rhino 3DM could not be decoded");
  const objects=doc.objects(),layers=doc.layers();
  const siteParts=[],roadParts=[],structureParts=[],unresolved=[];
+ // Buildings, farmland, towers and hand-drawn plots are separate entities, so
+ // each object is kept on its own rather than merged into one blob per layer.
+ const EXTRA_GROUPS=["building","agri","tower","plots"];
+ const extraParts={building:[],agri:[],tower:[],plots:[]};
  // ROAD LINES v31 — the 31 Oct revision adds the road division line work on a
  // layer named Default: 536 curves, all flat on the deck at the road top. They
  // are curves, not surfaces, so the mesh path below never sees them; sample
  // each one into segments here and move it with the same alignment shift.
  const lineParts=[];
- const names={site:0,roads:0,structure:0};
+ const names={site:0,roads:0,structure:0,building:0,agri:0,tower:0,plots:0};
  // Every layer is logged under the name the file gives it, matched or not.
  // Unmatched layers are dropped silently by design, which makes a new layer
  // (buildings, towers) look like a decode failure. The report says otherwise.
@@ -187,7 +191,16 @@ async function parseFile(file,onProgress){
    if(pts.length>1){lineParts.push(pts);log.group="lines";log.meshed++}
    continue;
   }
-  const group=/road|道路/.test(name)?"roads":/site|场地/.test(name)?"site":/struct|结构/.test(name)?"structure":null;
+  // Order matters. "建筑参考面 (building reference surfaces)" must NOT read as a
+  // building, so the building test demands 楼板/floor rather than bare "building".
+  const group=/road|道路/.test(name)?"roads"
+   :/site|场地/.test(name)?"site"
+   :/struct|结构/.test(name)?"structure"
+   :/塔|tower/.test(name)?"tower"
+   :/建筑楼板|buildings?\s*floor/.test(name)?"building"
+   :/农田|农业|farmland|farming|agri/.test(name)?"agri"
+   :/地块|plots?/.test(name)?"plots"
+   :null;
   log.group=group;
   if(!group)continue;
   names[group]++;
@@ -198,7 +211,8 @@ async function parseFile(file,onProgress){
   for(const mesh of pieces)append(merged,mesh);
   if(group==="roads")roadParts.push(merged);
   else if(group==="site")siteParts.push(merged);
-  else structureParts.push(merged);
+  else if(group==="structure")structureParts.push(merged);
+  else extraParts[group].push({layer:name,mesh:merged});
  }
  if(!siteParts.length||!roadParts.length)throw Error("缺少可读取的场地/道路网格。请在 Rhino 中先为曲面生成渲染网格，再重新保存 3DM。");
  if(unresolved.some(u=>/road|道路|site|场地/.test(u.layer)))throw Error("部分场地或道路曲面没有可读取的网格；为防止错误替换，已取消导入。请先在 Rhino 中导出 Mesh。");
@@ -222,6 +236,8 @@ async function parseFile(file,onProgress){
  for(const p of siteParts)translate(p);
  for(const p of roadParts)translate(p);
  for(const p of structureParts)translate(p);
+ // Same shift as the site. Never compute one per group, or they separate.
+ for(const g of EXTRA_GROUPS)for(const e of extraParts[g])translate(e.mesh);
  for(const curve of lineParts)for(const q of curve){q[0]+=shift[0];q[1]+=shift[1];q[2]+=shift[2]}
  // Rhino world coordinates stay recoverable: world = local + origin.
  const origin=[-shift[0],-shift[1],-shift[2]];
@@ -251,7 +267,18 @@ async function parseFile(file,onProgress){
   if(kind==="parcel"&&idx!=null)parcels[idx].unit=id;
  }
  const siteGeo=meshInfo(site),roadGeo=meshInfo(roads);
- const counts={site:siteParts.length,road:roadParts.length,structure:structureParts.length,unresolved:unresolved.length,originalObjects:objects.count};
+ const PREFIX={building:"B",agri:"A",tower:"T",plots:"L"};
+ const extras={};
+ for(const g of EXTRA_GROUPS)extras[g]=extraParts[g].map((e,i)=>{
+  const info=meshInfo(e.mesh);
+  return {id:PREFIX[g]+"-"+String(i+1).padStart(3,"0"),group:g,layer:e.layer,mesh:e.mesh,
+   minZ:info.min[2],maxZ:info.max[2],height:info.size[2],
+   center:info.center,size:info.size,area:info.projection||info.area,
+   boundary:polygonBoundary(e.mesh)};
+ });
+ const counts={site:siteParts.length,road:roadParts.length,structure:structureParts.length,
+  building:extras.building.length,agri:extras.agri.length,tower:extras.tower.length,plots:extras.plots.length,
+  unresolved:unresolved.length,originalObjects:objects.count};
  const layerSummary=[...layerLog.values()].sort((a,b)=>b.objects-a.objects);
  // Classify the line work so the app can draw it at a believable weight.
  // A zebra rung is a short straight curve with other short straight curves
@@ -289,7 +316,7 @@ async function parseFile(file,onProgress){
    lines.w.push(w);
   }
  });
- const m={site,roads,lines,parcels,units,meta:{
+ const m={site,roads,lines,parcels,units,extras,meta:{
   source:file.name+" · Rhino source layers · "+new Date().toISOString().slice(0,10),
   modelName:file.name,imported:true,topologyVerified:false,
   origin,alignedToSiteFrame:true,roadLineSegments:lines.v.length/6,
@@ -362,7 +389,8 @@ function esc(t){return String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">
 function reportHTML(meta){
  const rows=(meta&&meta.layers)||[];
  if(!rows.length)return '<div style="color:#9aa1ab">没有图层信息</div>';
- const GROUP={site:["场地","#8cb359"],roads:["道路","#4aa3e0"],structure:["结构","#e9ecf0"],lines:["划线","#d9c79a"]};
+ const GROUP={site:["场地","#8cb359"],roads:["道路","#4aa3e0"],structure:["结构","#e9ecf0"],lines:["划线","#d9c79a"],
+  building:["建筑","#e29234"],agri:["农业","#c6d64a"],tower:["农业塔","#9ad17a"],plots:["地块","#b48ae0"]};
  return '<table style="border-collapse:collapse;width:100%;font-size:11px">'+rows.map(r=>{
   const g=GROUP[r.group]||null;
   const tag=g?'<span style="color:'+g[1]+'">'+g[0]+'</span>'
@@ -417,6 +445,7 @@ function controls(){
    report.innerHTML=reportHTML(parsed.meta);
    const c=parsed.meta.counts||{};
    msg.innerHTML='解析成功：场地 '+(c.site|0)+' · 道路 '+(c.road|0)+' · 结构 '+(c.structure|0)
+    +' · 建筑 '+(c.building|0)+' · 农业 '+(c.agri|0)+' · 农业塔 '+(c.tower|0)+' · 地块 '+(c.plots|0)
     +(c.unresolved?' · <span style="color:#e05a4a">无网格 '+c.unresolved+'</span>':'')
     +'<br><span style="color:#7e848d">标为「未接入」的图层现在会被丢弃；把这份报告给我，我按它们的真实名字接入。</span>';
    apply.disabled=false;apply.style.opacity="1";
