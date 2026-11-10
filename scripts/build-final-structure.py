@@ -12,6 +12,7 @@ Requires: numpy, trimesh, shapely, mapbox-earcut, manifold3d.
 import base64, gzip, hashlib, json, re, sys
 from pathlib import Path
 import numpy as np
+from scipy.spatial import cKDTree
 import trimesh
 import manifold3d as mf
 from shapely.geometry import Polygon
@@ -26,6 +27,7 @@ PLATE_MIN_Z = 10.0   # plates below this sit on the ground, not on the deck
 TOWER_MIN_TOP = 100.0  # the west-side mid-rises top out at 33m; the towers at 259 and 327
 TOWER_CLUSTER_R = 25.0 # plates of one tower share a plan position
 TOWER_FOOT_BUFFER = 4.0  # the two towers are 9.8m apart, so stay well inside that
+REMAINDER_MIN_VOLUME = 20.0  # provisional; the run prints the distribution to check it against
 FLAT = 1e-6          # a part with no thickness cannot take part in a solid boolean
 
 old = json.loads(gzip.decompress(base64.b64decode(
@@ -195,6 +197,7 @@ result = {'meta': {
 zmin, zmax = source.bounds[:, 2]
 remaining_mf = source_mf
 claimed = None
+pieces = []          # (entry without mesh, trimesh) until the fragments are folded in
 for u in sorted(old['units'], key=lambda u: u['id']):
     v = np.asarray(u['mesh']['v']).reshape(-1, 3)
     f = np.asarray(u['mesh']['t']).reshape(-1, 3)
@@ -207,15 +210,13 @@ for u in sorted(old['units'], key=lambda u: u['id']):
     solid, remaining_mf = cut_region(poly, remaining_mf, zmin, zmax)
     if solid is None or solid.is_empty or solid.volume <= 0:
         continue
-    entry = {k: val for k, val in u.items() if k != 'mesh'}
-    entry.update(mesh=pack(solid), topology=stats(solid))
-    result['units'].append(entry)
+    pieces.append(({k: val for k, val in u.items() if k != 'mesh'}, solid))
     print('%-8s faces=%-7d volume=%.3f' % (u['id'], len(solid.faces), solid.volume), flush=True)
 
 # What the legacy masks never covered is the structure that now rises with the
-# towers -- 37.6% of the whole on the first run, which as one lump would appear
-# in the assembly as a single enormous piece. Split it by which tower owns it,
-# using the towers' own floor-plate footprints rather than an invented radius.
+# towers, reaching z=91 where the old deck stopped at 22. As one lump it would
+# appear in the assembly as a single enormous piece, so it is cut by each
+# tower's own floor-plate footprint rather than an invented radius.
 towers = tower_clusters()
 print('\ntowers found: %d' % len(towers), flush=True)
 for n, cluster in enumerate(towers, 1):
@@ -225,19 +226,52 @@ for n, cluster in enumerate(towers, 1):
     if piece is None or piece.is_empty or piece.volume <= 0:
         print('T-%02d  no structure claimed' % n, flush=True)
         continue
-    result['units'].append({'id': 'T-%02d 塔%d 结构' % (n, n), 'kind': 'tower',
-                            'plates': len(cluster), 'towerTop': round(top, 2),
-                            'mesh': pack(piece), 'topology': stats(piece)})
+    pieces.append(({'id': 'T-%02d 塔%d 结构' % (n, n), 'kind': 'tower',
+                    'plates': len(cluster), 'towerTop': round(top, 2)}, piece))
     print('T-%02d  plates=%-4d top=%7.1f  faces=%-7d volume=%.3f'
           % (n, len(cluster), top, len(piece.faces), piece.volume), flush=True)
 
+# Whatever neither the legacy regions nor the towers claimed comes out as
+# thousands of disjoint bodies: the legacy region edges do not follow the new
+# structure, so every seam leaves slivers. The bodies worth seeing become units
+# of their own; the slivers are merged into the nearest piece rather than
+# dropped, because discarding them would break the volume check that is the
+# only guarantee this partition is right.
 remaining = from_mf(remaining_mf)
 if not remaining.is_empty and remaining.volume > 0:
-    bodies = remaining.split(only_watertight=False)
-    result['units'].append({'id': 'R-其他新增区域', 'kind': 'remainder',
-                            'bodies': len(bodies),
-                            'mesh': pack(remaining), 'topology': stats(remaining)})
-    print('R     bodies=%-4d volume=%.3f' % (len(bodies), remaining.volume), flush=True)
+    bodies = [b for b in remaining.split(only_watertight=False) if b.volume > 0]
+    vols = np.sort([b.volume for b in bodies])[::-1]
+    print('\nremainder: %d bodies, volume %.3f' % (len(bodies), remaining.volume), flush=True)
+    print('   largest 12: %s' % ' '.join('%.1f' % v for v in vols[:12]), flush=True)
+    for q in (50, 75, 90, 95, 99):
+        print('   p%-3d %.3f' % (q, np.percentile(vols, q)), flush=True)
+    for cut in (1, 5, 20, 50, 100, 500):
+        keep = vols[vols >= cut]
+        print('   >=%-5g  %4d bodies  %.1f%% of remainder volume'
+              % (cut, len(keep), 100 * keep.sum() / vols.sum()), flush=True)
+    big = [b for b in bodies if b.volume >= REMAINDER_MIN_VOLUME]
+    small = [b for b in bodies if b.volume < REMAINDER_MIN_VOLUME]
+    big.sort(key=lambda b: -b.volume)
+    for n, b in enumerate(big, 1):
+        pieces.append(({'id': 'R-%02d 新增结构' % n, 'kind': 'remainder'}, b))
+        print('R-%02d  faces=%-7d volume=%.3f' % (n, len(b.faces), b.volume), flush=True)
+    if small:
+        centres = np.array([p[1].centroid for p in pieces])
+        tree = cKDTree(centres)
+        _, idx = tree.query(np.array([b.centroid for b in small]))
+        merged = {}
+        for b, i in zip(small, idx):
+            merged.setdefault(int(i), []).append(b)
+        for i, group in merged.items():
+            entry, mesh = pieces[i]
+            pieces[i] = (entry, trimesh.util.concatenate([mesh] + group))
+        print('   merged %d slivers (%.3f volume) into %d pieces'
+              % (len(small), sum(b.volume for b in small), len(merged)), flush=True)
+
+for entry, mesh in pieces:
+    entry = dict(entry)
+    entry.update(mesh=pack(mesh), topology=stats(mesh))
+    result['units'].append(entry)
 
 result['meta']['emptyLegacyGroups'] = [u['id'] for u in old['units']
                                        if u['id'] not in {p['id'] for p in result['units']}]
