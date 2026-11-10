@@ -1,0 +1,28 @@
+name: Build final structure solids
+on:
+  push:
+    paths:
+      - 'scripts/build-final-structure.py'
+      - 'data/final-model-parsed.json.gz'
+      - '.github/workflows/build-final-structure.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # The build container this script was written in cannot reach npm, pypi or
+      # any CDN, so the Boolean kernel is only ever exercised here.
+      - run: pip install numpy trimesh shapely mapbox-earcut manifold3d
+      - run: python scripts/build-final-structure.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: final-structure-solids
+          path: data/final-structure-solids.json.gz
+          if-no-files-found: error
