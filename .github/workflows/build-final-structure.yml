@@ -19,7 +19,9 @@ jobs:
           python-version: '3.12'
       # The build container this script was written in cannot reach npm, pypi or
       # any CDN, so the Boolean kernel is only ever exercised here.
-      - run: pip install numpy trimesh shapely mapbox-earcut manifold3d
+      # trimesh needs scipy for connected components and networkx for its graph ops;
+      # without them it raises ModuleNotFoundError from inside Trimesh.__init__.
+      - run: pip install numpy scipy networkx trimesh shapely mapbox-earcut manifold3d
       - run: python scripts/build-final-structure.py
       - uses: actions/upload-artifact@v4
         with:
