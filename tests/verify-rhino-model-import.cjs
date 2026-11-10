@@ -548,6 +548,18 @@ assert(loader.includes('const PUBLISHED_SOURCE="./2.3dm";'), 'The published sour
 assert(fs.existsSync('data/app-extras.json.gz'), 'The app extras bundle is missing');
 assert(fs.existsSync('data/final-model-parsed.json.gz'), 'The decoded source model is missing');
 assert(fs.existsSync('scripts/build-app-extras.py'), 'The extras build script is missing');
+// The plots and farmland leave Rhino as one-sided sheets at z=0.5, so at the
+// site edge they ended in a knife edge against the dark base while the road
+// beside them showed a proper slab. They are extruded down to the site's top.
+const extrasPy = fs.readFileSync('scripts/build-app-extras.py', 'utf8');
+assert(extrasPy.includes('def thicken('), 'The slab extrusion is missing');
+assert(extrasPy.includes("np.c_[a, a + nv, b + nv], np.c_[a, b + nv, b]"),
+ 'Wall winding: the other way still passes an undirected edge count and loses two thirds of the volume');
+assert(extrasPy.includes("assert (counts == 1).all(), 'slab winding is inconsistent'"),
+ 'Nothing checks that the slab is consistently wound');
+assert(/expect = plan \* \(v\[:, 2\]\.max\(\) - bottom\)/.test(extrasPy),
+ 'Nothing checks the slab encloses plan x height');
+assert(extrasPy.includes("e['mesh'] = thicken(e['mesh'])"), 'The slabs are never built');
 assert(html.includes("fetchExtras('./data/app-extras.json.gz')"), 'The app never loads the extras');
 assert(/raw\[0\]===0x1f&&raw\[1\]===0x8b/.test(html),
  'Decide gzip by magic bytes: Pages may or may not expand .gz, and Content-Encoding lies both ways');
