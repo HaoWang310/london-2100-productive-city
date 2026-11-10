@@ -491,7 +491,9 @@ assert(/const IMPORT_MODE=\/\[\?&\]import=1/.test(loader), 'The import dialog is
 assert(loader.includes('function controls(){\n if(!IMPORT_MODE)return;'), 'controls() must stay closed for ordinary visitors');
 assert(loader.includes('const layerLog=new Map();'), 'The per-layer report is missing');
 assert(loader.includes('layers:layerSummary,'), 'The layer report never reaches meta');
-assert(loader.includes('log.group=group;\n  if(!group)continue;'), 'Unmatched layers must be logged before they are skipped');
+assert(/log\.group=group;\s*\n\s*const pieces=getMeshes\(geom,R\);/.test(loader)
+ && /objectProbe\.push\(\{layer:name,group,[\s\S]{0,260}\n\s*if\(!group\)continue;/.test(loader),
+ 'Unmatched layers must be logged and measured before they are skipped');
 assert(loader.includes('async function readUpload()'), 'The local upload path is missing');
 assert(/readUpload[\s\S]{0,900}localUpload=true/.test(loader), 'An upload must be marked as local so the panel can say so');
 assert(loader.includes('await database("put",{name:pending.name'), 'The upload is never saved');
@@ -506,6 +508,19 @@ assert(loader.includes('id="riExport"'), 'The parsed-model export button is miss
 // them silently. "建筑参考面 (building reference surfaces)" is NOT a building,
 // so the building test demands 楼板/floor rather than bare "building".
 assert(loader.includes('/塔|tower/.test(name)?"tower"'), 'Towers are not classified');
+assert(/\/struct\|结构\|打印模型\|print\\s\*model\/\.test\(name\)\?"structure"/.test(loader),
+ 'The final model keeps the structure on 打印模型（带厚度）; nothing in that name says "structure"');
+// Measure every object, mapped or not. Otherwise an unmapped layer is opaque and
+// you cannot tell the missing structure from 5556 mullions.
+assert(loader.includes('const objectProbe=[];'), 'The per-object probe is missing');
+assert(/objectProbe\.push\(\{layer:name,group,/.test(loader), 'The probe does not record unmapped layers');
+assert(loader.includes('layers:layerSummary,probe:objectProbe,shift,'), 'The probe never reaches meta');
+assert(!/const probe=\[\]/.test(loader), 'probe collides with the site meshInfo binding of the same name');
+assert(/if\(group\)\{names\[group\]\+\+;unresolved\.push/.test(loader),
+ 'An unmeshable object on a DROPPED layer must not abort the import');
+assert(loader.includes('id="riProbe"'), 'The lightweight analysis export is missing');
+assert(/probeBtn\.onclick[\s\S]{0,300}JSON\.stringify\(\{meta\}/.test(loader),
+ 'The analysis export must carry meta only, never vertices');
 assert(loader.includes('/建筑楼板|buildings?\\s*floor/.test(name)?"building"'), 'Buildings are not classified');
 assert(loader.includes('/农田|农业|farmland|farming|agri/.test(name)?"agri"'), 'Farmland is not classified');
 assert(loader.includes('/地块|plots?/.test(name)?"plots"'), 'Hand-drawn plots are not classified');

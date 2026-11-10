@@ -148,6 +148,7 @@ function polygonBoundary(m){
  return hull(points);
 }
 function basename(name){return (name||"").trim()}
+const r=n=>Math.round(n*100)/100;
 async function parseFile(file,onProgress){
  const R=await getRhino();
  const bytes=new Uint8Array(await file.arrayBuffer());
@@ -159,6 +160,10 @@ async function parseFile(file,onProgress){
  // each object is kept on its own rather than merged into one blob per layer.
  const EXTRA_GROUPS=["building","agri","tower","plots"];
  const extraParts={building:[],agri:[],tower:[],plots:[]};
+ // Every object gets measured, classified or not. Without this an unmapped
+ // layer is opaque: you cannot tell whether it holds the missing structure or
+ // 5556 mullions. Statistics only, never vertices, so it stays small.
+ const objectProbe=[];
  // ROAD LINES v31 — the 31 Oct revision adds the road division line work on a
  // layer named Default: 536 curves, all flat on the deck at the road top. They
  // are curves, not surfaces, so the mesh path below never sees them; sample
@@ -195,20 +200,32 @@ async function parseFile(file,onProgress){
   // building, so the building test demands 楼板/floor rather than bare "building".
   const group=/road|道路/.test(name)?"roads"
    :/site|场地/.test(name)?"site"
-   :/struct|结构/.test(name)?"structure"
+   // The final model carries the structure on 打印模型（带厚度）{Print Model
+   // (With Thickness)} -- the thickened solid that was exported for printing.
+   // Nothing in that name says "structure", so it has to be named explicitly.
+   :/struct|结构|打印模型|print\s*model/.test(name)?"structure"
    :/塔|tower/.test(name)?"tower"
    :/建筑楼板|buildings?\s*floor/.test(name)?"building"
    :/农田|农业|farmland|farming|agri/.test(name)?"agri"
    :/地块|plots?/.test(name)?"plots"
    :null;
   log.group=group;
-  if(!group)continue;
-  names[group]++;
   const pieces=getMeshes(geom,R);
-  if(!pieces.length){log.unmeshed++;unresolved.push({layer:name,type:geom.constructor&&geom.constructor.name||"unknown",index:i});continue}
+  if(!pieces.length){
+   log.unmeshed++;
+   // Only a classified layer may abort the import; a dropped layer must not.
+   if(group){names[group]++;unresolved.push({layer:name,type:geom.constructor&&geom.constructor.name||"unknown",index:i})}
+   continue;
+  }
   log.meshed++;
   const merged=newMesh();
   for(const mesh of pieces)append(merged,mesh);
+  {const q=meshInfo(merged);
+   objectProbe.push({layer:name,group,type:(geom.constructor&&geom.constructor.name)||"unknown",
+    min:q.min.map(r),max:q.max.map(r),size:q.size.map(r),center:q.center.map(r),
+    area:r(q.area),footprint:r(q.projection),tris:merged.t.length/3});}
+  if(!group)continue;
+  names[group]++;
   if(group==="roads")roadParts.push(merged);
   else if(group==="site")siteParts.push(merged);
   else if(group==="structure")structureParts.push(merged);
@@ -322,7 +339,7 @@ async function parseFile(file,onProgress){
   origin,alignedToSiteFrame:true,roadLineSegments:lines.v.length/6,
   roadLineBold:lines.w.filter(w=>w>.3).length,
   warnings:["地块为独立场地组件的边界近似，尚未完成道路减场地布尔运算","跨路关系按几何距离初判；非施工拆分方案",...unresolved.slice(0,10).map(x=>"Unmeshed: "+x.layer+" / "+x.type)],
-  layers:layerSummary,
+  layers:layerSummary,probe:objectProbe,shift,
   siteArea:siteGeo.projection||siteGeo.area,roadArea:roadGeo.projection||roadGeo.area,
   sourceArea:totalArea,areaError:0,counts
  }};
@@ -424,11 +441,12 @@ function controls(){
   +'<div id="riReport" style="margin-bottom:10px"></div>'
   +'<div style="display:flex;gap:7px">'
   +'<button id="riApply" disabled style="flex:1;padding:8px;border:0;border-radius:8px;background:#0a84ff;color:#fff;cursor:pointer;opacity:.4">应用并重载</button>'
-  +'<button id="riExport" disabled style="flex:1;padding:8px;border:.5px solid #0a84ff;border-radius:8px;background:transparent;color:#6cb6ff;cursor:pointer;opacity:.4">导出解析结果</button>'
+  +'<button id="riExport" disabled style="flex:1;padding:8px;border:.5px solid #0a84ff;border-radius:8px;background:transparent;color:#6cb6ff;cursor:pointer;opacity:.4">导出几何</button>'
+  +'<button id="riProbe" disabled style="flex:1;padding:8px;border:.5px solid #c6d64a;border-radius:8px;background:transparent;color:#c6d64a;cursor:pointer;opacity:.4">导出分析数据</button>'
   +'<button id="riReset" style="padding:8px 12px;border:.5px solid #3a3f47;border-radius:8px;background:transparent;color:#c8ced7;cursor:pointer">恢复发布版</button>'
   +'</div>';
  document.body.appendChild(box);
- const msg=box.querySelector("#riMsg"),report=box.querySelector("#riReport"),apply=box.querySelector("#riApply"),xport=box.querySelector("#riExport");
+ const msg=box.querySelector("#riMsg"),report=box.querySelector("#riReport"),apply=box.querySelector("#riApply"),xport=box.querySelector("#riExport"),probeBtn=box.querySelector("#riProbe");
  if(activeMeta)report.innerHTML=reportHTML(activeMeta);
  if(window.__importError)msg.innerHTML='<span style="color:#e05a4a">上次上传解析失败，已回退到发布版：'+esc(window.__importError)+'</span>';
  box.querySelector("#riClose").onclick=()=>box.remove();
@@ -436,7 +454,8 @@ function controls(){
  box.querySelector("#riFile").onchange=async e=>{
   const file=e.target.files&&e.target.files[0];if(!file)return;
   pending=null;pendingParsed=null;apply.disabled=true;apply.style.opacity=".4";
-  xport.disabled=true;xport.style.opacity=".4";report.innerHTML="";
+  xport.disabled=true;xport.style.opacity=".4";
+  probeBtn.disabled=true;probeBtn.style.opacity=".4";report.innerHTML="";
   msg.textContent="解析中…";
   try{
    const bytes=await file.arrayBuffer();
@@ -450,6 +469,7 @@ function controls(){
     +'<br><span style="color:#7e848d">标为「未接入」的图层现在会被丢弃；把这份报告给我，我按它们的真实名字接入。</span>';
    apply.disabled=false;apply.style.opacity="1";
    xport.disabled=false;xport.style.opacity="1";
+   probeBtn.disabled=false;probeBtn.style.opacity="1";
   }catch(err){
    msg.innerHTML='<span style="color:#e05a4a">解析失败：'+esc(err.message||err)+'</span>';
   }
@@ -458,6 +478,32 @@ function controls(){
  // blocked -- so the decode has to happen in a browser that can reach them. This
  // hands the decoded model back so it can be baked without the .3dm ever having
  // to fit under GitHub's 100MB per-file limit.
+ // Statistics for every object in every layer, classified or not, with no
+ // vertices at all. A few hundred KB against hundreds of MB, and it is what
+ // says which layer the structure is actually hiding in.
+ probeBtn.onclick=async()=>{
+  if(!pendingParsed)return;
+  probeBtn.disabled=true;msg.textContent="打包分析数据…";
+  try{
+   const meta=pendingParsed.meta;
+   const json=JSON.stringify({meta},(k,v)=>ArrayBuffer.isView(v)?Array.from(v):v);
+   let blob,ext;
+   if(typeof CompressionStream==="function"){
+    blob=await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"))).blob();
+    ext=".json.gz";
+   }else{blob=new Blob([json],{type:"application/json"});ext=".json"}
+   const a=document.createElement("a");
+   a.href=URL.createObjectURL(blob);
+   a.download=((pending&&pending.name)||"model").replace(/\.3dm$/i,"")+"-probe"+ext;
+   document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(a.href),30000);
+   msg.innerHTML="分析数据已导出："+esc(a.download)+" ("+(blob.size/1024).toFixed(0)+" KB)<br>"
+    +'<span style="color:#7e848d">含每个对象的图层、包围盒、高度、投影面积。发给我。</span>';
+  }catch(err){
+   msg.innerHTML='<span style="color:#e05a4a">导出失败：'+esc(err.message||err)+'</span>';
+  }
+  probeBtn.disabled=false;
+ };
  xport.onclick=async()=>{
   if(!pendingParsed)return;
   xport.disabled=true;msg.textContent="序列化中…";
