@@ -561,6 +561,10 @@ assert(/if\(extrasGroup\)for\(const g of extrasGroup\.children\)if\(g\.visible\)
  'The 327m towers must be in the overview fit box, or they are cut off at the top');
 assert(/catch\(e\)\{console\.warn\('Final-model extras unavailable/.test(html),
  'A missing extras bundle must not take the rest of the scene down with it');
+assert(html.includes("if(!cameraTouched&&state.mode==='overview')fitWhole(false);"),
+ 'The extras arrive after the first fit, so the overview must be framed again');
+assert(html.includes("controls.addEventListener('start',()=>{cameraTouched=true});"),
+ 'That refit must never pull a camera the viewer is already moving');
 
 assert(fs.existsSync('2.3dm'), 'Default Rhino 2.3dm binary is missing from repository root');
 const asset=fs.readFileSync('2.3dm');
